@@ -20,7 +20,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MenuIcon from "@mui/icons-material/Menu";
-import { Book, Dashboard, PersonAdd } from "@mui/icons-material";
+import { Book, Category, Dashboard, PersonAdd } from "@mui/icons-material";
 import theme from "../../theme/theme";
 
 const drawerWidth = 240;
@@ -33,10 +33,11 @@ const Home = () => {
   const toggleDrawer = () => setOpen((prev) => !prev);
 
   const menuItems = [
-    {text:"Dashboard", icon:<Dashboard sx={{color:theme.palette.primary.main}} />, path:'/dashboard'},
+    {text:"Dashboard", icon:<Dashboard sx={{color:theme.palette.primary.main, cursor:"pointer"}} />, path:'/dashboard'},
     { text: "Cursos", icon: <Book  sx={{color:theme.palette.primary.main}}/>, path: "/cursos" },
     { text:"Instrutores", icon: <PersonAdd sx={{color:theme.palette.primary.main}}/>, path:'/instrutores'},
-    ];
+    { text:"Categorias", icon: <Category sx={{color:theme.palette.primary.main}}/>, path:'/categorias' }
+  ];
 
   return (
     <Box sx={{ display: "flex" }}>

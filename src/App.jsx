@@ -8,8 +8,10 @@ import { PrivateRoute } from './components/PrivateRoute';
 import Cursos from './pages/Cursos/Cursos';
 import Instrutor from './pages/Instrutor/Instrutor';
 import Dashboard from './pages/Dashboard/Dashboard';
-import Modulos from './pages/Modulos/Modulos';
+
 import CadastroModulo from './components/CadastroModulo';
+import { Modulos } from './pages/Modulos/Modulos';
+import Categoria from './pages/Categorias/Categoria';
 
 
 function App() {
@@ -35,8 +37,11 @@ function App() {
           <Route path="relatorios" element={<div>Relatórios</div>} />
           <Route path="configuracoes" element={<div>Configurações</div>} />
           <Route path='instrutores' element={<Instrutor />} />
-          <Route path='modulo' element={<Modulos />} />
+          <Route path='modulos' element={<Modulos/>}/>
           <Route path='cadastromodulo' element={<CadastroModulo/>}/>
+          <Route path='categorias' element={<Categoria/>}/>
+     
+
         </Route>
       </Routes>
     </BrowserRouter>

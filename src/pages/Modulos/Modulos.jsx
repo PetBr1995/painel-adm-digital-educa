@@ -1,58 +1,53 @@
-import { Add, ArrowBack, Delete, Download, Edit, EditAttributesOutlined } from "@mui/icons-material"
-import { Button, Typography, Box, Container, Stack, useScrollTrigger } from "@mui/material"
-import axios from "axios";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"
-import theme from "../../theme/theme";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Box, Button, Typography } from "@mui/material";
+import { Add, ArrowBack } from "@mui/icons-material";
 import CadastroModulo from "../../components/CadastroModulo";
 
-const Modulos = () => {
-
+export const Modulos = () => {
+    const location = useLocation();
     const navigate = useNavigate();
-    const [form, setForm] = useState(false);
-    
+
+    const [form, setForm] = useState(false)
+    const curso = location.state?.curso;
+    console.log(curso)
+    useEffect(() => {
+        if (!curso) {
+            // Redireciona se não vier nada (acesso direto)
+            navigate("/cursos");
+        }
+    }, [curso, navigate]);
+
+    if (!curso) {
+        return <p>Carregando...</p>;
+    }
 
     return (
-        <>
-            <Container>
-                <Box sx={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-                    <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "1rem" }}>
-                        <Button onClick={() => navigate('/cursos')}>
-                            <ArrowBack />
-                        </Button>
-                        <Box>
-                            <Typography variant="h5" sx={{ fontWeight: "600" }}>Gerenciar Modulos</Typography>
-                            <Typography variant="body1" sx={{ fontWeight: "500" }}>Gerencie os módulos e vídeos do curso</Typography>
-                        </Box>
+        <div>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 4 }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: "1rem" }}>
+                    <Button>
+                        <ArrowBack />
+                    </Button>
+                    <Box>
+                        <Typography variant="h5" sx={{ fontWeight: "600" }}>{curso.titulo}</Typography>
+                        <Typography variant="body2">{curso.descricao}</Typography>
                     </Box>
-                    <Button variant="contained" startIcon={<Add/>} sx={{fontWeight:"600"}} onClick={()=>setForm(true)}>Cadastrar Modulo</Button>
                 </Box>
-
-                {form && (
-                    <CadastroModulo setForm={setForm}/>
-                )}           
-
-                <Box sx={{ mt:3, borderRadius:"12px", backgroundColor:theme.palette.secondary.dark, display:"flex", justifyContent:"space-between", alignItems:"center", p:2}}>
-                      <Box>
-                        <Typography variant="h6" sx={{fontWeight:"600", fontSize:"1.1rem"}}>Intrudução ao React</Typography>
-                        <Typography variant="body1" sx={{fontWeight:"300", fontSize:".9rem"}}>Conceitos básicos e configuração</Typography>
-                      </Box>
-                      <Box sx={{display:"flex", justifyContent:"center", alignItems:"center", gap:"1rem"}}>
-                        <Typography variant="body2" sx={{backgroundColor:theme.palette.secondary.light, p:1, borderRadius:"15px"}}>Videos</Typography>
-                        <Button variant="outlined">
-                            <Edit/>
-                        </Button>
-                        <Button variant="outlined">
-                            <Download/>
-                        </Button>
-                        <Button variant="outlined">
-                            <Delete/>
-                        </Button>
-                      </Box>
+                <Box>
+                    <Button onClick={() => setForm(true)} startIcon={<Add />} variant="contained" sx={{ fontWeight: "600" }}>Novo Modulo</Button>
                 </Box>
-            </Container>
-        </>
-    )
-}
+            </Box>
+            {form && <CadastroModulo setForm={setForm} cursoId={curso.id} />}
+            
+                {curso.modulos.map((modulo, index) => (
+                    <Box key={index} sx={{ mt: 4, p:2, borderRadius:"12px" }} border={1} >
+                        <Typography>{modulo.titulo}</Typography>
+                        <Typography>{modulo.subtitulo}</Typography>
+                    </Box>
+                ))}
+        </div>
+    );
+};
 
-export default Modulos
+
