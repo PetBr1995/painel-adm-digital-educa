@@ -22,8 +22,9 @@ const CadastrarCurso = () => {
   const [requisitos, setRequisitos] = useState('');
   const [instrutorID, setInstrutorID] = useState('');
   const [instrutor, setInstrutor] = useState([]);
+  const [categoriaID, setCategoriaID] = useState('');
+  const [categorias, setCategorias] = useState([]);
 
-  // thumbnail
   const [thumbnail, setThumbnail] = useState(null);
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef();
@@ -49,6 +50,7 @@ const CadastrarCurso = () => {
     formData.append("aprendizagem", aprendizagem);
     formData.append("requisitos", requisitos);
     formData.append("instrutorId", instrutorID);
+    formData.append("categoriaId", categoriaID);
     if (thumbnail) {
       formData.append("thumbnail", thumbnail);
     }
@@ -88,8 +90,27 @@ const CadastrarCurso = () => {
       });
   };
 
+  const getCategorias = () => {
+    const token = localStorage.getItem("token");
+
+    axios
+      .get("https://api.digitaleduca.com.vc/categoria/list", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setCategorias(response.data);
+      })
+      .catch((error) => {
+        console.error("Erro ao carregar categorias:", error);
+        alert("Erro ao buscar categorias.");
+      });
+  };
+
   useEffect(() => {
     getInstructor();
+    getCategorias();
   }, []);
 
   const handleSubmit = (e) => {
@@ -112,7 +133,6 @@ const CadastrarCurso = () => {
       </Box>
       <form onSubmit={handleSubmit}>
         <Box sx={{ boxShadow: "0 0 2px rgba(255,255,255,0.2)", borderRadius: "15px", padding: "1rem 2rem", backgroundColor:theme.palette.secondary.dark }}>
-
 
           <Typography variant="h4" sx={{ fontWeight: "500" }}>Informações do curso</Typography>
 
@@ -165,6 +185,7 @@ const CadastrarCurso = () => {
             margin="normal"
             required
           />
+
           <TextField
             label="Descrição"
             value={descricao}
@@ -175,6 +196,7 @@ const CadastrarCurso = () => {
             rows={4}
             required
           />
+
           <FormControl fullWidth margin="normal" required>
             <InputLabel id="input-level-select">Level</InputLabel>
             <Select
@@ -188,6 +210,7 @@ const CadastrarCurso = () => {
               <MenuItem value="Avançado">Avançado</MenuItem>
             </Select>
           </FormControl>
+
           <TextField
             label="Aprendizagem"
             value={aprendizagem}
@@ -198,6 +221,7 @@ const CadastrarCurso = () => {
             rows={5}
             required
           />
+
           <TextField
             label="Requisitos"
             value={requisitos}
@@ -207,6 +231,24 @@ const CadastrarCurso = () => {
             required
           />
 
+          {/* Novo campo: Categoria */}
+          <FormControl fullWidth margin="normal" required>
+            <InputLabel id="select-categoria-label">Categoria</InputLabel>
+            <Select
+              labelId="select-categoria-label"
+              value={categoriaID}
+              onChange={(e) => setCategoriaID(e.target.value)}
+              label="Categoria"
+            >
+              {categorias.map((categoria) => (
+                <MenuItem key={categoria.id} value={categoria.id}>
+                  {categoria.nome}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Campo: Instrutor */}
           <FormControl fullWidth margin="normal" required>
             <InputLabel id="select-instrutor-label">Instrutor</InputLabel>
             <Select
@@ -222,7 +264,8 @@ const CadastrarCurso = () => {
               ))}
             </Select>
           </FormControl>
-          <Box sx={{display:"flex", alignItems:"center", justifyContent:"flexStart", marginTop:"2rem", gap:"1rem"}}>
+
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flexStart", marginTop: "2rem", gap: "1rem" }}>
             <Button variant="outlined" onClick={() => navigate('/cursos')}>Cancelar</Button>
             <Button type="submit" variant="contained" color="primary">
               Cadastrar

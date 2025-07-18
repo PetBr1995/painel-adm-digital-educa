@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import CadastroModulo from './components/CadastroModulo';
 import { Modulos } from './pages/Modulos/Modulos';
 import Categoria from './pages/Categorias/Categoria';
+import UploadVideo from './components/UploadVideo';
 
 
 function App() {
@@ -40,7 +41,7 @@ function App() {
           <Route path='modulos' element={<Modulos/>}/>
           <Route path='cadastromodulo' element={<CadastroModulo/>}/>
           <Route path='categorias' element={<Categoria/>}/>
-     
+          <Route path='upload-video' element={<UploadVideo/>}/>
 
         </Route>
       </Routes>
