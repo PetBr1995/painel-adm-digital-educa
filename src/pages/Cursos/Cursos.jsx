@@ -18,6 +18,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import theme from "../../theme/theme";
 
 const Cursos = () => {
   const navigate = useNavigate();
@@ -99,7 +100,7 @@ const Cursos = () => {
       ) : (
         <Grid container spacing={3}>
           {cursos.map((curso) => (
-            <Grid item xs={12} sm={6} lg={4} key={curso.id}>
+            <Grid item xs={12} sm={6} lg={4} key={curso.id} sx={{width:"350px"}}>
               <Card
                 sx={{
                   borderRadius: 3,
@@ -133,7 +134,7 @@ const Cursos = () => {
                   >
                     {curso.descricao}
                   </Typography>
-
+                  <Typography>{curso.categoria.nome}</Typography>
                   <Stack direction="row" spacing={2} mb={2}>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
                       <PersonIcon fontSize="small" color="action" />
@@ -149,14 +150,16 @@ const Cursos = () => {
 
                   <Stack direction="row" spacing={1} mb={3}>
                     <Chip
-                      label={`${curso.modulos} ${curso.modulos === 1 ? "módulo" : "módulos"}`}
+                      label={`${curso.modulos.length} ${curso.modulos === 1 ? "módulo" : "módulos"}`}
                       size="small"
                       variant="outlined"
+                      sx={{backgroundColor:theme.palette.primary.light, color:theme.palette.secondary.dark}}
                     />
                     <Chip
                       label={`${curso.videos} ${curso.videos === 1 ? "vídeo" : "vídeos"}`}
                       size="small"
                       variant="outlined"
+                      
                     />
                   </Stack>
 
@@ -172,7 +175,7 @@ const Cursos = () => {
                       Editar
                     </Button>
                     <Button
-                      variant="outlined"
+                      variant="contained"
                       startIcon={<SettingsIcon />}
                       fullWidth
                       sx={{ textTransform: "none", borderRadius: 2 }}

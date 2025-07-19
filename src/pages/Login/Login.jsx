@@ -5,6 +5,8 @@ import { useState } from 'react'
 import Button from '@mui/material/Button'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import theme from '../../theme/theme'
+import { ArrowForward } from '@mui/icons-material'
 
 const Login = () => {
 
@@ -13,25 +15,25 @@ const Login = () => {
     const navigate = useNavigate()
     const handleLogar = (e) => {
         e.preventDefault();
-        axios.post('https://api.digitaleduca.com.vc/auth/login',{
-            email:email, 
-            senha:password
-        }).then(function(response){
+        axios.post('https://api.digitaleduca.com.vc/auth/login', {
+            email: email,
+            senha: password
+        }).then(function (response) {
             localStorage.setItem('token', response.data.access_token
             )
             console.log(response)
-navigate('/cadastrarcurso')
-        }).catch(function(error){
+            navigate('/cadastrarcurso')
+        }).catch(function (error) {
             console.log(error)
         })
 
-    
+
     }
 
     return (
         <Box component={'form'} onSubmit={handleLogar} sx={{ width: "100vw", height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
 
-            <Box sx={{ width: 500, height: 500, borderRadius: "15px", display: "flex", flexDirection: "column", justifyContent: "center", border:1 }}>
+            <Box sx={{ backgroundColor: theme.palette.secondary.dark, width: 500, height: 500, borderRadius: "15px", display: "flex", flexDirection: "column", justifyContent: "center", boxShadow: "0 0 2px rgba(255,255,255,0.2)" }}>
                 <Typography variant='h4' sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                     Login
                 </Typography>
@@ -45,6 +47,7 @@ navigate('/cadastrarcurso')
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", margin: '1rem' }}>
                     <TextField
+                        type='password'
                         label="Senha"
                         sx={{ width: "100%" }}
                         required
@@ -52,7 +55,7 @@ navigate('/cadastrarcurso')
                     />
                 </Box>
                 <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                    <Button type='submit' variant='outlined' sx={{ width: "50%", marginTop: "2rem" }}>
+                    <Button type='submit' variant='contained' endIcon={<ArrowForward />} sx={{ fontWeight: "600", width: "50%", marginTop: "2rem" }}>
                         Entrar
                     </Button>
                 </Box>

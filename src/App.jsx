@@ -38,11 +38,10 @@ function App() {
           <Route path="relatorios" element={<div>Relatórios</div>} />
           <Route path="configuracoes" element={<div>Configurações</div>} />
           <Route path='instrutores' element={<Instrutor />} />
-          <Route path='modulos' element={<Modulos/>}/>
-          <Route path='cadastromodulo' element={<CadastroModulo/>}/>
-          <Route path='categorias' element={<Categoria/>}/>
-          <Route path='upload-video' element={<UploadVideo/>}/>
-
+          <Route path='modulos' element={<Modulos />} />
+          <Route path='cadastromodulo' element={<CadastroModulo />} />
+          <Route path='categorias' element={<Categoria />} />
+          <Route path='upload-video' element={<UploadVideo />} />
         </Route>
       </Routes>
     </BrowserRouter>
