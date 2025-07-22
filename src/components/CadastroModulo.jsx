@@ -7,9 +7,11 @@ const CadastroModulo = ({ setForm, onModuleCreated, cursoId }) => {
   const [titulo, setTitulo] = useState('');
   const [subtitulo, setSubtitulo] = useState('');
   const [descricao, setDescricao] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const createModule = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const response = await axios.post(
@@ -18,7 +20,7 @@ const CadastroModulo = ({ setForm, onModuleCreated, cursoId }) => {
           titulo,
           subtitulo,
           descricao,
-          cursoId: Number(cursoId), // Garantir que é um número
+          cursoId: Number(cursoId),
         },
         {
           headers: {
@@ -28,10 +30,16 @@ const CadastroModulo = ({ setForm, onModuleCreated, cursoId }) => {
       );
 
       console.log('Módulo criado com sucesso:', response.data);
-      if (onModuleCreated) onModuleCreated(); // Atualiza a lista de módulos
-      setForm(false); // Fecha o formulário
+
+      if (response.status === 201 || response.data?.id) {
+        if (onModuleCreated) onModuleCreated(); // Atualiza a lista no componente pai
+        setForm(false); // Fecha o formulário
+      }
     } catch (error) {
       console.error('Erro ao criar módulo:', error);
+      alert("Erro ao criar o módulo. Verifique os campos e tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,8 +83,13 @@ const CadastroModulo = ({ setForm, onModuleCreated, cursoId }) => {
           <Button variant="outlined" onClick={() => setForm(false)} sx={{ fontWeight: "700" }}>
             Cancelar
           </Button>
-          <Button variant="contained" type="submit" sx={{ fontWeight: "700" }}>
-            Criar Módulo
+          <Button
+            variant="contained"
+            type="submit"
+            sx={{ fontWeight: "700" }}
+            disabled={loading}
+          >
+            {loading ? "Salvando..." : "Criar Módulo"}
           </Button>
         </Box>
       </form>

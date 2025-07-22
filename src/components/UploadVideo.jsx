@@ -65,62 +65,73 @@ const UploadVideo = () => {
       prev.map((v, i) => (i === index ? { ...v, title: value } : v))
     );
   };
+const handleUpload = async (e) => {
+  e.preventDefault();
 
-  const handleUpload = async (e) => {
-    e.preventDefault();
+  if (!moduloId) {
+    setMensagem("ID do módulo não encontrado.");
+    return;
+  }
 
-    if (!moduloId) {
-      setMensagem("ID do módulo não encontrado.");
-      return;
-    }
+  if (videos.length === 0) {
+    setMensagem("Selecione pelo menos um vídeo.");
+    return;
+  }
 
-    if (videos.length === 0) {
-      setMensagem("Selecione pelo menos um vídeo.");
-      return;
-    }
+  setLoading(true);
+  setMensagem("");
+  setUploadProgress(0);
+  setUploadResults([]);
 
-    setLoading(true);
-    setMensagem("");
-    setUploadProgress(0);
-    setUploadResults([]);
+  try {
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
 
-    try {
-      const token = localStorage.getItem("token");
-      const formData = new FormData();
+    // Adiciona arquivos
+    videos.forEach(({ file }) => {
+      formData.append("videos", file);
+    });
 
-      videos.forEach(({ file, title, duration }) => {
-        formData.append("videos", file);
-        formData.append("titulos", title || file.name);
-        formData.append("duracoes", duration.toFixed(2));
-      });
+    // Adiciona os títulos e durações como múltiplos campos
+    // Isso funciona com NestJS pois ele trata arrays mesmo com chaves repetidas
+    videos.forEach(({ file, title, duration }) => {
+      formData.append("titulos", title || file.name);
+      formData.append("duracoes", duration?.toFixed(2) || "0");
+    });
 
-      const response = await axios.post(
-        `https://api.digitaleduca.com.vc/video/upload?moduloId=${moduloId}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-          onUploadProgress: (progressEvent) => {
-            const percent = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            setUploadProgress(percent);
-          },
-        }
-      );
+    const response = await axios.post(
+      `https://api.digitaleduca.com.vc/video/upload?moduloId=${moduloId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setUploadProgress(percent);
+        },
+      }
+    );
 
-      setMensagem("Upload finalizado.");
-      setUploadResults(response.data);
-      setVideos([]);
-    } catch (err) {
-      console.error("Erro ao enviar vídeos:", err);
-      setMensagem("Erro ao enviar vídeos. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setMensagem("Upload finalizado.");
+    setUploadResults(response.data);
+    setVideos([]);
+  } catch (err) {
+    console.error("Erro ao enviar vídeos:", err);
+    const msg =
+      Array.isArray(err?.response?.data?.message)
+        ? err.response.data.message.join(", ")
+        : err?.response?.data?.message || "Erro desconhecido.";
+    setMensagem(`Erro ao enviar vídeos: ${msg}`);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>

@@ -7,6 +7,8 @@ import {
   Select,
   TextField,
   Typography,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import { ArrowBack, Upload } from "@mui/icons-material";
 import { useEffect, useRef, useState } from "react";
@@ -25,9 +27,15 @@ const CadastrarCurso = () => {
   const [categoriaID, setCategoriaID] = useState('');
   const [categorias, setCategorias] = useState([]);
 
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
   const [thumbnail, setThumbnail] = useState(null);
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef();
+
+  const navigate = useNavigate();
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -64,11 +72,19 @@ const CadastrarCurso = () => {
       })
       .then((response) => {
         console.log("Curso cadastrado com sucesso:", response.data);
-        alert("Curso cadastrado com sucesso!");
+        setSnackbarMessage("Curso cadastrado com sucesso!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+
+        setTimeout(() => {
+          navigate("/cursos");
+        }, 2000);
       })
       .catch((error) => {
         console.error("Erro ao cadastrar curso:", error);
-        alert("Erro ao cadastrar curso. Verifique os dados.");
+        setSnackbarMessage("Erro ao cadastrar curso. Verifique os dados.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
       });
   };
 
@@ -86,7 +102,9 @@ const CadastrarCurso = () => {
       })
       .catch((error) => {
         console.error("Erro ao carregar instrutores:", error);
-        alert("Erro ao buscar instrutores.");
+        setSnackbarMessage("Erro ao buscar instrutores.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
       });
   };
 
@@ -104,7 +122,9 @@ const CadastrarCurso = () => {
       })
       .catch((error) => {
         console.error("Erro ao carregar categorias:", error);
-        alert("Erro ao buscar categorias.");
+        setSnackbarMessage("Erro ao buscar categorias.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
       });
   };
 
@@ -118,8 +138,6 @@ const CadastrarCurso = () => {
     createCurso();
   };
 
-  const navigate = useNavigate();
-
   return (
     <Box sx={{ maxWidth: 600, mx: "auto", mt: 4 }}>
       <Box sx={{ display: "flex", alignItems: "center", paddingBottom: "1rem", gap: "2rem" }}>
@@ -132,7 +150,7 @@ const CadastrarCurso = () => {
         </Box>
       </Box>
       <form onSubmit={handleSubmit}>
-        <Box sx={{ boxShadow: "0 0 2px rgba(255,255,255,0.2)", borderRadius: "15px", padding: "1rem 2rem", backgroundColor:theme.palette.secondary.dark }}>
+        <Box sx={{ boxShadow: "0 0 2px rgba(255,255,255,0.2)", borderRadius: "15px", padding: "1rem 2rem", backgroundColor: theme.palette.secondary.dark }}>
 
           <Typography variant="h4" sx={{ fontWeight: "500" }}>Informações do curso</Typography>
 
@@ -231,7 +249,6 @@ const CadastrarCurso = () => {
             required
           />
 
-          {/* Novo campo: Categoria */}
           <FormControl fullWidth margin="normal" required>
             <InputLabel id="select-categoria-label">Categoria</InputLabel>
             <Select
@@ -248,7 +265,6 @@ const CadastrarCurso = () => {
             </Select>
           </FormControl>
 
-          {/* Campo: Instrutor */}
           <FormControl fullWidth margin="normal" required>
             <InputLabel id="select-instrutor-label">Instrutor</InputLabel>
             <Select
@@ -273,6 +289,22 @@ const CadastrarCurso = () => {
           </Box>
         </Box>
       </form>
+
+      {/* Snackbar de feedback */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

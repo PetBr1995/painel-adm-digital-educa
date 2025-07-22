@@ -10,26 +10,50 @@ import {
   Modal,
   Fade,
 } from "@mui/material";
-import { Add, ArrowBack, Delete, Edit, Movie, PlayCircle, Upload } from "@mui/icons-material";
+import {
+  Add,
+  ArrowBack,
+  Delete,
+  Edit,
+  PlayCircle,
+  Upload,
+} from "@mui/icons-material";
 import CadastroModulo from "../../components/CadastroModulo";
 import theme from "../../theme/theme";
+import axios from "axios"; // <== necessário para chamada da API
 
 export const Modulos = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [formOpen, setFormOpen] = useState(false);
-  const curso = location.state?.curso;
+
+  const cursoState = location.state?.curso;
+  const [curso, setCurso] = useState(cursoState);
   const [loading, setLoading] = useState(true);
+  const [formOpen, setFormOpen] = useState(false);
+
+  const fetchCursoById = async (id) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/api/cursos/${id}`);
+      setCurso(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar curso:", error);
+    }
+  };
 
   useEffect(() => {
-    if (!curso) {
+    if (!cursoState) {
       navigate("/cursos");
     } else {
-      setLoading(false);
+      fetchCursoById(cursoState.id).finally(() => setLoading(false));
     }
-  }, [curso, navigate]);
+  }, [cursoState, navigate]);
 
-  if (loading) {
+  const handleModuloCriado = () => {
+    fetchCursoById(curso.id);
+    setFormOpen(false);
+  };
+
+  if (loading || !curso) {
     return (
       <Box
         sx={{
@@ -68,10 +92,7 @@ export const Modulos = () => {
               <ArrowBack />
             </IconButton>
             <Box>
-              <Typography
-                variant="h4"
-                sx={{ fontWeight: "bold", color: "text.primary" }}
-              >
+              <Typography variant="h4" sx={{ fontWeight: "bold", color: "text.primary" }}>
                 {curso.titulo}
               </Typography>
               <Typography variant="body1" sx={{ color: "text.secondary", mt: 1 }}>
@@ -83,18 +104,13 @@ export const Modulos = () => {
             onClick={() => setFormOpen(true)}
             startIcon={<Add />}
             variant="contained"
-            sx={{
-              textTransform: "none",
-              px: 4,
-              py: 1.5,
-              fontWeight: "medium",
-            }}
+            sx={{ textTransform: "none", px: 4, py: 1.5, fontWeight: "medium" }}
           >
             Novo Módulo
           </Button>
         </Box>
 
-        {/* Modal for CadastroModulo */}
+        {/* Modal de Cadastro de Módulo */}
         <Modal
           open={formOpen}
           onClose={() => setFormOpen(false)}
@@ -116,19 +132,15 @@ export const Modulos = () => {
                 boxShadow: 24,
               }}
             >
-              <Typography
-                id="cadastro-modulo-title"
-                variant="h6"
-                sx={{ fontWeight: "medium", mb: 3 }}
-              >
+              <Typography id="cadastro-modulo-title" variant="h6" sx={{ fontWeight: "medium", mb: 3 }}>
                 Adicionar Novo Módulo
               </Typography>
-              <CadastroModulo setForm={setFormOpen} cursoId={curso.id} />
+              <CadastroModulo setForm={setFormOpen} cursoId={curso.id} onSuccess={handleModuloCriado} />
             </Box>
           </Fade>
         </Modal>
 
-        {/* Modules List */}
+        {/* Lista de Módulos */}
         {curso.modulos.length === 0 ? (
           <Paper
             elevation={3}
@@ -172,25 +184,14 @@ export const Modulos = () => {
                 }}
               >
                 <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: "medium", color: "text.primary" }}
-                  >
+                  <Typography variant="h6" sx={{ fontWeight: "medium", color: "text.primary" }}>
                     {modulo.titulo}
                   </Typography>
                   <Typography variant="body2" sx={{ color: "text.secondary" }}>
                     {modulo.subtitulo}
                   </Typography>
                 </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    flexWrap: "wrap",
-                  }}
-                >
-
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
                   <Typography
                     variant="body2"
                     sx={{
@@ -199,72 +200,48 @@ export const Modulos = () => {
                       py: 0.5,
                       borderRadius: "16px",
                       color: theme.palette.primary.light,
-                      fontWeight: "600"
+                      fontWeight: "600",
                     }}
                   >
                     Videos: {modulo.videos.length}
                   </Typography>
-
-
-                  <IconButton
-                    aria-label="Editar módulo"
-                    sx={{
-                      bgcolor: theme.palette.secondary.light,
-                      "&:hover": { bgcolor: theme.palette.secondary.main },
-                    }}
-                  >
+                  <IconButton sx={{ bgcolor: theme.palette.secondary.light, "&:hover": { bgcolor: theme.palette.secondary.main } }}>
                     <Edit />
                   </IconButton>
                   <IconButton
-                    onClick={() =>
-                      navigate("/upload-video", { state: { moduloId: modulo.id } })
-                    }
-                    aria-label="Upload de vídeo"
-                    sx={{
-                      bgcolor: theme.palette.secondary.light,
-                      "&:hover": { bgcolor: theme.palette.secondary.main },
-                    }}
+                    onClick={() => navigate("/upload-video", { state: { moduloId: modulo.id } })}
+                    sx={{ bgcolor: theme.palette.secondary.light, "&:hover": { bgcolor: theme.palette.secondary.main } }}
                   >
                     <Upload />
                   </IconButton>
-                  <IconButton
-                    aria-label="Excluir módulo"
-                    sx={{
-                      bgcolor: theme.palette.error.light,
-                      "&:hover": { bgcolor: theme.palette.error.main },
-                    }}
-                  >
+                  <IconButton sx={{ bgcolor: theme.palette.error.light, "&:hover": { bgcolor: theme.palette.error.main } }}>
                     <Delete />
                   </IconButton>
                 </Box>
               </Box>
-              {modulo.videos.map((video, index) => (
 
-
-                <Paper elevation={1} sx={{ mt: 2 }}>
+              {/* Vídeos */}
+              {modulo.videos.map((video, idx) => (
+                <Paper key={idx} elevation={1} sx={{ mt: 2 }}>
                   <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "1rem" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                       <PlayCircle sx={{ color: theme.palette.primary.light }} />
-                      <Box>
-                        <Typography variant="h5" sx={{ fontWeight: "600" }}>{video.titulo}</Typography>
-                      </Box>
+                      <Typography variant="h5" sx={{ fontWeight: "600" }}>{video.titulo}</Typography>
                     </Box>
-                    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem" }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: "text.secondary",
-                            fontWeight: "medium",
-                            bgcolor: theme.palette.secondary.dark,
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: "12px",
-                          }}
-                        >
-                          {Math.floor(video.duracao / 60)}h {video.duracao % 60}m
-                        </Typography>
-                      </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "text.secondary",
+                          fontWeight: "medium",
+                          bgcolor: theme.palette.secondary.dark,
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: "12px",
+                        }}
+                      >
+                        {Math.floor(video.duracao / 60)}h {video.duracao % 60}m
+                      </Typography>
                       <Button variant="outlined" sx={{ border: "none" }}>
                         <Delete />
                       </Button>
