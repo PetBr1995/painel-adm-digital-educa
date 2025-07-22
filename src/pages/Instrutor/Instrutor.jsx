@@ -83,8 +83,9 @@ const Instrutor = () => {
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 transition: "all 0.3s ease",
-                border: "1px solid rgba(253,187,48,0.2)",
-                "&:hover": { transform: "scale(1.02)" }
+                border: "1px solid rgba(253,187,48,0)",
+                "&:hover": { transform: "translatex(2px)" },
+                cursor:"pointer"
               }}
             >
               <CardMedia
@@ -113,16 +114,15 @@ const Instrutor = () => {
               <CardContent>
                 <Stack direction="row" spacing={2} justifyContent="center">
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     startIcon={<Edit />}
-                    sx={{ borderRadius: '8px' }}
+                    sx={{ borderRadius: '8px', fontWeight:"600" }}
                     onClick={() => navigate(`/editarinstrutor/${instructor._id}`)}
                   >
                     Editar
                   </Button>
                   <Button
                     variant="outlined"
-                    color="error"
                     startIcon={<Delete />}
                     sx={{ borderRadius: '8px' }}
                     onClick={() => console.log('Excluir:', instructor._id)}

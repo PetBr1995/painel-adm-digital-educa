@@ -10,7 +10,7 @@ import {
   Modal,
   Fade,
 } from "@mui/material";
-import { Add, ArrowBack, Delete, Edit, Upload } from "@mui/icons-material";
+import { Add, ArrowBack, Delete, Edit, Movie, PlayCircle, Upload } from "@mui/icons-material";
 import CadastroModulo from "../../components/CadastroModulo";
 import theme from "../../theme/theme";
 
@@ -190,18 +190,22 @@ export const Modulos = () => {
                     flexWrap: "wrap",
                   }}
                 >
+
                   <Typography
                     variant="body2"
                     sx={{
-                      bgcolor: theme.palette.secondary.light,
+                      bgcolor: theme.palette.secondary.dark,
                       px: 2,
                       py: 0.5,
                       borderRadius: "16px",
-                      color: "text.primary",
+                      color: theme.palette.primary.light,
+                      fontWeight: "600"
                     }}
                   >
-                    Vídeos
+                    Videos: {modulo.videos.length}
                   </Typography>
+
+
                   <IconButton
                     aria-label="Editar módulo"
                     sx={{
@@ -234,6 +238,40 @@ export const Modulos = () => {
                   </IconButton>
                 </Box>
               </Box>
+              {modulo.videos.map((video, index) => (
+
+
+                <Paper elevation={1} sx={{ mt: 2 }}>
+                  <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "1rem" }}>
+                      <PlayCircle sx={{ color: theme.palette.primary.light }} />
+                      <Box>
+                        <Typography variant="h5" sx={{ fontWeight: "600" }}>{video.titulo}</Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem" }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "text.secondary",
+                            fontWeight: "medium",
+                            bgcolor: theme.palette.secondary.dark,
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: "12px",
+                          }}
+                        >
+                          {Math.floor(video.duracao / 60)}h {video.duracao % 60}m
+                        </Typography>
+                      </Box>
+                      <Button variant="outlined" sx={{ border: "none" }}>
+                        <Delete />
+                      </Button>
+                    </Box>
+                  </Box>
+                </Paper>
+              ))}
             </Paper>
           ))
         )}

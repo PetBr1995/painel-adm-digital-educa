@@ -9,6 +9,7 @@ import {
   Stack,
   Chip,
   CircularProgress,
+  Tooltip,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -38,19 +39,19 @@ const Cursos = () => {
       console.log(response.data)
     } catch (error) {
       setError("Erro ao carregar os cursos. Tente novamente mais tarde.");
-      console.error("Erro ao buscar cursos:", error);
     } finally {
       setLoading(false);
     }
   };
 
-
   useEffect(() => {
     getCursos();
+    
   }, []);
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 } }}>
+      {/* Header */}
       <Stack
         direction={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
@@ -63,7 +64,7 @@ const Cursos = () => {
             Cursos
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Gerencie todos os seus cursos
+            Gerencie todos os seus cursos cadastrados
           </Typography>
         </Box>
         <Button
@@ -79,12 +80,12 @@ const Cursos = () => {
             "&:hover": { bgcolor: "primary.dark" },
           }}
           onClick={() => navigate("/cadastrarcurso")}
-          aria-label="Criar novo curso"
         >
           Novo Curso
         </Button>
       </Stack>
 
+      {/* Estados */}
       {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
           <CircularProgress />
@@ -100,11 +101,17 @@ const Cursos = () => {
       ) : (
         <Grid container spacing={3}>
           {cursos.map((curso) => (
-            <Grid item xs={12} sm={6} lg={4} key={curso.id} sx={{width:"350px"}}>
+            <Grid item xs={12} sm={6} md={4} key={curso.id}>
               <Card
+                onClick={() => navigate(`/modulos`, { state: { curso } })}
                 sx={{
                   borderRadius: 3,
                   boxShadow: 3,
+                  height: "100%",
+                  width:"300px",
+                  display: "flex",
+                  flexDirection: "column",
+                  cursor: "pointer",
                   transition: "transform 0.3s, box-shadow 0.3s",
                   "&:hover": {
                     transform: "translateY(-5px)",
@@ -113,28 +120,49 @@ const Cursos = () => {
                 }}
               >
                 <CardMedia
-                  sx={{ height: 160, backgroundColor: "#f0f0f0" }}
-                  image={curso.thumbnail}
-                  title={curso.titulo}
                   component="img"
+                  height="160"
+                  image={"https://api.digitaleduca.com.vc/"+curso.thumbnail || "/placeholder-image.jpg"}
+                  alt={curso.titulo}
+                  sx={{ objectFit: "cover", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
                 />
-                <CardContent sx={{ p: 3 }}>
+                
+                <CardContent sx={{ flexGrow: 1 }}>
                   <Typography
                     variant="h6"
                     fontWeight="bold"
-                    noWrap
-                    sx={{ mb: 1, overflow: "hidden", textOverflow: "ellipsis" }}
+                    sx={{
+                      mb: 1,
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                    }}
                   >
                     {curso.titulo}
                   </Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ mb: 2, height: 40, overflow: "hidden" }}
+                    sx={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      mb: 1.5,
+                      minHeight: "3em",
+                    }}
                   >
                     {curso.descricao}
                   </Typography>
-                  <Typography>{curso.categoria.nome}</Typography>
+                  <Typography
+                    variant="body2"
+                    color="primary.main"
+                    sx={{ mb: 1, fontWeight: 500 }}
+                  >
+                    {curso.categoria.nome}
+                  </Typography>
+
+                  {/* Dados rápidos */}
                   <Stack direction="row" spacing={2} mb={2}>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
                       <PersonIcon fontSize="small" color="action" />
@@ -148,43 +176,54 @@ const Cursos = () => {
                     </Stack>
                   </Stack>
 
-                  <Stack direction="row" spacing={1} mb={3}>
+                  {/* Chips */}
+                  <Stack direction="row" spacing={1} mb={2}>
                     <Chip
-                      label={`${curso.modulos.length} ${curso.modulos === 1 ? "módulo" : "módulos"}`}
+                      label={`${curso.modulos.length} ${curso.modulos.length === 1 ? "módulo" : "módulos"}`}
                       size="small"
                       variant="outlined"
-                      sx={{backgroundColor:theme.palette.primary.light, color:theme.palette.secondary.dark}}
+                      sx={{
+                        bgcolor: theme.palette.primary.light,
+                        color: theme.palette.secondary.dark,
+                      }}
                     />
                     <Chip
                       label={`${curso.videos} ${curso.videos === 1 ? "vídeo" : "vídeos"}`}
                       size="small"
                       variant="outlined"
-                      
                     />
                   </Stack>
 
-                  <Stack direction="row" spacing={2}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<EditIcon />}
-                      fullWidth
-                      sx={{ textTransform: "none", borderRadius: 2 }}
-                      onClick={() => navigate(`/editarcurso/${curso.id}`)}
-                      aria-label={`Editar curso ${curso.titulo}`}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      variant="contained"
-                      startIcon={<SettingsIcon />}
-                      fullWidth
-                      sx={{ textTransform: "none", borderRadius: 2 }}
-                      onClick={() => navigate(`/modulos`, { state: { curso } })}
-                      aria-label={`Gerenciar módulos do curso ${curso.titulo}`}
-                    >
-                      Módulos
-                    </Button>
-
+                  {/* Botões */}
+                  <Stack direction="row" spacing={1}>
+                    <Tooltip title="Editar curso">
+                      <Button
+                        variant="outlined"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/editarcurso/${curso.id}`);
+                        }}
+                        fullWidth
+                        startIcon={<EditIcon />}
+                        sx={{ textTransform: "none", borderRadius: 2 }}
+                      >
+                        Editar
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title="Gerenciar módulos">
+                      <Button
+                        variant="contained"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/modulos`, { state: { curso } });
+                        }}
+                        fullWidth
+                        startIcon={<SettingsIcon />}
+                        sx={{ textTransform: "none", borderRadius: 2 }}
+                      >
+                        Módulos
+                      </Button>
+                    </Tooltip>
                   </Stack>
                 </CardContent>
               </Card>

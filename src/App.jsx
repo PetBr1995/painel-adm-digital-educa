@@ -10,9 +10,11 @@ import Instrutor from './pages/Instrutor/Instrutor';
 import Dashboard from './pages/Dashboard/Dashboard';
 
 import CadastroModulo from './components/CadastroModulo';
-import { Modulos } from './pages/Modulos/Modulos';
+import  { Modulos }  from './pages/Modulos/Modulos';
 import Categoria from './pages/Categorias/Categoria';
 import UploadVideo from './components/UploadVideo';
+import Planos from './pages/Planos/Planos';
+import CadastraPlano from './components/CadastraPlano';
 
 
 function App() {
@@ -42,6 +44,8 @@ function App() {
           <Route path='cadastromodulo' element={<CadastroModulo />} />
           <Route path='categorias' element={<Categoria />} />
           <Route path='upload-video' element={<UploadVideo />} />
+          <Route path='planos' element={<Planos />} />
+          <Route path='cadastrarplano' element={<CadastraPlano/>}/>
         </Route>
       </Routes>
     </BrowserRouter>

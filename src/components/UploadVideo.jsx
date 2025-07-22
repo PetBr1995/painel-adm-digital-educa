@@ -1,66 +1,78 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
 import {
   Box,
-  Button,
   Typography,
+  Button,
+  Paper,
   TextField,
-  InputLabel,
+  LinearProgress,
   CircularProgress,
   Alert,
-  Paper,
-  LinearProgress,
   IconButton,
+  InputLabel,
 } from "@mui/material";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const UploadVideo = () => {
-  const { moduloId } = useParams();
-  const [videos, setVideos] = useState([]); // Now includes title for each video
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [moduloId, setModuloId] = useState(null);
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadResults, setUploadResults] = useState([]);
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (location.state?.moduloId) {
+      setModuloId(location.state.moduloId);
+    } else {
+      setMensagem("ID do módulo não encontrado.");
+    }
+  }, [location.state]);
 
   const handleFileChange = async (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files || []);
     const processed = [];
 
     for (const file of files) {
       const duration = await getVideoDuration(file);
-      processed.push({ file, duration, title: "" }); // Initialize title as empty
+      processed.push({ file, duration, title: "" });
     }
 
     setVideos(processed);
+    setUploadResults([]);
   };
 
   const getVideoDuration = (file) => {
     return new Promise((resolve) => {
       const video = document.createElement("video");
       video.preload = "metadata";
-
       video.onloadedmetadata = () => {
         URL.revokeObjectURL(video.src);
         resolve(video.duration);
       };
-
       video.src = URL.createObjectURL(file);
     });
   };
 
   const handleTitleChange = (index, value) => {
-    setVideos((prevVideos) =>
-      prevVideos.map((video, i) =>
-        i === index ? { ...video, title: value } : video
-      )
+    setVideos((prev) =>
+      prev.map((v, i) => (i === index ? { ...v, title: value } : v))
     );
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
+
+    if (!moduloId) {
+      setMensagem("ID do módulo não encontrado.");
+      return;
+    }
 
     if (videos.length === 0) {
       setMensagem("Selecione pelo menos um vídeo.");
@@ -70,40 +82,40 @@ const UploadVideo = () => {
     setLoading(true);
     setMensagem("");
     setUploadProgress(0);
+    setUploadResults([]);
 
     try {
       const token = localStorage.getItem("token");
+      const formData = new FormData();
 
-      for (const [index, { file, duration, title }] of videos.entries()) {
-        const formData = new FormData();
-        formData.append("titulo", title || file.name); // Use custom title or fallback to file name
-        formData.append("video", file);
-        formData.append("duracao", duration.toFixed(2));
+      videos.forEach(({ file, title, duration }) => {
+        formData.append("videos", file);
+        formData.append("titulos", title || file.name);
+        formData.append("duracoes", duration.toFixed(2));
+      });
 
-        await axios.post(
-          `https://api.digitaleduca.com.vc/video/upload?moduloId=${moduloId}`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
-            },
-            onUploadProgress: (progressEvent) => {
-              const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
-              setUploadProgress(
-                (prev) => (index / videos.length) * 100 + percentCompleted / videos.length
-              );
-            },
-          }
-        );
-      }
+      const response = await axios.post(
+        `https://api.digitaleduca.com.vc/video/upload?moduloId=${moduloId}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+          onUploadProgress: (progressEvent) => {
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setUploadProgress(percent);
+          },
+        }
+      );
 
-      setMensagem("Vídeos enviados com sucesso!");
+      setMensagem("Upload finalizado.");
+      setUploadResults(response.data);
       setVideos([]);
-    } catch (error) {
-      console.error("Erro ao enviar vídeos:", error);
+    } catch (err) {
+      console.error("Erro ao enviar vídeos:", err);
       setMensagem("Erro ao enviar vídeos. Tente novamente.");
     } finally {
       setLoading(false);
@@ -113,7 +125,6 @@ const UploadVideo = () => {
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>
       <Box sx={{ maxWidth: "800px", mx: "auto", px: { xs: 2, sm: 3 } }}>
-        {/* Back Button */}
         <Box sx={{ mb: 3 }}>
           <IconButton
             onClick={() => navigate("/modulos")}
@@ -124,7 +135,6 @@ const UploadVideo = () => {
           </IconButton>
         </Box>
 
-        {/* Header */}
         <Typography
           variant="h4"
           sx={{
@@ -137,7 +147,6 @@ const UploadVideo = () => {
           Upload de Vídeo
         </Typography>
 
-        {/* Form */}
         <Paper
           elevation={3}
           sx={{
@@ -164,11 +173,9 @@ const UploadVideo = () => {
                 multiple
                 onChange={handleFileChange}
                 style={{ display: "none" }}
-                aria-label="Selecionar vídeos"
               />
             </Button>
 
-            {/* Video Titles and Preview */}
             {videos.length > 0 && (
               <Box sx={{ mb: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: "medium", mb: 2 }}>
@@ -192,10 +199,11 @@ const UploadVideo = () => {
                       fullWidth
                       label={`Título do vídeo ${index + 1} (opcional)`}
                       value={title}
-                      onChange={(e) => handleTitleChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleTitleChange(index, e.target.value)
+                      }
                       variant="outlined"
                       size="small"
-                      aria-label={`Título para ${file.name}`}
                     />
                   </Box>
                 ))}
@@ -206,7 +214,7 @@ const UploadVideo = () => {
               <Box sx={{ mb: 3 }}>
                 <LinearProgress variant="determinate" value={uploadProgress} />
                 <Typography variant="caption" color="text.secondary">
-                  Enviando: {Math.round(uploadProgress)}%
+                  Enviando: {uploadProgress}%
                 </Typography>
               </Box>
             )}
@@ -219,18 +227,38 @@ const UploadVideo = () => {
               sx={{ textTransform: "none", px: 4, py: 1.5 }}
               fullWidth
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : "Enviar Vídeo(s)"}
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Enviar Vídeo(s)"
+              )}
             </Button>
           </form>
 
-          {/* Feedback Message */}
           {mensagem && (
             <Alert
-              severity={mensagem.includes("sucesso") ? "success" : "error"}
+              severity={mensagem.includes("sucesso") ? "success" : "info"}
               sx={{ mt: 3 }}
             >
               {mensagem}
             </Alert>
+          )}
+
+          {uploadResults.length > 0 && (
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6">Resultado do upload:</Typography>
+              {uploadResults.map((res, index) => (
+                <Alert
+                  key={index}
+                  severity={res.status === "fulfilled" ? "success" : "error"}
+                  sx={{ mt: 1 }}
+                >
+                  {res.status === "fulfilled"
+                    ? `✅ ${res.video.titulo} enviado com sucesso`
+                    : `❌ Erro no vídeo ${index + 1}: ${res.error}`}
+                </Alert>
+              ))}
+            </Box>
           )}
         </Paper>
       </Box>
