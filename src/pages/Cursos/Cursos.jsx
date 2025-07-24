@@ -36,7 +36,7 @@ const Cursos = () => {
         },
       });
       setCursos(response.data);
-      console.log(response.data)
+      console.log(response.data);
     } catch (error) {
       setError("Erro ao carregar os cursos. Tente novamente mais tarde.");
     } finally {
@@ -46,7 +46,6 @@ const Cursos = () => {
 
   useEffect(() => {
     getCursos();
-    
   }, []);
 
   return (
@@ -100,135 +99,135 @@ const Cursos = () => {
         </Typography>
       ) : (
         <Grid container spacing={3}>
-          {cursos.map((curso) => (
-            <Grid item xs={12} sm={6} md={4} key={curso.id}>
-              <Card
-                onClick={() => navigate(`/modulos`, { state: { curso } })}
-                sx={{
-                  borderRadius: 3,
-                  boxShadow: 3,
-                  height: "100%",
-                  width:"300px",
-                  display: "flex",
-                  flexDirection: "column",
-                  cursor: "pointer",
-                  transition: "transform 0.3s, box-shadow 0.3s",
-                  "&:hover": {
-                    transform: "translateY(-5px)",
-                    boxShadow: 6,
-                  },
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  height="160"
-                  image={"https://api.digitaleduca.com.vc/"+curso.thumbnail || "/placeholder-image.jpg"}
-                  alt={curso.titulo}
-                  sx={{ objectFit: "cover", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-                />
-                
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography
-                    variant="h6"
-                    fontWeight="bold"
-                    sx={{
-                      mb: 1,
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {curso.titulo}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      mb: 1.5,
-                      minHeight: "3em",
-                    }}
-                  >
-                    {curso.descricao}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="primary.main"
-                    sx={{ mb: 1, fontWeight: 500 }}
-                  >
-                    {curso.categoria.nome}
-                  </Typography>
+          {cursos.map((curso) => {
+            const totalVideos = curso.modulos?.reduce(
+              (acc, mod) => acc + (mod.videos?.length || 0),
+              0
+            );
 
-                  {/* Dados rápidos */}
-                  <Stack direction="row" spacing={2} mb={2}>
-                    <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <PersonIcon fontSize="small" color="action" />
-                      <Typography variant="caption">
-                        {curso.alunos} {curso.alunos === 1 ? "aluno" : "alunos"}
-                      </Typography>
-                    </Stack>
-                    <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <AccessTimeIcon fontSize="small" color="action" />
-                      <Typography variant="caption">{curso.duracao}</Typography>
-                    </Stack>
-                  </Stack>
+            return (
+              <Grid item xs={12} sm={6} md={4} key={curso.id}>
+                <Card
+                  onClick={() => navigate(`/modulos`, { state: { curso } })}
+                  sx={{
+                    borderRadius: 3,
+                    boxShadow: 3,
+                    height: "100%",
+                    width: "300px",
+                    display: "flex",
+                    flexDirection: "column",
+                    cursor: "pointer",
+                    transition: "transform 0.3s, box-shadow 0.3s",
+                    "&:hover": {
+                      transform: "translateY(-5px)",
+                      boxShadow: 6,
+                    },
+                  }}
+                >
+                  <CardMedia
+                    component="img"
+                    height="160"
+                    image={
+                      curso.thumbnail
+                        ? "https://api.digitaleduca.com.vc/" + curso.thumbnail
+                        : "/placeholder-image.jpg"
+                    }
+                    alt={curso.titulo}
+                    sx={{ objectFit: "cover", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+                  />
 
-                  {/* Chips */}
-                  <Stack direction="row" spacing={1} mb={2}>
-                    <Chip
-                      label={`${curso.modulos.length} ${curso.modulos.length === 1 ? "módulo" : "módulos"}`}
-                      size="small"
-                      variant="outlined"
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Typography
+                      variant="h6"
+                      fontWeight="bold"
                       sx={{
-                        bgcolor: theme.palette.primary.light,
-                        color: theme.palette.secondary.dark,
+                        mb: 1,
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis",
                       }}
-                    />
-                    <Chip
-                      label={`${curso.videos} ${curso.videos === 1 ? "vídeo" : "vídeos"}`}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </Stack>
+                    >
+                      {curso.titulo}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        mb: 1.5,
+                        minHeight: "3em",
+                      }}
+                    >
+                      {curso.descricao}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="primary.main"
+                      sx={{ mb: 1, fontWeight: 500 }}
+                    >
+                      {curso.categoria?.nome || "Sem categoria"}
+                    </Typography>
 
-                  {/* Botões */}
-                  <Stack direction="row" spacing={1}>
-                    <Tooltip title="Editar curso">
-                      <Button
+                    {/* Chips */}
+                    <Stack direction="row" spacing={1} mb={2}>
+                      <Chip
+                        label={`${curso.modulos?.length || 0} ${
+                          curso.modulos?.length === 1 ? "módulo" : "módulos"
+                        }`}
+                        size="small"
                         variant="outlined"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/editarcurso/${curso.id}`);
+                        sx={{
+                          bgcolor: theme.palette.primary.light,
+                          color: theme.palette.secondary.dark,
                         }}
-                        fullWidth
-                        startIcon={<EditIcon />}
-                        sx={{ textTransform: "none", borderRadius: 2 }}
-                      >
-                        Editar
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="Gerenciar módulos">
-                      <Button
-                        variant="contained"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/modulos`, { state: { curso } });
-                        }}
-                        fullWidth
-                        startIcon={<SettingsIcon />}
-                        sx={{ textTransform: "none", borderRadius: 2 }}
-                      >
-                        Módulos
-                      </Button>
-                    </Tooltip>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+                      />
+
+                      <Chip
+                        label={`${totalVideos} ${totalVideos === 1 ? "vídeo" : "vídeos"}`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </Stack>
+
+                    {/* Botões */}
+                    <Stack direction="row" spacing={1}>
+                      <Tooltip title="Editar curso">
+                        <Button
+                          variant="outlined"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/editarcurso/${curso.id}`);
+                          }}
+                          fullWidth
+                          startIcon={<EditIcon />}
+                          sx={{ textTransform: "none", borderRadius: 2 }}
+                        >
+                          Editar
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title="Gerenciar módulos">
+                        <Button
+                          variant="contained"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/modulos`, { state: { curso } });
+                          }}
+                          fullWidth
+                          startIcon={<SettingsIcon />}
+                          sx={{ textTransform: "none", borderRadius: 2 }}
+                        >
+                          Módulos
+                        </Button>
+                      </Tooltip>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
         </Grid>
       )}
     </Box>

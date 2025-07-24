@@ -55,14 +55,14 @@ const Planos = () => {
 
             <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "2rem", flexWrap: "wrap" }}>
                 {planos.map((plano) => (
-                    <Paper elevation={2} sx={{ borderRadius: "12px", p: 2, mb: 2, mt: 4, width: "350px" }}>
-                        <Box sx={{ textAlign: "center" }}>
-                            <Typography variant='body1'>Plano:</Typography>
+                    <Paper elevation={2} sx={{ borderRadius: "12px", mb: 2, mt: 4, width: "350px" }}>
+                        <Box sx={{ textAlign: "center", mt:1.5, mb:1.5 }}>
                             <Typography variant='h5' sx={{ fontWeight: "600" }}>{plano.nome}</Typography>
                         </Box>
-                        <Box sx={{ textAlign: "center", color: theme.palette.primary.light }}>
-                            <Typography variant='h4'>{plano.preco}</Typography>
+                        <Box sx={{ textAlign: "center",p:1, color: theme.palette.primary.light, backgroundColor:"#000000" }}>
+                            <Typography variant='h3' sx={{ fontWeight: "900", mt: 2, mb: 2 }}>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(plano.preco)}</Typography>
                         </Box>
+                        <Typography variant='body2' sx={{ mt: 2,mb:4, textAlign:"center" }}>{plano.descricao}</Typography>
                         <Box sx={{ mt: 2, mb: 2, display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem" }}>
                             <Button onClick={() => setOpen(true)} variant='outlined' startIcon={<Edit />}>Editar</Button>
                             <Button variant='contained' endIcon={<Delete />}>Excluir</Button>
@@ -73,10 +73,10 @@ const Planos = () => {
             <Dialog
                 open={open}
                 onClose={handleClose}
-               
 
-                >
-                <DialogContent sx={{backgroundColor:theme.palette.secondary.dark}}>
+
+            >
+                <DialogContent sx={{ backgroundColor: theme.palette.secondary.dark }}>
                     <EditarPlano setOpen={setOpen} />
                 </DialogContent>
             </Dialog>

@@ -24,12 +24,14 @@ const UploadVideo = () => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState("");
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadProgresses, setUploadProgresses] = useState([]);
   const [uploadResults, setUploadResults] = useState([]);
+  const [curso, setCurso] = useState(null);
 
   useEffect(() => {
     if (location.state?.moduloId) {
       setModuloId(location.state.moduloId);
+      setCurso(location.state.curso);
     } else {
       setMensagem("ID do módulo não encontrado.");
     }
@@ -45,6 +47,7 @@ const UploadVideo = () => {
     }
 
     setVideos(processed);
+    setUploadProgresses(new Array(processed.length).fill(0));
     setUploadResults([]);
   };
 
@@ -65,80 +68,87 @@ const UploadVideo = () => {
       prev.map((v, i) => (i === index ? { ...v, title: value } : v))
     );
   };
-const handleUpload = async (e) => {
-  e.preventDefault();
 
-  if (!moduloId) {
-    setMensagem("ID do módulo não encontrado.");
-    return;
-  }
+  const handleUpload = async (e) => {
+    e.preventDefault();
 
-  if (videos.length === 0) {
-    setMensagem("Selecione pelo menos um vídeo.");
-    return;
-  }
+    if (!moduloId) {
+      setMensagem("ID do módulo não encontrado.");
+      return;
+    }
 
-  setLoading(true);
-  setMensagem("");
-  setUploadProgress(0);
-  setUploadResults([]);
+    if (videos.length === 0) {
+      setMensagem("Selecione pelo menos um vídeo.");
+      return;
+    }
 
-  try {
+    setLoading(true);
+    setMensagem("");
+    setUploadResults([]);
+
     const token = localStorage.getItem("token");
-    const formData = new FormData();
+    const results = [];
 
-    // Adiciona arquivos
-    videos.forEach(({ file }) => {
+    for (let i = 0; i < videos.length; i++) {
+      const { file, title, duration } = videos[i];
+      const formData = new FormData();
+
       formData.append("videos", file);
-    });
-
-    // Adiciona os títulos e durações como múltiplos campos
-    // Isso funciona com NestJS pois ele trata arrays mesmo com chaves repetidas
-    videos.forEach(({ file, title, duration }) => {
       formData.append("titulos", title || file.name);
       formData.append("duracoes", duration?.toFixed(2) || "0");
-    });
 
-    const response = await axios.post(
-      `https://api.digitaleduca.com.vc/video/upload?moduloId=${moduloId}`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-        onUploadProgress: (progressEvent) => {
-          const percent = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          setUploadProgress(percent);
-        },
+      try {
+        const response = await axios.post(
+          `https://api.digitaleduca.com.vc/video/upload?moduloId=${moduloId}`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+            onUploadProgress: (progressEvent) => {
+              const percent = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total
+              );
+              setUploadProgresses((prev) =>
+                prev.map((p, idx) => (idx === i ? percent : p))
+              );
+            },
+          }
+        );
+
+        results.push({
+          status: "fulfilled",
+          video: response.data,
+          title: title || file.name
+        });
+      } catch (err) {
+        console.error("Erro ao enviar vídeo:", err);
+        const msg =
+          Array.isArray(err?.response?.data?.message)
+            ? err.response.data.message.join(", ")
+            : err?.response?.data?.message || "Erro desconhecido.";
+
+        results.push({
+          status: "rejected",
+          error: msg,
+        });
       }
-    );
+    }
 
-    setMensagem("Upload finalizado.");
-    setUploadResults(response.data);
+    setUploadResults(results);
     setVideos([]);
-  } catch (err) {
-    console.error("Erro ao enviar vídeos:", err);
-    const msg =
-      Array.isArray(err?.response?.data?.message)
-        ? err.response.data.message.join(", ")
-        : err?.response?.data?.message || "Erro desconhecido.";
-    setMensagem(`Erro ao enviar vídeos: ${msg}`);
-  } finally {
     setLoading(false);
-  }
-};
-
-
+  };
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>
       <Box sx={{ maxWidth: "800px", mx: "auto", px: { xs: 2, sm: 3 } }}>
         <Box sx={{ mb: 3 }}>
           <IconButton
-            onClick={() => navigate("/modulos")}
+            onClick={() => navigate("/modulos", { state: { curso } })}
             aria-label="Voltar para módulos"
             color="primary"
           >
@@ -216,17 +226,23 @@ const handleUpload = async (e) => {
                       variant="outlined"
                       size="small"
                     />
+                    {loading && (
+                      <Box sx={{ mt: 2 }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={uploadProgresses[index] || 0}
+                        />
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ mt: 1 }}
+                        >
+                          Enviando: {uploadProgresses[index] || 0}%
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 ))}
-              </Box>
-            )}
-
-            {loading && (
-              <Box sx={{ mb: 3 }}>
-                <LinearProgress variant="determinate" value={uploadProgress} />
-                <Typography variant="caption" color="text.secondary">
-                  Enviando: {uploadProgress}%
-                </Typography>
               </Box>
             )}
 
@@ -265,7 +281,7 @@ const handleUpload = async (e) => {
                   sx={{ mt: 1 }}
                 >
                   {res.status === "fulfilled"
-                    ? `✅ ${res.video.titulo} enviado com sucesso`
+                    ? `✅ ${res.title} enviado com sucesso`
                     : `❌ Erro no vídeo ${index + 1}: ${res.error}`}
                 </Alert>
               ))}

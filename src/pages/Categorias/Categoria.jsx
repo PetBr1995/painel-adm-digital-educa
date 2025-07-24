@@ -1,34 +1,51 @@
-import { Add, ArrowBack, ExpandMore } from "@mui/icons-material";
 import {
   Box,
-  Button,
   Typography,
-  Paper,
-  Modal,
-  Fade,
-  CircularProgress,
-  IconButton,
-  Collapse,
   Grid,
   Card,
   CardContent,
+  CardActions,
   CardMedia,
+  Button,
+  CircularProgress,
   Stack,
+  Modal,
   Chip,
+  Divider,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import CadastrarCategoria from "../../components/CadastrarCategorias";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import CadastrarCategorias from "../../components/CadastrarCategorias";
 import theme from "../../theme/theme";
 
 const Categoria = () => {
-  const navigate = useNavigate();
-  const [formOpen, setFormOpen] = useState(false);
   const [categorias, setCategorias] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [expanded, setExpanded] = useState({}); // Track expanded state for each category
+  const [todosCursos, setTodosCursos] = useState([]);
+  const [cursosPorCategoria, setCursosPorCategoria] = useState([]);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState("todos"); // Inicia selecionado em "todos"
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Ao carregar, pega categorias e cursos
+    getCategorias();
+    getTodosCursos();
+  }, []);
+
+  useEffect(() => {
+    // Sempre que atualizar lista completa de cursos ou categoria selecionada, filtra cursos exibidos
+    if (categoriaSelecionada === "todos") {
+      setCursosPorCategoria(todosCursos);
+    } else {
+      const filtrados = todosCursos.filter(
+        (curso) => curso?.categoria?.id === categoriaSelecionada
+      );
+      setCursosPorCategoria(filtrados);
+    }
+  }, [categoriaSelecionada, todosCursos]);
 
   const getCategorias = async () => {
     try {
@@ -39,351 +56,229 @@ const Categoria = () => {
         },
       });
       setCategorias(response.data);
-      setExpanded(response.data.reduce((acc, cat) => ({ ...acc, [cat.id]: false }), {}));
     } catch (error) {
-      setError("Erro ao carregar as categorias. Tente novamente mais tarde.");
       console.error("Erro ao buscar categorias:", error);
+      alert("Erro ao carregar categorias");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    getCategorias();
-  }, []);
+  const getTodosCursos = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("https://api.digitaleduca.com.vc/curso/cursos", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setTodosCursos(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar cursos:", error);
+      alert("Erro ao carregar cursos");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleToggleExpand = (id) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  const handleCategoriaCadastrada = (novaCategoria) => {
+    setCategorias((prev) => [...prev, novaCategoria]);
+    setShowForm(false);
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: { xs: 3, md: 5 } }}>
-      <Box sx={{ maxWidth: "1200px", mx: "auto", px: { xs: 2, sm: 3 } }}>
-        {/* Header */}
+    <Box p={4}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4">Categorias</Typography>
+        <Button variant="contained" onClick={() => setShowForm(true)}>
+          Cadastrar Categoria
+        </Button>
+      </Stack>
+
+      <Divider sx={{mb:4}}/>
+
+      {loading ? (
+        <Box display="flex" justifyContent="center" my={4}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          <Grid container spacing={2} mb={4}>
+            {/* Botão "Todos" */}
+            <Grid item>
+              <Button
+                variant={categoriaSelecionada === "todos" ? "contained" : "outlined"}
+                onClick={() => setCategoriaSelecionada("todos")}
+                sx={{ border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }}
+              >
+                Todos
+              </Button>
+            </Grid>
+
+            {/* Botões categorias */}
+            {categorias.map((cat) => (
+              <Grid item key={cat.id}>
+                <Button
+                  variant={categoriaSelecionada === cat.id ? "contained" : "outlined"}
+                  onClick={() => setCategoriaSelecionada(cat.id)}
+                  sx={{ border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }}
+                >
+                  {cat.nome}
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
+          <Box>
+            <Divider sx={{mb:4}}/>
+          </Box>
+
+          <Typography variant="h5" gutterBottom>
+            {categoriaSelecionada === "todos"
+              ? "Todos os cursos"
+              : categoriaSelecionada
+              ? `Cursos da Categoria Selecionada`
+              : "Selecione uma categoria para ver os cursos"}
+          </Typography>
+
+          {categoriaSelecionada && cursosPorCategoria.length === 0 ? (
+            <Typography variant="body1" color="textSecondary" mt={2}>
+              Nenhum curso encontrado para esta categoria.
+            </Typography>
+          ) : (
+            <Grid container spacing={3}>
+              {cursosPorCategoria.map((curso) => {
+                const totalVideos = curso.modulos?.reduce(
+                  (acc, mod) => acc + (mod.videos?.length || 0),
+                  0
+                );
+
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={curso.id}>
+                    <Card
+                      sx={{
+                        borderRadius: 3,
+                        boxShadow: 3,
+                        height: "100%",
+                        width: "300px",
+                        display: "flex",
+                        flexDirection: "column",
+                        cursor: "pointer",
+                        transition: "transform 0.3s, box-shadow 0.3s",
+                        "&:hover": {
+                          transform: "translateY(-5px)",
+                          boxShadow: 6,
+                        },
+                      }}
+                      onClick={() => navigate(`/curso/${curso.id}`)}
+                    >
+                      <CardMedia
+                        component="img"
+                        height="160"
+                        image={
+                          curso.thumbnail
+                            ? "https://api.digitaleduca.com.vc/" + curso.thumbnail
+                            : "/placeholder-image.jpg"
+                        }
+                        alt={curso.titulo || curso.nome}
+                        sx={{ objectFit: "cover", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+                      />
+
+                      <CardContent sx={{ flexGrow: 1 }}>
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          sx={{
+                            mb: 1,
+                            overflow: "hidden",
+                            whiteSpace: "nowrap",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {curso.titulo || curso.nome}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            mb: 1.5,
+                            minHeight: "3em",
+                          }}
+                        >
+                          {curso.descricao || curso.descricaoCurta || "Sem descrição"}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="primary.main"
+                          sx={{ mb: 1, fontWeight: 500 }}
+                        >
+                          {curso.categoria?.nome || "Sem categoria"}
+                        </Typography>
+
+                        <Stack direction="row" spacing={1} mb={2}>
+                          <Chip
+                            label={`${curso.modulos?.length || 0} ${
+                              curso.modulos?.length === 1 ? "módulo" : "módulos"
+                            }`}
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              bgcolor: theme.palette.primary.light,
+                              color: theme.palette.secondary.dark,
+                            }}
+                          />
+
+                          <Chip
+                            label={`${totalVideos} ${totalVideos === 1 ? "vídeo" : "vídeos"}`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        </Stack>
+                      </CardContent>
+
+                      <CardActions>
+                        <Button
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/curso/${curso.id}`);
+                          }}
+                        >
+                          Ver detalhes
+                        </Button>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          )}
+        </>
+      )}
+
+      <Modal open={showForm} onClose={() => setShowForm(false)}>
         <Box
           sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            justifyContent: "space-between",
-            alignItems: { xs: "flex-start", sm: "center" },
-            mb: 5,
-            gap: 2,
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+            width: 400,
           }}
         >
-          <Box>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: "bold", color: "text.primary", mb: 1 }}
-            >
-              Categorias
-            </Typography>
-            <Typography variant="body1" sx={{ color: "text.secondary" }}>
-              Gerencie as categorias e seus cursos
-            </Typography>
-          </Box>
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBack />}
-              sx={{
-                textTransform: "none",
-                borderRadius: 2,
-                borderColor: "primary.main",
-                color: "primary.main",
-                "&:hover": { bgcolor: "primary.light" },
-              }}
-              onClick={() => navigate("/cursos")}
-              aria-label="Voltar para cursos"
-            >
-              Voltar
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              sx={{
-                textTransform: "none",
-                px: 4,
-                py: 1.5,
-                fontWeight: "medium",
-                borderRadius: 2,
-                bgcolor: "primary.main",
-                "&:hover": { bgcolor: "primary.dark" },
-              }}
-              onClick={() => setFormOpen(true)}
-              aria-label="Adicionar nova categoria"
-            >
-              Adicionar Categoria
-            </Button>
-          </Box>
+          <CadastrarCategorias
+            setForm={setShowForm}
+            onCategoriaCadastrada={handleCategoriaCadastrada}
+          />
         </Box>
-
-        {/* Modal for CadastrarCategoria */}
-        <Modal
-          open={formOpen}
-          onClose={() => setFormOpen(false)}
-          aria-labelledby="cadastro-categoria-title"
-          closeAfterTransition
-        >
-          <Fade in={formOpen}>
-            <Box
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                maxWidth: "600px",
-                width: "90%",
-                bgcolor: "background.paper",
-                borderRadius: 2,
-                p: { xs: 2, sm: 4 },
-                boxShadow: 24,
-              }}
-            >
-              <Typography
-                id="cadastro-categoria-title"
-                variant="h6"
-                sx={{ fontWeight: "medium", mb: 3 }}
-              >
-                Adicionar Nova Categoria
-              </Typography>
-              <CadastrarCategoria setForm={setFormOpen} />
-            </Box>
-          </Fade>
-        </Modal>
-
-        {/* Loading State */}
-        {loading ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              minHeight: 300,
-            }}
-          >
-            <CircularProgress />
-            <Typography sx={{ ml: 2, color: "text.secondary" }}>
-              Carregando categorias...
-            </Typography>
-          </Box>
-        ) : error ? (
-          <Box
-            sx={{
-              p: 4,
-              borderRadius: 2,
-              bgcolor: "background.paper",
-              textAlign: "center",
-              border: 1,
-              borderColor: "error.light",
-            }}
-          >
-            <Typography sx={{ color: "error.main", mb: 2 }}>
-              {error}
-            </Typography>
-            <Button
-              variant="outlined"
-              onClick={getCategorias}
-              sx={{ textTransform: "none", borderRadius: 2 }}
-              aria-label="Tentar novamente"
-            >
-              Tentar Novamente
-            </Button>
-          </Box>
-        ) : categorias.length === 0 ? (
-          <Box
-            sx={{
-              p: 4,
-              borderRadius: 2,
-              bgcolor: "background.paper",
-              textAlign: "center",
-              border: 1,
-              borderColor: "divider",
-            }}
-          >
-            <Typography sx={{ color: "text.secondary", mb: 2 }}>
-              Nenhuma categoria encontrada. Crie uma nova categoria para começar.
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => setFormOpen(true)}
-              sx={{ textTransform: "none", borderRadius: 2 }}
-              aria-label="Adicionar nova categoria"
-            >
-              Criar Categoria
-            </Button>
-          </Box>
-        ) : (
-          categorias.map((categoria) => (
-            <Paper
-              key={categoria.id}
-              elevation={2}
-              sx={{
-                p: { xs: 2, sm: 3 },
-                mb: 2,
-                borderRadius: 2,
-                bgcolor: "background.paper",
-                border: 1,
-                borderColor: "divider",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: theme.shadows[4],
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
-                  justifyContent: "space-between",
-                  alignItems: { xs: "flex-start", sm: "center" },
-                  gap: 2,
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: "medium", color: "text.primary" }}
-                  >
-                    {categoria.nome}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "text.secondary", mt: 0.5 }}
-                  >
-                    {categoria.cursos?.length || 0}{" "}
-                    {categoria.cursos?.length === 1 ? "curso" : "cursos"}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      textTransform: "none",
-                      borderRadius: 2,
-                      borderColor: "primary.main",
-                      color: "primary.main",
-                      "&:hover": { bgcolor: "primary.light" },
-                    }}
-                    onClick={() => navigate(`/editar-categoria/${categoria.id}`)}
-                    aria-label={`Editar categoria ${categoria.nome}`}
-                  >
-                    Editar
-                  </Button>
-                  <IconButton
-                    onClick={() => handleToggleExpand(categoria.id)}
-                    aria-label={`Expandir cursos da categoria ${categoria.nome}`}
-                    sx={{
-                      transform: expanded[categoria.id]
-                        ? "rotate(180deg)"
-                        : "rotate(0deg)",
-                      transition: "transform 0.2s",
-                    }}
-                  >
-                    <ExpandMore />
-                  </IconButton>
-                </Box>
-              </Box>
-              <Collapse in={expanded[categoria.id]} timeout="auto" unmountOnExit>
-                <Box sx={{ mt: 3 }}>
-                  {categoria.cursos?.length > 0 ? (
-                    <Grid container spacing={2}>
-                      {categoria.cursos.map((curso) => (
-                        <Grid item xs={12} sm={6} key={curso.id}>
-                          <Card
-                            sx={{
-                              borderRadius: 2,
-                              border: 1,
-                              borderColor: "divider",
-                              bgcolor: "background.paper",
-                            }}
-                          >
-                            <CardMedia
-                              sx={{
-                                height: 120,
-                                backgroundColor: "grey.200",
-                                objectFit: "cover",
-                              }}
-                              image={
-                                curso.thumbnail ||
-                                "https://via.placeholder.com/300x120?text=Sem+Imagem"
-                              }
-                              title={curso.titulo}
-                              component="img"
-                            />
-                            <CardContent sx={{ p: 2 }}>
-                              <Typography
-                                variant="body1"
-                                sx={{
-                                  fontWeight: "medium",
-                                  color: "text.primary",
-                                  mb: 1,
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {curso.titulo}
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  color: "text.secondary",
-                                  mb: 2,
-                                  height: 40,
-                                  overflow: "hidden",
-                                  display: "-webkit-box",
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: "vertical",
-                                }}
-                              >
-                                {curso.descricao}
-                              </Typography>
-                              <Stack direction="row" spacing={1}>
-                                <Chip
-                                  label={`${curso.modulos} ${
-                                    curso.modulos === 1 ? "módulo" : "módulos"
-                                  }`}
-                                  size="small"
-                                  variant="outlined"
-                                  sx={{
-                                    bgcolor: theme.palette.secondary.light,
-                                    color: "text.primary",
-                                    borderColor: theme.palette.secondary.main,
-                                  }}
-                                />
-                                <Chip
-                                  label={`${curso.videos} ${
-                                    curso.videos === 1 ? "vídeo" : "vídeos"
-                                  }`}
-                                  size="small"
-                                  variant="outlined"
-                                  sx={{
-                                    bgcolor: theme.palette.secondary.light,
-                                    color: "text.primary",
-                                    borderColor: theme.palette.secondary.main,
-                                  }}
-                                />
-                              </Stack>
-                            </CardContent>
-                          </Card>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  ) : (
-                    <Typography
-                      sx={{ color: "text.secondary", textAlign: "center", py: 2 }}
-                    >
-                      Nenhum curso associado a esta categoria.
-                    </Typography>
-                  )}
-                </Box>
-              </Collapse>
-            </Paper>
-          ))
-        )}
-      </Box>
+      </Modal>
     </Box>
   );
 };

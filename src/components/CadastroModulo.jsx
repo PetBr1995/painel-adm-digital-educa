@@ -3,7 +3,7 @@ import theme from "../theme/theme";
 import { useState } from "react";
 import axios from "axios";
 
-const CadastroModulo = ({ setForm, onModuleCreated, cursoId }) => {
+const CadastroModulo = ({ setForm, onModuleCreated, cursoId,getCurso}) => {
   const [titulo, setTitulo] = useState('');
   const [subtitulo, setSubtitulo] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -30,7 +30,7 @@ const CadastroModulo = ({ setForm, onModuleCreated, cursoId }) => {
       );
 
       console.log('Módulo criado com sucesso:', response.data);
-
+      getCurso(cursoId)
       if (response.status === 201 || response.data?.id) {
         if (onModuleCreated) onModuleCreated(); // Atualiza a lista no componente pai
         setForm(false); // Fecha o formulário

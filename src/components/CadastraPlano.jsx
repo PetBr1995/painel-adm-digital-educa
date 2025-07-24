@@ -144,8 +144,6 @@ const CadastraPlano = ({ setFormPlanos }) => {
                         value={intervalo}
                         onChange={(e) => setIntervalo(e.target.value)}
                     >
-                        <MenuItem value="day">Dia</MenuItem>
-                        <MenuItem value="week">Semana</MenuItem>
                         <MenuItem value="month">Mês</MenuItem>
                         <MenuItem value="year">Ano</MenuItem>
                     </Select>

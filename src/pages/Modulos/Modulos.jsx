@@ -9,6 +9,7 @@ import {
   CircularProgress,
   Modal,
   Fade,
+  Divider,
 } from "@mui/material";
 import {
   Add,
@@ -20,7 +21,7 @@ import {
 } from "@mui/icons-material";
 import CadastroModulo from "../../components/CadastroModulo";
 import theme from "../../theme/theme";
-import axios from "axios"; // <== necessário para chamada da API
+import axios from "axios";
 
 export const Modulos = () => {
   const location = useLocation();
@@ -33,7 +34,7 @@ export const Modulos = () => {
 
   const fetchCursoById = async (id) => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/cursos/${id}`);
+      const response = await axios.get(`https://api.digitaleduca.com.vc/curso/${id}`);
       setCurso(response.data);
     } catch (error) {
       console.error("Erro ao carregar curso:", error);
@@ -88,6 +89,7 @@ export const Modulos = () => {
               onClick={() => navigate("/cursos")}
               aria-label="Voltar para cursos"
               color="primary"
+              
             >
               <ArrowBack />
             </IconButton>
@@ -95,7 +97,7 @@ export const Modulos = () => {
               <Typography variant="h4" sx={{ fontWeight: "bold", color: "text.primary" }}>
                 {curso.titulo}
               </Typography>
-              <Typography variant="body1" sx={{ color: "text.secondary", mt: 1 }}>
+              <Typography variant="body1" sx={{ color: "text.secondary", mt: 1, width:350 }}>
                 {curso.descricao}
               </Typography>
             </Box>
@@ -135,7 +137,12 @@ export const Modulos = () => {
               <Typography id="cadastro-modulo-title" variant="h6" sx={{ fontWeight: "medium", mb: 3 }}>
                 Adicionar Novo Módulo
               </Typography>
-              <CadastroModulo setForm={setFormOpen} cursoId={curso.id} onSuccess={handleModuloCriado} />
+              <CadastroModulo
+                getCurso={fetchCursoById}
+                setForm={setFormOpen}
+                cursoId={curso.id}
+                onSuccess={handleModuloCriado}
+              />
             </Box>
           </Fade>
         </Modal>
@@ -191,6 +198,7 @@ export const Modulos = () => {
                     {modulo.subtitulo}
                   </Typography>
                 </Box>
+
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
                   <Typography
                     variant="body2"
@@ -209,7 +217,14 @@ export const Modulos = () => {
                     <Edit />
                   </IconButton>
                   <IconButton
-                    onClick={() => navigate("/upload-video", { state: { moduloId: modulo.id } })}
+                    onClick={() =>
+                      navigate("/upload-video", {
+                        state: {
+                          moduloId: modulo.id,
+                          curso, // envia o curso junto
+                        },
+                      })
+                    }
                     sx={{ bgcolor: theme.palette.secondary.light, "&:hover": { bgcolor: theme.palette.secondary.main } }}
                   >
                     <Upload />
@@ -219,7 +234,7 @@ export const Modulos = () => {
                   </IconButton>
                 </Box>
               </Box>
-
+              <Divider sx={{ mt: 2, mb: 2 }} />
               {/* Vídeos */}
               {modulo.videos.map((video, idx) => (
                 <Paper key={idx} elevation={1} sx={{ mt: 2 }}>
@@ -240,8 +255,9 @@ export const Modulos = () => {
                           borderRadius: "12px",
                         }}
                       >
-                        {Math.floor(video.duracao / 60)}h {video.duracao % 60}m
+                        {Math.floor(video.duracao / 60)}m {video.duracao % 60}s
                       </Typography>
+
                       <Button variant="outlined" sx={{ border: "none" }}>
                         <Delete />
                       </Button>
@@ -256,3 +272,5 @@ export const Modulos = () => {
     </Box>
   );
 };
+
+export default Modulos;
