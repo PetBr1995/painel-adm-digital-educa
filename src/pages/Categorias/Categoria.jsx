@@ -244,8 +244,10 @@ const Categoria = () => {
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/curso/${curso.id}`);
+                            navigate(`/cursos`);
                           }}
+                          variant="outlined"
+                          sx={{margin:"auto", mb:1, border:"none", boxShadow:"0 0 2px rgba(255,255,255,0.4)"}}
                         >
                           Ver detalhes
                         </Button>
