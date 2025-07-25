@@ -15,23 +15,27 @@ import {
   Toolbar,
   InputBase,
   CardMedia,
-  Alert,
-  Button,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
+import SchoolIcon from "@mui/icons-material/School";
 import { styled, alpha } from "@mui/material/styles";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import SettingsIcon from "@mui/icons-material/Settings";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
-import { AirplaneTicket, Book, Campaign, Category, Dashboard, Notifications, Person, PersonAdd } from "@mui/icons-material";
+import {
+  AirplaneTicket,
+  Book,
+  Category,
+  Dashboard,
+  Notifications,
+  Person,
+  PersonAdd,
+} from "@mui/icons-material";
 import theme from "../../theme/theme";
 
 const drawerWidth = 240;
 const miniDrawerWidth = 60;
 
-// Styled components for search bar
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
@@ -39,10 +43,9 @@ const Search = styled("div")(({ theme }) => ({
   "&:hover": {
     backgroundColor: alpha(theme.palette.common.white, 0.25),
   },
-  marginLeft: 0,
+  marginLeft: theme.spacing(2),
   width: "100%",
   [theme.breakpoints.up("sm")]: {
-    marginLeft: theme.spacing(1),
     width: "auto",
   },
 }));
@@ -64,98 +67,147 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     padding: theme.spacing(1, 1, 1, 0),
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create("width"),
+    width: "100%",
     [theme.breakpoints.up("sm")]: {
-      width: "12ch",
+      width: "20ch",
       "&:focus": {
-        width: "20ch",
+        width: "28ch",
       },
     },
   },
 }));
 
 const Home = () => {
-  const [open, setOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(true);
   const navigate = useNavigate();
+  const muiTheme = useTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down("sm"));
 
-  const toggleDrawer = () => setOpen((prev) => !prev);
+  const handleDrawerToggle = () => {
+    if (isMobile) {
+      setMobileOpen(!mobileOpen);
+    } else {
+      setDrawerOpen((prev) => !prev);
+    }
+  };
 
   const menuItems = [
-    { text: "Dashboard", icon: <Dashboard sx={{ color: theme.palette.primary.main, cursor: "pointer" }} />, path: "/dashboard" },
-    { text: "Cursos", icon: <Book sx={{ color: theme.palette.primary.main }} />, path: "/cursos" },
-    { text: "Instrutores", icon: <PersonAdd sx={{ color: theme.palette.primary.main }} />, path: "/instrutores" },
-    { text: "Categorias", icon: <Category sx={{ color: theme.palette.primary.main }} />, path: "/categorias" },
-    { text: "Planos", icon: <AirplaneTicket sx={{ color: theme.palette.primary.main }} />, path: "/planos" },
+    { text: "Dashboard", icon: <Dashboard sx={{ color:theme.palette.primary.light }} />, path: "/dashboard" },
+    { text: "Cursos", icon: <SchoolIcon sx={{ color:theme.palette.primary.light }} />, path: "/cursos" },
+    { text: "Instrutores", icon: <PersonAdd sx={{ color:theme.palette.primary.light }} />, path: "/instrutores" },
+    { text: "Categorias", icon: <Category sx={{ color:theme.palette.primary.light}} />, path: "/categorias" },
+    { text: "Planos", icon: <AirplaneTicket sx={{ color:theme.palette.primary.light}} />, path: "/planos" },
   ];
+
+  const drawer = (
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Toolbar />
+      <Divider />
+      <List>
+        {menuItems.map((item) => (
+          <ListItem button key={item.text} onClick={() => navigate(item.path)}>
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            {(drawerOpen || isMobile) && <ListItemText primary={item.text} />}
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
 
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
       <AppBar
         position="fixed"
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          backgroundColor: "#1a1a1a", // Cor escura
+        }}
       >
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "1rem" }}>
+        <Toolbar
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            width: "100%",
+            gap: 2,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <IconButton
               color="inherit"
               edge="start"
-              onClick={toggleDrawer}
+              onClick={handleDrawerToggle}
               sx={{
-                transform: open ? "rotate(180deg)" : "rotate(0deg)",
+                mr: 1,
+                transform: drawerOpen && !isMobile ? "rotate(180deg)" : "rotate(0deg)",
                 transition: "transform 0.3s ease-in-out",
               }}
             >
               <MenuIcon />
             </IconButton>
-
-            <CardMedia component="img" height="40" image="https://i.imgur.com/fumQcmz.png" />
-
+            <CardMedia
+              component="img"
+              height="40"
+              image="https://i.imgur.com/fumQcmz.png"
+              alt="Logo"
+              sx={{ maxWidth: "150px" }}
+            />
           </Box>
 
-          <Search>
+          <Search sx={{ flex: 1, maxWidth: "300px" }}>
             <SearchIconWrapper>
               <SearchIcon />
             </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Search…"
-              inputProps={{ "aria-label": "search" }}
-            />
+            <StyledInputBase placeholder="Buscar…" inputProps={{ "aria-label": "search" }} />
           </Search>
-          <Box sx={{display:"flex",}}>
-            <Button>
+
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <IconButton color="inherit">
               <Notifications />
-            </Button>
-            <Button>
+            </IconButton>
+            <IconButton color="inherit">
               <Person />
-            </Button>
+            </IconButton>
           </Box>
         </Toolbar>
       </AppBar>
-      <Drawer
-        variant="permanent"
-        open={open}
-        sx={{
-          width: open ? drawerWidth : miniDrawerWidth,
-          flexShrink: 0,
-          whiteSpace: "nowrap",
-          "& .MuiDrawer-paper": {
-            width: open ? drawerWidth : miniDrawerWidth,
-            transition: "width 0.3s",
-            overflowX: "hidden",
-          },
-        }}
-      >
-        <Toolbar />
-        <Divider />
-        <List>
-          {menuItems.map((item) => (
-            <ListItem button key={item.text} onClick={() => navigate(item.path)}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              {open && <ListItemText primary={item.text} />}
-            </ListItem>
-          ))}
-        </List>
-      </Drawer>
+
+      {isMobile ? (
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            "& .MuiDrawer-paper": {
+              width: drawerWidth,
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+      ) : (
+        <Drawer
+          variant="permanent"
+          open={drawerOpen}
+          sx={{
+            width: drawerOpen ? drawerWidth : miniDrawerWidth,
+            flexShrink: 0,
+            whiteSpace: "nowrap",
+            "& .MuiDrawer-paper": {
+              width: drawerOpen ? drawerWidth : miniDrawerWidth,
+              transition: "width 0.3s",
+              overflowX: "hidden",
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+      )}
+
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         <Outlet />

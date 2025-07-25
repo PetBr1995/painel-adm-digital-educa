@@ -95,7 +95,7 @@ const Categoria = () => {
         </Button>
       </Stack>
 
-      <Divider sx={{mb:4}}/>
+      <Divider sx={{ mb: 4 }} />
 
       {loading ? (
         <Box display="flex" justifyContent="center" my={4}>
@@ -129,15 +129,15 @@ const Categoria = () => {
             ))}
           </Grid>
           <Box>
-            <Divider sx={{mb:4}}/>
+            <Divider sx={{ mb: 4 }} />
           </Box>
 
           <Typography variant="h5" gutterBottom>
             {categoriaSelecionada === "todos"
               ? "Todos os cursos"
               : categoriaSelecionada
-              ? `Cursos da Categoria Selecionada`
-              : "Selecione uma categoria para ver os cursos"}
+                ? `Cursos da Categoria Selecionada`
+                : "Selecione uma categoria para ver os cursos"}
           </Typography>
 
           {categoriaSelecionada && cursosPorCategoria.length === 0 ? (
@@ -220,9 +220,8 @@ const Categoria = () => {
 
                         <Stack direction="row" spacing={1} mb={2}>
                           <Chip
-                            label={`${curso.modulos?.length || 0} ${
-                              curso.modulos?.length === 1 ? "módulo" : "módulos"
-                            }`}
+                            label={`${curso.modulos?.length || 0} ${curso.modulos?.length === 1 ? "módulo" : "módulos"
+                              }`}
                             size="small"
                             variant="outlined"
                             sx={{
@@ -247,7 +246,7 @@ const Categoria = () => {
                             navigate(`/cursos`);
                           }}
                           variant="outlined"
-                          sx={{margin:"auto", mb:1, border:"none", boxShadow:"0 0 2px rgba(255,255,255,0.4)"}}
+                          sx={{ margin: "auto", mb: 1, border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }}
                         >
                           Ver detalhes
                         </Button>
