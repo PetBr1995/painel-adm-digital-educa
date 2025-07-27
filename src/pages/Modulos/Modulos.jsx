@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import Swal from 'sweetalert2'
 import {
   Box,
   Button,
@@ -70,6 +71,26 @@ export const Modulos = () => {
     );
   }
 
+  const deleteAlert = () => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success"
+        });
+      }
+    });
+  }
+
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>
       <Box sx={{ maxWidth: "1000px", mx: "auto", px: { xs: 2, sm: 3 } }}>
@@ -89,7 +110,7 @@ export const Modulos = () => {
               onClick={() => navigate("/cursos")}
               aria-label="Voltar para cursos"
               color="primary"
-              
+
             >
               <ArrowBack />
             </IconButton>
@@ -97,7 +118,7 @@ export const Modulos = () => {
               <Typography variant="h4" sx={{ fontWeight: "bold", color: "text.primary" }}>
                 {curso.titulo}
               </Typography>
-              <Typography variant="body1" sx={{ color: "text.secondary", mt: 1, width:350 }}>
+              <Typography variant="body1" sx={{ color: "text.secondary", mt: 1, width: 350 }}>
                 {curso.descricao}
               </Typography>
             </Box>
@@ -229,7 +250,7 @@ export const Modulos = () => {
                   >
                     <Upload />
                   </IconButton>
-                  <IconButton sx={{ bgcolor: theme.palette.error.light, "&:hover": { bgcolor: theme.palette.error.main } }}>
+                  <IconButton onClick={deleteAlert} sx={{ bgcolor: theme.palette.error.light, "&:hover": { bgcolor: theme.palette.error.main } }}>
                     <Delete />
                   </IconButton>
                 </Box>

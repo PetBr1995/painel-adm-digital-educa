@@ -70,13 +70,15 @@ const Cursos = () => {
           variant="contained"
           startIcon={<AddIcon />}
           sx={{
-            borderRadius: 2,
+            borderRadius: "20px",
             px: 3,
             py: 1,
             fontWeight: "bold",
             textTransform: "none",
             bgcolor: "primary.main",
-            "&:hover": { bgcolor: "primary.dark" },
+            "&:hover": { bgcolor: "primary.dark", color:theme.palette.primary.light, boxShadow:"inset 0 0 5px rgba(0,0,0,0.5)" },
+            boxShadow: "inset 0 0 5px rgba(0,0,0,0.5)",
+            transition:".4s"
           }}
           onClick={() => navigate("/cadastrarcurso")}
         >
@@ -174,9 +176,8 @@ const Cursos = () => {
                     {/* Chips */}
                     <Stack direction="row" spacing={1} mb={2}>
                       <Chip
-                        label={`${curso.modulos?.length || 0} ${
-                          curso.modulos?.length === 1 ? "módulo" : "módulos"
-                        }`}
+                        label={`${curso.modulos?.length || 0} ${curso.modulos?.length === 1 ? "módulo" : "módulos"
+                          }`}
                         size="small"
                         variant="outlined"
                         sx={{
@@ -203,7 +204,7 @@ const Cursos = () => {
                           }}
                           fullWidth
                           startIcon={<EditIcon />}
-                          sx={{ textTransform: "none", borderRadius: 2 }}
+                          sx={{ textTransform: "none", borderRadius:"20px", border:"none", boxShadow:"inset 0 0 6px rgba(255,255,255,0.4)" }}
                         >
                           Editar
                         </Button>
@@ -217,7 +218,7 @@ const Cursos = () => {
                           }}
                           fullWidth
                           startIcon={<SettingsIcon />}
-                          sx={{ textTransform: "none", borderRadius: 2 }}
+                          sx={{  textTransform: "none", borderRadius:"20px" }}
                         >
                           Módulos
                         </Button>

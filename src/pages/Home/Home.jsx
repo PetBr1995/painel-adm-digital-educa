@@ -93,11 +93,11 @@ const Home = () => {
   };
 
   const menuItems = [
-    { text: "Dashboard", icon: <Dashboard sx={{ color:theme.palette.primary.light }} />, path: "/dashboard" },
-    { text: "Cursos", icon: <SchoolIcon sx={{ color:theme.palette.primary.light }} />, path: "/cursos" },
-    { text: "Instrutores", icon: <PersonAdd sx={{ color:theme.palette.primary.light }} />, path: "/instrutores" },
-    { text: "Categorias", icon: <Category sx={{ color:theme.palette.primary.light}} />, path: "/categorias" },
-    { text: "Planos", icon: <AirplaneTicket sx={{ color:theme.palette.primary.light}} />, path: "/planos" },
+    { text: "Dashboard", icon: <Dashboard sx={{ color: theme.palette.primary.light }} />, path: "/dashboard" },
+    { text: "Cursos", icon: <SchoolIcon sx={{ color: theme.palette.primary.light }} />, path: "/cursos" },
+    { text: "Instrutores", icon: <PersonAdd sx={{ color: theme.palette.primary.light }} />, path: "/instrutores" },
+    { text: "Categorias", icon: <Category sx={{ color: theme.palette.primary.light }} />, path: "/categorias" },
+    { text: "Planos", icon: <AirplaneTicket sx={{ color: theme.palette.primary.light }} />, path: "/planos" },
   ];
 
   const drawer = (
@@ -112,8 +112,32 @@ const Home = () => {
           </ListItem>
         ))}
       </List>
+
+      {/* Espaço automático para empurrar o Logoff para o fim */}
+      <Box sx={{ flexGrow: 1 }} />
+
+      {/* Logoff */}
+      <Divider />
+      <List>
+        <ListItem button onClick={() => {
+          // Ação de logoff, exemplo: remover token e redirecionar
+          localStorage.removeItem("token"); // ou o nome usado para autenticação
+          navigate("/");
+        }}>
+          <ListItemIcon>
+            <Person sx={{ color: theme.palette.error.main }} />
+          </ListItemIcon>
+          {(drawerOpen || isMobile) && (
+            <ListItemText
+              primary="Sair"
+              primaryTypographyProps={{ color: "error" }}
+            />
+          )}
+        </ListItem>
+      </List>
     </Box>
   );
+
 
   return (
     <Box sx={{ display: "flex" }}>
