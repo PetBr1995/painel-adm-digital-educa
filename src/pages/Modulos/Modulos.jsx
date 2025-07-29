@@ -75,13 +75,13 @@ export const Modulos = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }
         })
-        .then(() => {
-          Swal.fire("Excluído!", "O módulo foi excluído com sucesso.", "success");
-          fetchCursoById(curso.id);
-        })
-        .catch(() => {
-          Swal.fire("Erro", "Erro ao excluir o módulo.", "error");
-        });
+          .then(() => {
+            Swal.fire("Excluído!", "O módulo foi excluído com sucesso.", "success");
+            fetchCursoById(curso.id);
+          })
+          .catch(() => {
+            Swal.fire("Erro", "Erro ao excluir o módulo.", "error");
+          });
       }
     });
   };
@@ -102,13 +102,13 @@ export const Modulos = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }
         })
-        .then(() => {
-          Swal.fire("Excluído!", "O vídeo foi excluído com sucesso.", "success");
-          fetchCursoById(curso.id);
-        })
-        .catch(() => {
-          Swal.fire("Erro", "Erro ao excluir o vídeo.", "error");
-        });
+          .then(() => {
+            Swal.fire("Excluído!", "O vídeo foi excluído com sucesso.", "success");
+            fetchCursoById(curso.id);
+          })
+          .catch(() => {
+            Swal.fire("Erro", "Erro ao excluir o vídeo.", "error");
+          });
       }
     });
   };
@@ -146,7 +146,7 @@ export const Modulos = () => {
             onClick={() => setFormOpen(true)}
             startIcon={<Add />}
             variant="contained"
-            sx={{ textTransform: "none", px: 4, py: 1.5 }}
+            sx={{ textTransform: "none", px: 4, py: 1.5, borderRadius:"20px", fontWeight:"600" }}
           >
             Novo Módulo
           </Button>
@@ -210,7 +210,13 @@ export const Modulos = () => {
                   >
                     Vídeos: {modulo.videos.length}
                   </Typography>
-                  <IconButton color="primary"><Edit /></IconButton>
+                  <IconButton
+                    color="primary"
+                    onClick={() => navigate("/editar-modulo", { state: { modulo } })}
+                  >
+                    <Edit />
+                  </IconButton>
+
                   <IconButton color="primary" onClick={() => navigate("/upload-video", {
                     state: { moduloId: modulo.id, curso }
                   })}><Upload /></IconButton>

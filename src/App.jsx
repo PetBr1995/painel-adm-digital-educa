@@ -17,6 +17,7 @@ import Planos from './pages/Planos/Planos';
 import CadastraPlano from './components/CadastraPlano';
 import EditarCurso from './pages/EditarCurso/EditarCurso';
 import EditarInstrutor from './components/EditarInstrutor';
+import EditarModulo from './components/EditarModulo';
 
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
           <Route path='cadastrarplano' element={<CadastraPlano/>}/>
           <Route path='/editarcurso/:id' element={<EditarCurso/>}/>
           <Route path="/editarinstrutor/:id" element={<EditarInstrutor />} />
+          <Route path='/editar-modulo' element={<EditarModulo/>}/>
         </Route>
       </Routes>
     </BrowserRouter>

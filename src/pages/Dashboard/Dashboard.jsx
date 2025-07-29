@@ -1,54 +1,110 @@
-import { Box, Grid, Paper, Typography, useScrollTrigger } from "@mui/material";
+import { Box, Grid, Paper, Typography } from "@mui/material";
 import SchoolIcon from "@mui/icons-material/School";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import CategoryIcon from "@mui/icons-material/Category";
 import FlightIcon from "@mui/icons-material/Flight";
-import { data, Link } from "react-router-dom"; // <-- importação do Link
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-
-
 const Dashboard = () => {
-
-  //Listar Cursos
   const [cursos, setCursos] = useState([]);
+  const [instrutores, setInstrutores] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [planos, setPlanos] = useState([]);
+
+  // Listar cursos
   const getCursos = () => {
-    axios.get('https://api.digitaleduca.com.vc/curso/cursos', {
+    axios
+      .get("https://api.digitaleduca.com.vc/curso/cursos", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      .then((response) => {
+        setCursos(response.data);
+      })
+      .catch((error) => {
+        console.log("Erro ao buscar cursos:", error);
+      });
+  };
+
+  // Listar instrutores
+  const getInstrutores = () => {
+    axios.get("https://api.digitaleduca.com.vc/instrutor", {
       headers: {
-        Authorization: ` Bearer ${localStorage.getItem("token")}`
-      }
-    }, {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    }).then((response) => {
+      setInstrutores(response.data);
+      console.log(response)
+    }).catch((error) => {
+      console.log("Erro ao buscar instrutores:", error);
+      console.log(error)
+    });
+  };
+
+  const getCategorias = () => {
+    axios.get('https://api.digitaleduca.com.vc/categoria/list', {
 
     }).then(function (response) {
-      setCursos(response.data)
+      setCategorias(response.data)
       console.log(response)
     }).catch(function (error) {
       console.log(error)
     })
   }
 
+  const getPlanos = () => {
+    axios.get('https://api.digitaleduca.com.vc/planos', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    }).then(function (response) {
+      setPlanos(response.data)
+      console.log(response)
+    }).catch(function (error) {
+      console.log(error)
+    })
+  }
+
+
   useEffect(() => {
     getCursos();
-  }, [])
+    getInstrutores();
+    getCategorias();
+    getPlanos();
+  }, []);
 
-//Final do Listar Cursos
-// Listar Instrutores
-const getInstrutores = () => {
-  axios.get('',{
-
-  },{
-
-  }).then(function(response){
-    console.log(response)
-  })
-}
-// Final do listar Instrutores
   const summaryData = [
-    { label: "Cursos", value: cursos.length, icon: <SchoolIcon fontSize="large" />, color: "#1976d2", link: "/cursos" },
-    { label: "Instrutores", value: 12, icon: <PersonAddIcon fontSize="large" />, color: "#388e3c", link: "/instrutores" },
-    { label: "Categorias", value: 12, icon: <CategoryIcon fontSize="large" />, color: "#f57c00", link: "/categorias" },
-    { label: "Planos", value: 3, icon: <FlightIcon fontSize="large" />, color: "#7b1fa2", link: "/planos" },
+    {
+      label: "Cursos",
+      value: cursos.length,
+      icon: <SchoolIcon fontSize="large" />,
+      color: "#1976d2",
+      link: "/cursos",
+    },
+    {
+      label: "Instrutores",
+      value: instrutores.length,
+      icon: <PersonAddIcon fontSize="large" />,
+      color: "#388e3c",
+      link: "/instrutores",
+    },
+    {
+      label: "Categorias",
+      value: categorias.length,
+      icon: <CategoryIcon fontSize="large" />,
+      color: "#f57c00",
+      link: "/categorias",
+    },
+    {
+      label: "Planos",
+      value: planos.length,
+      icon: <FlightIcon fontSize="large" />,
+      color: "#7b1fa2",
+      link: "/planos",
+    },
   ];
 
   return (
