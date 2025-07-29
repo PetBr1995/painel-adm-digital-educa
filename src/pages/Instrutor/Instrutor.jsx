@@ -1,4 +1,4 @@
-import { Add, Delete, Edit, Home, School } from '@mui/icons-material';
+import { Add, Delete, Edit } from '@mui/icons-material';
 import {
   Box,
   Typography,
@@ -74,7 +74,7 @@ const Instrutor = () => {
         ) : (
           instrutor.map((instructor) => (
             <Card
-              key={instructor._id}
+              key={instructor.id}
               sx={{
                 width: 320,
                 borderRadius: 3,
@@ -84,8 +84,8 @@ const Instrutor = () => {
                 justifyContent: 'space-between',
                 transition: "all 0.3s ease",
                 border: "1px solid rgba(253,187,48,0)",
-                "&:hover": { transform: "translatex(2px)" },
-                cursor:"pointer"
+                "&:hover": { transform: "translateX(2px)" },
+                cursor: "pointer"
               }}
             >
               <CardMedia
@@ -116,8 +116,10 @@ const Instrutor = () => {
                   <Button
                     variant="contained"
                     startIcon={<Edit />}
-                    sx={{ borderRadius: '8px', fontWeight:"600" }}
-                    onClick={() => navigate(`/editarinstrutor/${instructor._id}`)}
+                    sx={{ borderRadius: '8px', fontWeight: "600" }}
+                    onClick={() =>
+                      navigate(`/editarinstrutor/${instructor.id}`, { state: { instrutor: instructor } })
+                    }
                   >
                     Editar
                   </Button>
@@ -125,7 +127,7 @@ const Instrutor = () => {
                     variant="outlined"
                     startIcon={<Delete />}
                     sx={{ borderRadius: '8px' }}
-                    onClick={() => console.log('Excluir:', instructor._id)}
+                    onClick={() => console.log('Excluir:', instructor.id)}
                   >
                     Excluir
                   </Button>

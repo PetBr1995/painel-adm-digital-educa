@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2';
 import {
   Box,
   Button,
@@ -27,15 +27,19 @@ import axios from "axios";
 export const Modulos = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
   const cursoState = location.state?.curso;
+
   const [curso, setCurso] = useState(cursoState);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
 
   const fetchCursoById = async (id) => {
     try {
-      const response = await axios.get(`https://api.digitaleduca.com.vc/curso/${id}`);
+      const response = await axios.get(`https://api.digitaleduca.com.vc/curso/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
       setCurso(response.data);
     } catch (error) {
       console.error("Erro ao carregar curso:", error);
@@ -55,109 +59,114 @@ export const Modulos = () => {
     setFormOpen(false);
   };
 
+  const handleDeleteModulo = async (moduloId) => {
+    Swal.fire({
+      title: "Deseja excluir o módulo?",
+      text: "Essa ação não pode ser desfeita!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sim, excluir"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axios.delete(`https://api.digitaleduca.com.vc/modulo-curso/${moduloId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        })
+        .then(() => {
+          Swal.fire("Excluído!", "O módulo foi excluído com sucesso.", "success");
+          fetchCursoById(curso.id);
+        })
+        .catch(() => {
+          Swal.fire("Erro", "Erro ao excluir o módulo.", "error");
+        });
+      }
+    });
+  };
+
+  const handleDeleteVideo = async (videoId) => {
+    Swal.fire({
+      title: "Deseja excluir o vídeo?",
+      text: "Essa ação não pode ser desfeita!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sim, excluir"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axios.delete(`https://api.digitaleduca.com.vc/video/${videoId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        })
+        .then(() => {
+          Swal.fire("Excluído!", "O vídeo foi excluído com sucesso.", "success");
+          fetchCursoById(curso.id);
+        })
+        .catch(() => {
+          Swal.fire("Erro", "Erro ao excluir o vídeo.", "error");
+        });
+      }
+    });
+  };
+
   if (loading || !curso) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-        }}
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <CircularProgress />
         <Typography sx={{ ml: 2 }}>Carregando...</Typography>
       </Box>
     );
   }
 
-  const deleteAlert = () => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: "Deleted!",
-          text: "Your file has been deleted.",
-          icon: "success"
-        });
-      }
-    });
-  }
-
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>
       <Box sx={{ maxWidth: "1000px", mx: "auto", px: { xs: 2, sm: 3 } }}>
-        {/* Header */}
         <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            alignItems: { xs: "flex-start", sm: "center" },
-            justifyContent: "space-between",
-            mb: 4,
-            gap: 2,
-          }}
+          display="flex"
+          flexDirection={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          mb={4}
+          gap={2}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <IconButton
-              onClick={() => navigate("/cursos")}
-              aria-label="Voltar para cursos"
-              color="primary"
-
-            >
+          <Box display="flex" alignItems="center" gap="1rem">
+            <IconButton onClick={() => navigate("/cursos")} color="primary">
               <ArrowBack />
             </IconButton>
             <Box>
-              <Typography variant="h4" sx={{ fontWeight: "bold", color: "text.primary" }}>
-                {curso.titulo}
-              </Typography>
-              <Typography variant="body1" sx={{ color: "text.secondary", mt: 1, width: 350 }}>
-                {curso.descricao}
-              </Typography>
+              <Typography variant="h4" fontWeight="bold">{curso.titulo}</Typography>
+              <Typography color="text.secondary" mt={1} width={350}>{curso.descricao}</Typography>
             </Box>
           </Box>
           <Button
             onClick={() => setFormOpen(true)}
             startIcon={<Add />}
             variant="contained"
-            sx={{ textTransform: "none", px: 4, py: 1.5, fontWeight: "medium" }}
+            sx={{ textTransform: "none", px: 4, py: 1.5 }}
           >
             Novo Módulo
           </Button>
         </Box>
 
-        {/* Modal de Cadastro de Módulo */}
-        <Modal
-          open={formOpen}
-          onClose={() => setFormOpen(false)}
-          aria-labelledby="cadastro-modulo-title"
-          closeAfterTransition
-        >
+        <Modal open={formOpen} onClose={() => setFormOpen(false)} closeAfterTransition>
           <Fade in={formOpen}>
-            <Box
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                maxWidth: "600px",
-                width: "90%",
-                bgcolor: "background.paper",
-                borderRadius: 2,
-                p: { xs: 2, sm: 4 },
-                boxShadow: 24,
-              }}
-            >
-              <Typography id="cadastro-modulo-title" variant="h6" sx={{ fontWeight: "medium", mb: 3 }}>
-                Adicionar Novo Módulo
-              </Typography>
+            <Box sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "90%",
+              maxWidth: "600px",
+              bgcolor: "background.paper",
+              borderRadius: 2,
+              p: { xs: 2, sm: 4 },
+              boxShadow: 24,
+            }}>
+              <Typography variant="h6" mb={3}>Adicionar Novo Módulo</Typography>
               <CadastroModulo
                 getCurso={fetchCursoById}
                 setForm={setFormOpen}
@@ -168,59 +177,26 @@ export const Modulos = () => {
           </Fade>
         </Modal>
 
-        {/* Lista de Módulos */}
         {curso.modulos.length === 0 ? (
-          <Paper
-            elevation={3}
-            sx={{
-              p: 4,
-              borderRadius: 2,
-              textAlign: "center",
-              bgcolor: "background.paper",
-            }}
-          >
-            <Typography variant="h6" sx={{ color: "text.secondary" }}>
+          <Paper elevation={3} sx={{ p: 4, textAlign: "center" }}>
+            <Typography variant="h6" color="text.secondary">
               Nenhum módulo disponível. Adicione um novo módulo para começar.
             </Typography>
           </Paper>
         ) : (
-          curso.modulos.map((modulo, index) => (
-            <Paper
-              key={index}
-              elevation={2}
-              sx={{
-                p: { xs: 2, sm: 3 },
-                mb: 2,
-                borderRadius: 2,
-                bgcolor: "background.paper",
-                border: 1,
-                borderColor: "divider",
-                transition: "transform 0.2s",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: theme.shadows[4],
-                },
-              }}
-            >
+          curso.modulos.map((modulo) => (
+            <Paper key={modulo.id} sx={{ p: 3, mb: 2 }}>
               <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
-                  justifyContent: "space-between",
-                  alignItems: { xs: "flex-start", sm: "center" },
-                  gap: 2,
-                }}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                flexWrap="wrap"
               >
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: "medium", color: "text.primary" }}>
-                    {modulo.titulo}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    {modulo.subtitulo}
-                  </Typography>
+                  <Typography variant="h6" fontWeight="medium">{modulo.titulo}</Typography>
+                  <Typography variant="body2" color="text.secondary">{modulo.subtitulo}</Typography>
                 </Box>
-
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                <Box display="flex" alignItems="center" gap={1}>
                   <Typography
                     variant="body2"
                     sx={{
@@ -229,59 +205,33 @@ export const Modulos = () => {
                       py: 0.5,
                       borderRadius: "16px",
                       color: theme.palette.primary.light,
-                      fontWeight: "600",
+                      fontWeight: 600,
                     }}
                   >
-                    Videos: {modulo.videos.length}
+                    Vídeos: {modulo.videos.length}
                   </Typography>
-                  <IconButton sx={{ bgcolor: theme.palette.secondary.light, "&:hover": { bgcolor: theme.palette.secondary.main } }}>
-                    <Edit />
-                  </IconButton>
-                  <IconButton
-                    onClick={() =>
-                      navigate("/upload-video", {
-                        state: {
-                          moduloId: modulo.id,
-                          curso, // envia o curso junto
-                        },
-                      })
-                    }
-                    sx={{ bgcolor: theme.palette.secondary.light, "&:hover": { bgcolor: theme.palette.secondary.main } }}
-                  >
-                    <Upload />
-                  </IconButton>
-                  <IconButton onClick={deleteAlert} sx={{ bgcolor: theme.palette.error.light, "&:hover": { bgcolor: theme.palette.error.main } }}>
-                    <Delete />
-                  </IconButton>
+                  <IconButton color="primary"><Edit /></IconButton>
+                  <IconButton color="primary" onClick={() => navigate("/upload-video", {
+                    state: { moduloId: modulo.id, curso }
+                  })}><Upload /></IconButton>
+                  <IconButton color="error" onClick={() => handleDeleteModulo(modulo.id)}><Delete /></IconButton>
                 </Box>
               </Box>
-              <Divider sx={{ mt: 2, mb: 2 }} />
-              {/* Vídeos */}
-              {modulo.videos.map((video, idx) => (
-                <Paper key={idx} elevation={1} sx={{ mt: 2 }}>
-                  <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                      <PlayCircle sx={{ color: theme.palette.primary.light }} />
-                      <Typography variant="h5" sx={{ fontWeight: "600" }}>{video.titulo}</Typography>
+              <Divider sx={{ my: 2 }} />
+              {modulo.videos.map((video) => (
+                <Paper key={video.id} elevation={1} sx={{ mt: 2 }}>
+                  <Box p={2} display="flex" justifyContent="space-between" alignItems="center">
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <PlayCircle sx={{ color: theme.palette.primary.main }} />
+                      <Typography variant="h6">{video.titulo}</Typography>
                     </Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "text.secondary",
-                          fontWeight: "medium",
-                          bgcolor: theme.palette.secondary.dark,
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: "12px",
-                        }}
-                      >
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Typography variant="body2" color="text.secondary">
                         {Math.floor(video.duracao / 60)}m {video.duracao % 60}s
                       </Typography>
-
-                      <Button variant="outlined" sx={{ border: "none" }}>
+                      <IconButton onClick={() => handleDeleteVideo(video.id)} color="error">
                         <Delete />
-                      </Button>
+                      </IconButton>
                     </Box>
                   </Box>
                 </Paper>

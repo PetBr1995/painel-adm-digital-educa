@@ -35,6 +35,7 @@ const Login = () => {
                 icon: "error",
                 title: "Credenciais inválidas",
                 text: "Email ou senha inválidos",
+                footer:"Tente novamente..."
             });
 
         })
