@@ -32,6 +32,7 @@ import {
   PersonAdd,
 } from "@mui/icons-material";
 import theme from "../../theme/theme";
+import Swal from "sweetalert2";
 
 const drawerWidth = 240;
 const miniDrawerWidth = 60;
@@ -104,7 +105,7 @@ const Home = () => {
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Toolbar />
       <Divider />
-      <List>
+      <List sx={{ cursor: "pointer" }}>
         {menuItems.map((item) => (
           <ListItem button key={item.text} onClick={() => navigate(item.path)}>
             <ListItemIcon>{item.icon}</ListItemIcon>
@@ -118,12 +119,27 @@ const Home = () => {
 
       {/* Logoff */}
       <Divider />
-      <List>
-        <ListItem button onClick={() => {
-          // Ação de logoff, exemplo: remover token e redirecionar
-          localStorage.removeItem("token"); // ou o nome usado para autenticação
-          navigate("/");
-        }}>
+      <List sx={{ cursor: "pointer" }}>
+        <ListItem
+          button
+          onClick={() => {
+            Swal.fire({
+              title: "Tem certeza que deseja sair?",
+              text: "Você será deslogado do sistema.",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#d33",
+              cancelButtonColor: "#3085d6",
+              confirmButtonText: "Sim, sair",
+              cancelButtonText: "Cancelar",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                localStorage.removeItem("token"); // ou outro nome do seu token
+                navigate("/");
+              }
+            });
+          }}
+        >
           <ListItemIcon>
             <Person sx={{ color: theme.palette.error.main }} />
           </ListItemIcon>

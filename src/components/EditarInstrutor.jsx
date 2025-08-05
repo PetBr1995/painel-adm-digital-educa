@@ -147,8 +147,8 @@ const EditarInstrutor = () => {
       />
 
       <Box mt={4} display="flex" justifyContent="flex-end" gap={2}>
-        <Button variant="outlined" onClick={() => navigate("/instrutores")}>Cancelar</Button>
-        <Button variant="contained" onClick={handleUpdate}>Salvar</Button>
+        <Button sx={{borderRadius:"20px", fontWeight:"600", border:"none", boxShadow:"0 0 2px rgba(255,255,255,0.4)"}} variant="outlined" onClick={() => navigate("/instrutores")}>Cancelar</Button>
+        <Button sx={{borderRadius:"20px", fontWeight:"600"}} variant="contained" onClick={handleUpdate}>Salvar</Button>
       </Box>
     </Paper>
   );

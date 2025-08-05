@@ -98,20 +98,20 @@ const CadastroInstrutor = () => {
 
             {/* Formação */}
             <TextField
-            label="Formação"
-            value={formacao}
-            onChange={(e) => setFormacao(e.target.value)}
-            required
+              label="Formação"
+              value={formacao}
+              onChange={(e) => setFormacao(e.target.value)}
+              required
             />
 
             {/* Sobre */}
             <TextField
-            label="Sobre"
-            value={sobre}
-            onChange={(e) => setSobre(e.target.value)}
-            required
-            multiline
-            rows={4}
+              label="Sobre"
+              value={sobre}
+              onChange={(e) => setSobre(e.target.value)}
+              required
+              multiline
+              rows={4}
             />
 
             {/* Botão */}
@@ -122,10 +122,11 @@ const CadastroInstrutor = () => {
                 type="submit"
                 disabled={isLoading}
                 sx={{
+                  borderRadius:"20px",
                   mt: 0,
                   backgroundColor: "#FDBB30",
                   color: "#000",
-                  fontWeight: "bold",
+                  fontWeight: "600",
                   "&:hover": {
                     backgroundColor: "#f4a000",
                   },
@@ -134,6 +135,7 @@ const CadastroInstrutor = () => {
                 {isLoading ? "Cadastrando..." : "Cadastrar"}
               </Button>
               <Button
+                sx={{ borderRadius: "20px", border:"none", boxShadow:"0 0 2px rgba(255,255,255,0.4)" }}
                 variant="outlined"
                 disabled={isLoading}
                 onClick={() => navigate('/instrutores')}

@@ -51,7 +51,7 @@ const Instrutor = () => {
           endIcon={<Add />}
           onClick={() => navigate('/cadastrarinstrutor')}
           variant='contained'
-          sx={{ borderRadius: '12px', backgroundColor: '#FDBB30', color: '#000', fontWeight: 600, "&:hover": { backgroundColor: '#f4a000' } }}
+          sx={{ borderRadius: '20px', backgroundColor: '#FDBB30', color: '#000', fontWeight: 600, "&:hover": { backgroundColor: '#f4a000' } }}
         >
           Novo Instrutor
         </Button>
@@ -116,7 +116,7 @@ const Instrutor = () => {
                   <Button
                     variant="contained"
                     startIcon={<Edit />}
-                    sx={{ borderRadius: '8px', fontWeight: "600" }}
+                    sx={{ borderRadius: '20px', fontWeight: "600" }}
                     onClick={() =>
                       navigate(`/editarinstrutor/${instructor.id}`, { state: { instrutor: instructor } })
                     }
@@ -126,7 +126,7 @@ const Instrutor = () => {
                   <Button
                     variant="outlined"
                     startIcon={<Delete />}
-                    sx={{ borderRadius: '8px' }}
+                    sx={{ borderRadius: '20px', border:"none", boxShadow:"0 0 2px rgba(255,255,255,0.4)" }}
                     onClick={() => console.log('Excluir:', instructor.id)}
                   >
                     Excluir

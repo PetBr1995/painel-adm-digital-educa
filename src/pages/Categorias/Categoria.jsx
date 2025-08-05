@@ -90,7 +90,7 @@ const Categoria = () => {
     <Box p={4}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Categorias</Typography>
-        <Button variant="contained" onClick={() => setShowForm(true)}>
+        <Button variant="contained" sx={{ borderRadius: "20px", fontWeight: "600" }} onClick={() => setShowForm(true)}>
           Cadastrar Categoria
         </Button>
       </Stack>
@@ -109,7 +109,7 @@ const Categoria = () => {
               <Button
                 variant={categoriaSelecionada === "todos" ? "contained" : "outlined"}
                 onClick={() => setCategoriaSelecionada("todos")}
-                sx={{ border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }}
+                sx={{ fontWeight: "600", borderRadius: "20px", border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }}
               >
                 Todos
               </Button>
@@ -121,7 +121,7 @@ const Categoria = () => {
                 <Button
                   variant={categoriaSelecionada === cat.id ? "contained" : "outlined"}
                   onClick={() => setCategoriaSelecionada(cat.id)}
-                  sx={{ border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }}
+                  sx={{ borderRadius: "20px", fontWeight: "600", border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }}
                 >
                   {cat.nome}
                 </Button>
@@ -246,7 +246,7 @@ const Categoria = () => {
                             navigate(`/cursos`);
                           }}
                           variant="outlined"
-                          sx={{ margin: "auto", mb: 1, border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }}
+                          sx={{ fontWeight: "600", borderRadius: "20px", margin: "auto", mb: 1, border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }}
                         >
                           Ver detalhes
                         </Button>

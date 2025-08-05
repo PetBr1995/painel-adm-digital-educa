@@ -259,6 +259,7 @@ const EditarCurso = () => {
                                     variant="outlined"
                                     startIcon={<Upload />}
                                     onClick={handleClick}
+                                    sx={{borderRadius:"20px", fontWeight:"600", border:"none", boxShadow:"0 0 2px rgba(255,255,255,0.4)"}}
                                 >
                                     Alterar Imagem
                                 </Button>
@@ -353,7 +354,7 @@ const EditarCurso = () => {
                     </FormControl>
                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "2rem" }}>
                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flexStart", gap: "1rem" }}>
-                            <Button variant="outlined" sx={{ fontWeight: "600", borderRadius: "20px" }} onClick={() => navigate('/cursos')}>Cancelar</Button>
+                            <Button variant="outlined" sx={{ boxShadow:"0 0 2px rgba(255,255,255,0.4)",border:"none",fontWeight: "600", borderRadius: "20px" }} onClick={() => navigate('/cursos')}>Cancelar</Button>
                             <Button type="submit" variant="contained" color="primary" sx={{ borderRadius: "20px", fontWeight: "600" }}>
                                 Salvar Alterações
                             </Button>
