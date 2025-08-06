@@ -24,15 +24,16 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import {
   AirplaneTicket,
-  Book,
   Category,
   Dashboard,
   Notifications,
   Person,
   PersonAdd,
+  PlayArrow,
 } from "@mui/icons-material";
 import theme from "../../theme/theme";
 import Swal from "sweetalert2";
+import axios from "axios";
 
 const drawerWidth = 240;
 const miniDrawerWidth = 60;
@@ -81,6 +82,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 const Home = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down("sm"));
@@ -97,9 +99,50 @@ const Home = () => {
     { text: "Dashboard", icon: <Dashboard sx={{ color: theme.palette.primary.light }} />, path: "/dashboard" },
     { text: "Cursos", icon: <SchoolIcon sx={{ color: theme.palette.primary.light }} />, path: "/cursos" },
     { text: "Instrutores", icon: <PersonAdd sx={{ color: theme.palette.primary.light }} />, path: "/instrutores" },
-    { text: "Categorias", icon: <Category sx={{ color: theme.palette.primary.light }} />, path: "/categorias" },
     { text: "Planos", icon: <AirplaneTicket sx={{ color: theme.palette.primary.light }} />, path: "/planos" },
+    { text: "Podcasts", icon: <PlayArrow sx={{ color: theme.palette.primary.light }} />, path:"/podcast" }
   ];
+
+  // Handle search input change
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
+  // Handle search submission
+  const handleSearchSubmit = async (event) => {
+    if (event.key === "Enter" && searchQuery.trim()) {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // Query all relevant endpoints
+        const [cursosRes, instrutoresRes, categoriasRes, planosRes] = await Promise.all([
+          axios.get(`https://api.digitaleduca.com.vc/curso/cursos?search=${encodeURIComponent(searchQuery)}`, { headers }),
+          axios.get(`https://api.digitaleduca.com.vc/instrutor?search=${encodeURIComponent(searchQuery)}`, { headers }),
+          axios.get(`https://api.digitaleduca.com.vc/categoria/list?search=${encodeURIComponent(searchQuery)}`),
+          axios.get(`https://api.digitaleduca.com.vc/planos?search=${encodeURIComponent(searchQuery)}`, { headers }),
+        ]);
+
+        const results = {
+          cursos: cursosRes.data || [],
+          instrutores: instrutoresRes.data || [],
+          categorias: categoriasRes.data || [],
+          planos: planosRes.data || [],
+        };
+
+        // Navigate to search results page with query and results
+        navigate(`/search?query=${encodeURIComponent(searchQuery)}`, { state: { results } });
+        setSearchQuery("");
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Erro na busca",
+          text: "Não foi possível realizar a busca. Tente novamente.",
+        });
+        console.error("Search error:", error);
+      }
+    }
+  };
 
   const drawer = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -113,11 +156,7 @@ const Home = () => {
           </ListItem>
         ))}
       </List>
-
-      {/* Espaço automático para empurrar o Logoff para o fim */}
       <Box sx={{ flexGrow: 1 }} />
-
-      {/* Logoff */}
       <Divider />
       <List sx={{ cursor: "pointer" }}>
         <ListItem
@@ -134,7 +173,7 @@ const Home = () => {
               cancelButtonText: "Cancelar",
             }).then((result) => {
               if (result.isConfirmed) {
-                localStorage.removeItem("token"); // ou outro nome do seu token
+                localStorage.removeItem("token");
                 navigate("/");
               }
             });
@@ -154,7 +193,6 @@ const Home = () => {
     </Box>
   );
 
-
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
@@ -162,7 +200,7 @@ const Home = () => {
         position="fixed"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: "#1a1a1a", // Cor escura
+          backgroundColor: theme.palette.primary.dark,
         }}
       >
         <Toolbar
@@ -201,7 +239,13 @@ const Home = () => {
             <SearchIconWrapper>
               <SearchIcon />
             </SearchIconWrapper>
-            <StyledInputBase placeholder="Buscar…" inputProps={{ "aria-label": "search" }} />
+            <StyledInputBase
+              placeholder="Buscar…"
+              inputProps={{ "aria-label": "search" }}
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onKeyDown={handleSearchSubmit}
+            />
           </Search>
 
           <Box sx={{ display: "flex", gap: 1 }}>

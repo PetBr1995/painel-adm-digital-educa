@@ -64,7 +64,7 @@ const CadastrarCategorias = ({ setForm, onCategoriaCadastrada }) => {
         onChange={(e) => setNome(e.target.value)}
         disabled={loading}
       />
-      <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: "1rem" }}>
+      <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: "1rem",  }}>
         <Button onClick={() => setForm(false)} variant="outlined" disabled={loading}>
           Cancelar
         </Button>

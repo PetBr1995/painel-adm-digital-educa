@@ -10,6 +10,8 @@ import {
   Chip,
   CircularProgress,
   Tooltip,
+  Divider,
+  Modal,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -20,33 +22,70 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import theme from "../../theme/theme";
+import CadastrarCategorias from "../../components/CadastrarCategorias";
 
 const Cursos = () => {
   const navigate = useNavigate();
   const [cursos, setCursos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [cursosPorCategoria, setCursosPorCategoria] = useState([]);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState("todos");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   const getCursos = async () => {
     try {
-      setLoading(true);
       const response = await axios.get("https://api.digitaleduca.com.vc/curso/cursos", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
       setCursos(response.data);
-      console.log(response.data);
+      setCursosPorCategoria(response.data); // Initially show all courses
     } catch (error) {
       setError("Erro ao carregar os cursos. Tente novamente mais tarde.");
-    } finally {
-      setLoading(false);
     }
   };
 
+  const getCategorias = async () => {
+    try {
+      const response = await axios.get("https://api.digitaleduca.com.vc/categoria/list", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setCategorias(response.data);
+    } catch (error) {
+      setError("Erro ao carregar as categorias. Tente novamente mais tarde.");
+    }
+  };
+
+  const handleCategoriaCadastrada = (novaCategoria) => {
+    setCategorias((prev) => [...prev, novaCategoria]);
+    setShowForm(false);
+  };
+
   useEffect(() => {
-    getCursos();
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([getCursos(), getCategorias()]);
+      setLoading(false);
+    };
+    fetchData();
   }, []);
+
+  useEffect(() => {
+    // Filter courses based on selected category
+    if (categoriaSelecionada === "todos") {
+      setCursosPorCategoria(cursos);
+    } else {
+      const filtrados = cursos.filter(
+        (curso) => curso?.categoria?.id === categoriaSelecionada
+      );
+      setCursosPorCategoria(filtrados);
+    }
+  }, [categoriaSelecionada, cursos]);
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 } }}>
@@ -76,9 +115,9 @@ const Cursos = () => {
             fontWeight: "bold",
             textTransform: "none",
             bgcolor: "primary.main",
-            "&:hover": { bgcolor: "primary.dark", color:theme.palette.primary.light, boxShadow:"inset 0 0 5px rgba(0,0,0,0.5)" },
+            "&:hover": { bgcolor: "primary.dark", color: theme.palette.primary.light, boxShadow: "inset 0 0 5px rgba(0,0,0,0.5)" },
             boxShadow: "inset 0 0 5px rgba(0,0,0,0.5)",
-            transition:".4s"
+            transition: ".4s",
           }}
           onClick={() => navigate("/cadastrarcurso")}
         >
@@ -86,7 +125,55 @@ const Cursos = () => {
         </Button>
       </Stack>
 
-      {/* Estados */}
+      {/* Category Filter */}
+      <Divider sx={{ mb: 4 }} />
+      <Box sx={{ flexWrap:"wrap",display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+
+          <Button
+            variant="contained"
+            sx={{ borderRadius: "20px", fontWeight: "600" }}
+            onClick={() => setShowForm(true)}
+          >
+            Cadastrar Categoria
+          </Button>
+        </Stack>
+        <Grid container spacing={2} mb={3}>
+          <Grid item>
+            <Button
+              variant={categoriaSelecionada === "todos" ? "contained" : "outlined"}
+              onClick={() => setCategoriaSelecionada("todos")}
+              sx={{
+                fontWeight: "600",
+                borderRadius: "20px",
+                border: "none",
+                boxShadow: "0 0 2px rgba(255,255,255,0.4)",
+              }}
+            >
+              Todos
+            </Button>
+          </Grid>
+          {categorias.map((cat) => (
+            <Grid item key={cat.id}>
+              <Button
+                variant={categoriaSelecionada === cat.id ? "contained" : "outlined"}
+                onClick={() => setCategoriaSelecionada(cat.id)}
+                sx={{
+                  fontWeight: "600",
+                  borderRadius: "20px",
+                  border: "none",
+                  boxShadow: "0 0 2px rgba(255,255,255,0.4)",
+                }}
+              >
+                {cat.nome}
+              </Button>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+      <Divider sx={{ mb: 4 }} />
+
+      {/* States */}
       {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
           <CircularProgress />
@@ -95,13 +182,13 @@ const Cursos = () => {
         <Typography color="error" align="center">
           {error}
         </Typography>
-      ) : cursos.length === 0 ? (
+      ) : cursosPorCategoria.length === 0 ? (
         <Typography align="center" color="text.secondary">
-          Nenhum curso encontrado.
+          Nenhum curso encontrado para {categoriaSelecionada === "todos" ? "todas as categorias" : "esta categoria"}.
         </Typography>
       ) : (
         <Grid container spacing={3}>
-          {cursos.map((curso) => {
+          {cursosPorCategoria.map((curso) => {
             const totalVideos = curso.modulos?.reduce(
               (acc, mod) => acc + (mod.videos?.length || 0),
               0
@@ -137,7 +224,6 @@ const Cursos = () => {
                     alt={curso.titulo}
                     sx={{ objectFit: "cover", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
                   />
-
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Typography
                       variant="h6"
@@ -172,12 +258,9 @@ const Cursos = () => {
                     >
                       {curso.categoria?.nome || "Sem categoria"}
                     </Typography>
-
-                    {/* Chips */}
                     <Stack direction="row" spacing={1} mb={2}>
                       <Chip
-                        label={`${curso.modulos?.length || 0} ${curso.modulos?.length === 1 ? "módulo" : "módulos"
-                          }`}
+                        label={`${curso.modulos?.length || 0} ${curso.modulos?.length === 1 ? "módulo" : "módulos"}`}
                         size="small"
                         variant="outlined"
                         sx={{
@@ -185,15 +268,12 @@ const Cursos = () => {
                           color: theme.palette.secondary.dark,
                         }}
                       />
-
                       <Chip
                         label={`${totalVideos} ${totalVideos === 1 ? "vídeo" : "vídeos"}`}
                         size="small"
                         variant="outlined"
                       />
                     </Stack>
-
-                    {/* Botões */}
                     <Stack direction="row" spacing={1}>
                       <Tooltip title="Editar curso">
                         <Button
@@ -204,7 +284,12 @@ const Cursos = () => {
                           }}
                           fullWidth
                           startIcon={<EditIcon />}
-                          sx={{ textTransform: "none", borderRadius:"20px", border:"none", boxShadow:"inset 0 0 6px rgba(255,255,255,0.4)" }}
+                          sx={{
+                            textTransform: "none",
+                            borderRadius: "20px",
+                            border: "none",
+                            boxShadow: "0 0 6px rgba(255,255,255,0.4)",
+                          }}
                         >
                           Editar
                         </Button>
@@ -218,7 +303,7 @@ const Cursos = () => {
                           }}
                           fullWidth
                           startIcon={<SettingsIcon />}
-                          sx={{  textTransform: "none", borderRadius:"20px" }}
+                          sx={{ textTransform: "none", borderRadius: "20px" }}
                         >
                           Módulos
                         </Button>
@@ -231,6 +316,27 @@ const Cursos = () => {
           })}
         </Grid>
       )}
+
+      <Modal open={showForm} onClose={() => setShowForm(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "transparent",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+            width: 400,
+          }}
+        >
+          <CadastrarCategorias
+            setForm={setShowForm}
+            onCategoriaCadastrada={handleCategoriaCadastrada}
+          />
+        </Box>
+      </Modal>
     </Box>
   );
 };

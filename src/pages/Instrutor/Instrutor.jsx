@@ -123,6 +123,7 @@ const Instrutor = () => {
                   >
                     Editar
                   </Button>
+                  {/* 
                   <Button
                     variant="outlined"
                     startIcon={<Delete />}
@@ -131,6 +132,7 @@ const Instrutor = () => {
                   >
                     Excluir
                   </Button>
+                  */}
                 </Stack>
               </CardContent>
             </Card>

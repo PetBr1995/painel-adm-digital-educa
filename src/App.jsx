@@ -18,6 +18,8 @@ import CadastraPlano from './components/CadastraPlano';
 import EditarCurso from './pages/EditarCurso/EditarCurso';
 import EditarInstrutor from './components/EditarInstrutor';
 import EditarModulo from './components/EditarModulo';
+import SearchResults from './components/SearchResults';
+import Podcast from './pages/Podcast/Podcast';
 
 
 function App() {
@@ -35,7 +37,8 @@ function App() {
               <Home />
             </PrivateRoute>
           }
-        >
+        > 
+        <Route path='search' element={<SearchResults/>}/>
           <Route path="cadastrarcurso" element={<CadastrarCurso />} />
           <Route path="cursos" element={<Cursos />} />
           <Route path='dashboard' element={<Dashboard />} />
@@ -52,6 +55,7 @@ function App() {
           <Route path='/editarcurso/:id' element={<EditarCurso/>}/>
           <Route path="/editarinstrutor/:id" element={<EditarInstrutor />} />
           <Route path='/editar-modulo' element={<EditarModulo/>}/>
+          <Route path='/podcast' element={<Podcast/>}/>
         </Route>
       </Routes>
     </BrowserRouter>

@@ -122,8 +122,7 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
     <Paper
       sx={{
         p: 2,
-        width: "450px",
-        margin: "2rem auto",
+        width: "100%",
         borderRadius: "12px",
         boxShadow: "0 0 2px rgba(255,255,255,0.4)",
       }}

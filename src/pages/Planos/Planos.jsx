@@ -74,16 +74,20 @@ const Planos = () => {
                         </Box>
                         <Typography variant='body2' sx={{ mt: 2, mb: 4, textAlign: "center" }}>{plano.descricao}</Typography>
                         <Box sx={{ mt: 2, mb: 2, display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem" }}>
-                            <Button onClick={() => handleOpenEditar(plano)} variant='outlined' sx={{ boxShadow
-                                :"0 0 2px rgba(255,255,255,0.4)",border:"none",fontWeight:"600",borderRadius: "20px" }} startIcon={<Edit />}>Editar</Button>
+                            <Button onClick={() => handleOpenEditar(plano)} variant='outlined' sx={{
+                                boxShadow
+                                    : "0 0 2px rgba(255,255,255,0.4)", border: "none", fontWeight: "600", borderRadius: "20px"
+                            }} startIcon={<Edit />}>Editar</Button>
+                            {/* 
                             <Button variant='contained' sx={{ fontWeight:"600",borderRadius: "20px" }} endIcon={<Delete />}>Excluir</Button>
+                                */}
                         </Box>
                     </Paper>
                 ))}
             </Box >
 
             <Dialog open={open} onClose={handleClose}>
-                <DialogContent sx={{ backgroundColor: theme.palette.secondary.dark }}>
+                <DialogContent>
                     {selectedPlano && (
                         <EditarPlano
                             plano={selectedPlano}
