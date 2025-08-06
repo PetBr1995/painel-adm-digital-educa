@@ -18,7 +18,7 @@ const Cursos = () => {
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(false); 
 
   const getCategorias = async () => {
     try {
@@ -28,6 +28,7 @@ const Cursos = () => {
         },
       });
       setCategorias(response.data);
+      console.log(response.data)
     } catch (error) {
       setError("Erro ao carregar as categorias. Tente novamente mais tarde.");
     } finally {

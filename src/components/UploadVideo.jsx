@@ -74,11 +74,13 @@ const UploadVideo = () => {
 
     if (!moduloId) {
       setMensagem("ID do módulo não encontrado.");
+      console.warn("Upload cancelado: módulo ID ausente.");
       return;
     }
 
     if (videos.length === 0) {
       setMensagem("Selecione pelo menos um vídeo.");
+      console.warn("Upload cancelado: nenhum vídeo selecionado.");
       return;
     }
 
@@ -89,6 +91,8 @@ const UploadVideo = () => {
     const token = localStorage.getItem("token");
     const results = [];
 
+    console.log(`Iniciando upload de ${videos.length} vídeo(s) para o módulo ${moduloId}...`);
+
     for (let i = 0; i < videos.length; i++) {
       const { file, title, duration } = videos[i];
       const formData = new FormData();
@@ -96,6 +100,13 @@ const UploadVideo = () => {
       formData.append("videos", file);
       formData.append("titulos", title || file.name);
       formData.append("duracoes", duration?.toFixed(2) || "0");
+
+      console.log(`Preparando envio do vídeo [${i + 1}/${videos.length}]:`, {
+        nome: file.name,
+        tamanho: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+        titulo: title || file.name,
+        duracao: duration,
+      });
 
       try {
         const response = await axios.post(
@@ -106,12 +117,12 @@ const UploadVideo = () => {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${token}`,
             },
+            timeout: 30 * 60 * 1000, // 30 minutos
             maxContentLength: Infinity,
             maxBodyLength: Infinity,
             onUploadProgress: (progressEvent) => {
-              const percent = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
+              const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              console.log(`Progresso do vídeo ${i + 1}: ${percent}%`);
               setUploadProgresses((prev) =>
                 prev.map((p, idx) => (idx === i ? percent : p))
               );
@@ -119,17 +130,29 @@ const UploadVideo = () => {
           }
         );
 
+        console.log(`✅ Vídeo ${i + 1} enviado com sucesso:`, response.data);
+
         results.push({
           status: "fulfilled",
           video: response.data,
           title: title || file.name
         });
+
       } catch (err) {
-        console.error("Erro ao enviar vídeo:", err);
+        console.error(`❌ Erro ao enviar vídeo ${i + 1}:`, err);
+
         const msg =
           Array.isArray(err?.response?.data?.message)
             ? err.response.data.message.join(", ")
-            : err?.response?.data?.message || "Erro desconhecido.";
+            : err?.response?.data?.message ||
+            err?.message ||
+            "Erro desconhecido.";
+
+        console.warn("Código do erro:", err.code);
+        console.warn("Mensagem do erro:", msg);
+        if (err?.response?.status) {
+          console.warn("Status HTTP:", err.response.status);
+        }
 
         results.push({
           status: "rejected",
@@ -138,10 +161,12 @@ const UploadVideo = () => {
       }
     }
 
+    console.log("Upload finalizado. Resultados:", results);
     setUploadResults(results);
     setVideos([]);
     setLoading(false);
   };
+
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>

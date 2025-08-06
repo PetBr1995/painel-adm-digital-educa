@@ -100,7 +100,6 @@ const Home = () => {
     { text: "Cursos", icon: <SchoolIcon sx={{ color: theme.palette.primary.light }} />, path: "/cursos" },
     { text: "Instrutores", icon: <PersonAdd sx={{ color: theme.palette.primary.light }} />, path: "/instrutores" },
     { text: "Planos", icon: <AirplaneTicket sx={{ color: theme.palette.primary.light }} />, path: "/planos" },
-    { text: "Podcasts", icon: <PlayArrow sx={{ color: theme.palette.primary.light }} />, path:"/podcast" }
   ];
 
   // Handle search input change

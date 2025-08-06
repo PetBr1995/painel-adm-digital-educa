@@ -1,13 +1,16 @@
 import { Add } from "@mui/icons-material"
-import { Box, Button, Divider, Typography, Modal } from "@mui/material"
+import { Box, Button, Divider, Typography, Modal, Card } from "@mui/material"
 import theme from "../../theme/theme"
 import { useState } from "react"
 import CadastrarPodcast from "../../components/CadastrarPodcast"
+import CadastrarHost from "../../components/CadastrarHost"
 
 const Podcast = () => {
     const [open, setOpen] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
+    const [openModalHost, setOpenModalHost] = useState(false);
+    const [openModalParticipante, setOpenModalParticipante] = useState(false);
 
     return (
         <>
@@ -38,15 +41,21 @@ const Podcast = () => {
                         p: 2
                     }}
                 >
-                    <CadastrarPodcast handleClose={handleClose}/>
+                    <CadastrarPodcast handleClose={handleClose} />
                 </Modal>
             </Box>
             <Divider sx={{ mt: 2 }} />
             <Box sx={{ mt: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Button sx={{ fontWeight: "600", borderRadius: "20px", border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }} variant="outlined">Cadastrar Host</Button>
+                <Button onClick={() => setOpenModalHost(true)} sx={{ fontWeight: "600", borderRadius: "20px", border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }} variant="outlined">Cadastrar Host</Button>
                 <Button sx={{ fontWeight: "600", borderRadius: "20px", border: "none", boxShadow: "0 0 2px rgba(255,255,255,0.4)" }} variant="outlined">Cadastrar Participante</Button>
             </Box>
+            <Modal open={openModalHost} BackdropProps={{ sx: { backgroundColor: "transparent" } }} sx={{ width: "400", position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }}>
+                <CadastrarHost setOpenModalHost={setOpenModalHost} />
+            </Modal>
             <Divider sx={{ mt: 3 }} />
+            <Box sx={{mt:3, boxShadow:"0 0 2px rgba(255,255,255,0.4)",borderRadius:"12px",p:2,width:"300px"}}>
+                  
+            </Box>
         </>
     )
 }
