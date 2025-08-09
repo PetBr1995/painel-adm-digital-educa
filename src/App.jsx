@@ -20,6 +20,8 @@ import EditarInstrutor from './components/EditarInstrutor';
 import EditarModulo from './components/EditarModulo';
 import SearchResults from './components/SearchResults';
 import Podcast from './pages/Podcast/Podcast';
+import CadastrarUsuario from './pages/CadastrarUsuario/CadastrarUsuario';
+import Usuarios from './pages/Usuarios/Usuarios';
 
 
 function App() {
@@ -56,6 +58,8 @@ function App() {
           <Route path="/editarinstrutor/:id" element={<EditarInstrutor />} />
           <Route path='/editar-modulo' element={<EditarModulo/>}/>
           <Route path='/podcast' element={<Podcast/>}/>
+          <Route path='/cadastrarusuario' element={<CadastrarUsuario/>}/>
+          <Route path='/usuarios' element={<Usuarios/>}/>
         </Route>
       </Routes>
     </BrowserRouter>

@@ -284,7 +284,6 @@ const EditarCurso = () => {
                         margin="normal"
                         multiline
                         rows={4}
-                        required
                     />
 
                     <FormControl fullWidth margin="normal" required>
@@ -309,7 +308,6 @@ const EditarCurso = () => {
                         margin="normal"
                         multiline
                         rows={5}
-                        required
                     />
 
                     <TextField

@@ -5,7 +5,7 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#FFB800', // Amarelo destaque (da logo)
+      main: '#f5a204', // Amarelo destaque (da logo)
     },
     secondary: {
       main: '#1E2A46', // Azul escuro complementar
