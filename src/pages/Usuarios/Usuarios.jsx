@@ -1,4 +1,4 @@
-import { ArrowBack, Delete } from "@mui/icons-material";
+import { Add, ArrowBack, Delete } from "@mui/icons-material";
 import {
     Box,
     Table,
@@ -8,7 +8,8 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Button
+    Button,
+    TextField
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -17,6 +18,7 @@ import Swal from "sweetalert2";
 
 const Usuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
+    const [busca, setBusca] = useState("");
     const navigate = useNavigate();
 
     const listarUsuarios = () => {
@@ -68,9 +70,35 @@ const Usuarios = () => {
         listarUsuarios();
     }, []);
 
+    // Filtra usuários pelo nome ou email
+    const usuariosFiltrados = usuarios.filter((usuario) =>
+        usuario.nome.toLowerCase().includes(busca.toLowerCase()) ||
+        usuario.email.toLowerCase().includes(busca.toLowerCase())
+    );
+
     return (
         <Box sx={{ maxWidth: "900px", margin: "auto", mt: 4 }}>
-            <Button onClick={() => navigate('/cadastrarusuario')} variant="contained" startIcon={<ArrowBack />} sx={{ borderRadius: "20px", fontWeight: "600", mb: 2 }}>Voltar ao Cadastro de Usuários</Button>
+            <Box sx={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+
+                <Button
+                    onClick={() => navigate('/cadastrarusuario')}
+                    variant="contained"
+                    startIcon={<Add />}
+                    sx={{ borderRadius: "20px", fontWeight: "600", mb: 2 }}
+                >
+                    Cadastrar Usuários
+                </Button>
+
+                {/* Barra de Pesquisa */}
+                <TextField
+                    label="Pesquisar usuário"
+                    variant="outlined"
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    sx={{ mb: 2, width:"50%", flexWrap:"wrap" }}
+                />
+            </Box>
+
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
@@ -81,8 +109,8 @@ const Usuarios = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {usuarios.length > 0 ? (
-                            usuarios.map((usuario) => (
+                        {usuariosFiltrados.length > 0 ? (
+                            usuariosFiltrados.map((usuario) => (
                                 <TableRow key={usuario.id}>
                                     <TableCell>{usuario.nome}</TableCell>
                                     <TableCell>{usuario.email}</TableCell>

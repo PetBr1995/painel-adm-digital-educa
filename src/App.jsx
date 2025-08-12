@@ -10,7 +10,7 @@ import Instrutor from './pages/Instrutor/Instrutor';
 import Dashboard from './pages/Dashboard/Dashboard';
 
 import CadastroModulo from './components/CadastroModulo';
-import  { Modulos }  from './pages/Modulos/Modulos';
+import { Modulos } from './pages/Modulos/Modulos';
 import Categoria from './pages/Categorias/Categoria';
 import UploadVideo from './components/UploadVideo';
 import Planos from './pages/Planos/Planos';
@@ -39,8 +39,8 @@ function App() {
               <Home />
             </PrivateRoute>
           }
-        > 
-        <Route path='search' element={<SearchResults/>}/>
+        >
+          <Route path='search' element={<SearchResults />} />
           <Route path="cadastrarcurso" element={<CadastrarCurso />} />
           <Route path="cursos" element={<Cursos />} />
           <Route path='dashboard' element={<Dashboard />} />
@@ -53,13 +53,13 @@ function App() {
           <Route path='categorias' element={<Categoria />} />
           <Route path='upload-video' element={<UploadVideo />} />
           <Route path='planos' element={<Planos />} />
-          <Route path='cadastrarplano' element={<CadastraPlano/>}/>
-          <Route path='/editarcurso/:id' element={<EditarCurso/>}/>
+          <Route path='cadastrarplano' element={<CadastraPlano />} />
+          <Route path='/editarcurso/:id' element={<EditarCurso />} />
           <Route path="/editarinstrutor/:id" element={<EditarInstrutor />} />
-          <Route path='/editar-modulo' element={<EditarModulo/>}/>
-          <Route path='/podcast' element={<Podcast/>}/>
-          <Route path='/cadastrarusuario' element={<CadastrarUsuario/>}/>
-          <Route path='/usuarios' element={<Usuarios/>}/>
+          <Route path='/editar-modulo' element={<EditarModulo />} />
+          <Route path='/podcast' element={<Podcast />} />
+          <Route path='/cadastrarusuario' element={<CadastrarUsuario />} />
+          <Route path='/usuarios' element={<Usuarios />} />
         </Route>
       </Routes>
     </BrowserRouter>
