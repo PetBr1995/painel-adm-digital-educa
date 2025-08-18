@@ -1,4 +1,4 @@
-import { Add, Delete, Edit } from '@mui/icons-material';
+import { Add, Edit, SearchOutlined } from '@mui/icons-material';
 import {
   Box,
   Typography,
@@ -8,7 +8,9 @@ import {
   CardHeader,
   CardContent,
   Divider,
-  Stack
+  Stack,
+  TextField,
+  InputAdornment
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -17,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 const Instrutor = () => {
   const navigate = useNavigate();
   const [instrutor, setInstrutor] = useState([]);
+  const [busca, setBusca] = useState(""); // Mudado para string
 
   const getInstructor = () => {
     axios.get('https://api.digitaleduca.com.vc/instrutor', {
@@ -34,6 +37,12 @@ const Instrutor = () => {
     getInstructor();
   }, []);
 
+  // Filtra os instrutores com base no nome ou formação
+  const instrutoresFiltrados = instrutor.filter((instructor) =>
+    instructor.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+    instructor.formacao?.toLowerCase().includes(busca.toLowerCase())
+  );
+
   return (
     <Box>
       {/* Header */}
@@ -41,17 +50,47 @@ const Instrutor = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        mb: 4
+        mb: 4,
+        flexWrap: "wrap",
+        gap: 2
       }}>
         <Box>
           <Typography variant='h5' fontWeight={600}>Instrutores</Typography>
           <Typography variant='body1' color='text.secondary'>Gerencie seus instrutores</Typography>
         </Box>
+
+        {/* Barra de Pesquisa */}
+        <TextField
+          variant='outlined'
+          placeholder="Pesquisar instrutor..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <SearchOutlined />
+              </InputAdornment>
+            )
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "50px", // Bordas arredondadas
+            },width:"50%"
+          }}
+
+        />
+
         <Button
           endIcon={<Add />}
           onClick={() => navigate('/cadastrarinstrutor')}
           variant='contained'
-          sx={{ borderRadius: '20px', backgroundColor: '#FDBB30', color: '#000', fontWeight: 600, "&:hover": { backgroundColor: '#f4a000' } }}
+          sx={{
+            borderRadius: '20px',
+            backgroundColor: '#FDBB30',
+            color: '#000',
+            fontWeight: 600,
+            "&:hover": { backgroundColor: '#f4a000' }
+          }}
         >
           Novo Instrutor
         </Button>
@@ -67,12 +106,12 @@ const Instrutor = () => {
           gap: 3
         }}
       >
-        {instrutor.length === 0 ? (
+        {instrutoresFiltrados.length === 0 ? (
           <Typography variant="body1" color="text.secondary">
-            Nenhum instrutor cadastrado ainda.
+            Nenhum instrutor encontrado.
           </Typography>
         ) : (
-          instrutor.map((instructor) => (
+          instrutoresFiltrados.map((instructor) => (
             <Card
               key={instructor.id}
               sx={{
@@ -123,16 +162,7 @@ const Instrutor = () => {
                   >
                     Editar
                   </Button>
-                  {/* 
-                  <Button
-                    variant="outlined"
-                    startIcon={<Delete />}
-                    sx={{ borderRadius: '20px', border:"none", boxShadow:"0 0 2px rgba(255,255,255,0.4)" }}
-                    onClick={() => console.log('Excluir:', instructor.id)}
-                  >
-                    Excluir
-                  </Button>
-                  */}
+                  {/* Botão de excluir comentado */}
                 </Stack>
               </CardContent>
             </Card>
