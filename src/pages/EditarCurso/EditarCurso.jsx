@@ -15,22 +15,28 @@ import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import theme from "../../theme/theme";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
 const EditarCurso = () => {
     const { id } = useParams();
-    const [titulo, setTitulo] = useState('');
-    const [descricao, setDescricao] = useState('');
-    const [level, setLevel] = useState('');
-    const [aprendizagem, setAprendizagem] = useState('');
-    const [requisitos, setRequisitos] = useState('');
-    const [instrutorID, setInstrutorID] = useState('');
-    const [categoriaID, setCategoriaID] = useState('');
+    const [titulo, setTitulo] = useState("");
+    const [descricao, setDescricao] = useState("");
+    const [level, setLevel] = useState("");
+    const [aprendizagem, setAprendizagem] = useState("");
+    const [requisitos, setRequisitos] = useState("");
+    const [instrutorID, setInstrutorID] = useState("");
+    const [categoriaID, setCategoriaID] = useState("");
     const [instrutor, setInstrutor] = useState([]);
     const [categorias, setCategorias] = useState([]);
+
+    // Thumbnails
     const [thumbnail, setThumbnail] = useState(null);
     const [preview, setPreview] = useState(null);
     const fileInputRef = useRef();
+
+    const [thumbnailMobile, setThumbnailMobile] = useState(null);
+    const [previewMobile, setPreviewMobile] = useState(null);
+    const fileInputMobileRef = useRef();
 
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -47,12 +53,12 @@ const EditarCurso = () => {
     const getInstrutores = () => {
         axios
             .get("https://api.digitaleduca.com.vc/instrutor", {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             })
             .then((res) => {
                 setInstrutor(res.data);
             })
-            .catch((err) => {
+            .catch(() => {
                 setSnackbarMessage("Erro ao carregar instrutores.");
                 setSnackbarSeverity("error");
                 setSnackbarOpen(true);
@@ -62,12 +68,12 @@ const EditarCurso = () => {
     const getCategorias = () => {
         axios
             .get("https://api.digitaleduca.com.vc/categoria/list", {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             })
             .then((res) => {
                 setCategorias(res.data);
             })
-            .catch((err) => {
+            .catch(() => {
                 setSnackbarMessage("Erro ao carregar categorias.");
                 setSnackbarSeverity("error");
                 setSnackbarOpen(true);
@@ -77,10 +83,9 @@ const EditarCurso = () => {
     const getCursoById = () => {
         axios
             .get(`https://api.digitaleduca.com.vc/curso/${id}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             })
             .then((res) => {
-                console.log(res.data)
                 const data = res.data;
                 setTitulo(data.titulo);
                 setDescricao(data.descricao);
@@ -89,11 +94,12 @@ const EditarCurso = () => {
                 setRequisitos(data.requisitos);
                 setInstrutorID(data.instrutor.id);
                 setCategoriaID(data.categoria.id);
-                if (data.thumbnail) {
-                    setPreview(data.thumbnail);
-                }
+                console.log(data)
+
+                if (data.thumbnail) setPreview(data.thumbnail);
+                if (data.thumbnailMobile) setPreviewMobile(data.thumbnailMobile);
             })
-            .catch((err) => {
+            .catch(() => {
                 setSnackbarMessage("Erro ao carregar curso.");
                 setSnackbarSeverity("error");
                 setSnackbarOpen(true);
@@ -110,6 +116,18 @@ const EditarCurso = () => {
 
     const handleClick = () => {
         fileInputRef.current.click();
+    };
+
+    const handleImageUploadMobile = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setThumbnailMobile(file);
+            setPreviewMobile(URL.createObjectURL(file));
+        }
+    };
+
+    const handleClickMobile = () => {
+        fileInputMobileRef.current.click();
     };
 
     const handleDelete = () => {
@@ -138,7 +156,6 @@ const EditarCurso = () => {
                             timer: 2000,
                             showConfirmButton: false,
                         });
-                        // Redireciona após exclusão (opcional)
                         navigate("/cursos");
                     })
                     .catch(() => {
@@ -174,9 +191,9 @@ const EditarCurso = () => {
                 formData.append("requisitos", requisitos);
                 formData.append("instrutorId", instrutorID);
                 formData.append("categoriaId", categoriaID);
-                if (thumbnail) {
-                    formData.append("thumbnail", thumbnail);
-                }
+                if (thumbnail) formData.append("thumbnail", thumbnail);
+                if (thumbnailMobile) formData.append("thumbnailMobile", thumbnailMobile);
+                console.log(previewMobile)
 
                 axios
                     .put(`https://api.digitaleduca.com.vc/curso/${id}`, formData, {
@@ -208,58 +225,72 @@ const EditarCurso = () => {
         });
     };
 
-
     return (
         <Box sx={{ maxWidth: 600, mx: "auto", mt: 4 }}>
             <Box sx={{ display: "flex", alignItems: "center", paddingBottom: "1rem", gap: "2rem" }}>
-                <Button onClick={() => navigate('/cursos')}>
+                <Button onClick={() => navigate("/cursos")}>
                     <ArrowBack />
                 </Button>
                 <Box>
-                    <Typography variant="h5" fontWeight={700}>Editar Curso</Typography>
+                    <Typography variant="h5" fontWeight={700}>
+                        Editar Curso
+                    </Typography>
                     <Typography variant="body1">Atualize as informações do curso</Typography>
                 </Box>
             </Box>
 
             <form onSubmit={handleSubmit}>
-                <Box sx={{ boxShadow: "0 0 2px rgba(255,255,255,0.2)", borderRadius: "15px", padding: "1rem 2rem", backgroundColor: theme.palette.secondary.dark }}>
-                    <Typography variant="h4" sx={{ fontWeight: "500" }}>Informações do curso</Typography>
+                <Box
+                    sx={{
+                        boxShadow: "0 0 2px rgba(255,255,255,0.2)",
+                        borderRadius: "15px",
+                        padding: "1rem 2rem",
+                        backgroundColor: theme.palette.secondary.dark,
+                    }}
+                >
+                    <Typography variant="h4" sx={{ fontWeight: "500" }}>
+                        Informações do curso
+                    </Typography>
 
-                    {/* Upload da Thumbnail */}
+                    {/* Thumbnail Desktop */}
                     <Box mt={2}>
                         <Typography variant="subtitle1" gutterBottom>
-                            Thumbnail do Curso
+                            Thumbnail Desktop do Curso
                         </Typography>
                         <Box display="flex" alignItems="center" gap={2}>
                             <Box
                                 sx={{
                                     width: 128,
                                     height: 80,
-                                    border: '2px dashed #ccc',
+                                    border: "2px dashed #ccc",
                                     borderRadius: 2,
-                                    overflow: 'hidden',
+                                    overflow: "hidden",
                                 }}
                             >
                                 <img
-                                    src={"https://api.digitaleduca.com.vc/" + preview || "/placeholder.svg"}
-                                    alt="Thumbnail"
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    src={preview ? "https://api.digitaleduca.com.vc/" + preview : "/placeholder.svg"}
+                                    alt="Thumbnail Desktop"
+                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
                                 />
                             </Box>
-
                             <Box>
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageUpload}
                                     ref={fileInputRef}
-                                    style={{ display: 'none' }}
+                                    style={{ display: "none" }}
                                 />
                                 <Button
                                     variant="outlined"
                                     startIcon={<Upload />}
                                     onClick={handleClick}
-                                    sx={{borderRadius:"20px", fontWeight:"600", border:"none", boxShadow:"0 0 2px rgba(255,255,255,0.4)"}}
+                                    sx={{
+                                        borderRadius: "20px",
+                                        fontWeight: "600",
+                                        border: "none",
+                                        boxShadow: "0 0 2px rgba(255,255,255,0.4)",
+                                    }}
                                 >
                                     Alterar Imagem
                                 </Button>
@@ -267,6 +298,53 @@ const EditarCurso = () => {
                         </Box>
                     </Box>
 
+                    {/* Thumbnail Mobile */}
+                    <Box mt={2}>
+                        <Typography variant="subtitle1" gutterBottom>
+                            Thumbnail Mobile do Curso
+                        </Typography>
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <Box 
+                                sx={{
+                                    width: 128,
+                                    height: 80,
+                                    border: "2px dashed #ccc",
+                                    borderRadius: 2,
+                                    overflow: "hidden",
+                                }}
+                            >
+                                <img
+                                    src={previewMobile ? (previewMobile.startsWith('http') ? previewMobile : "https://api.digitaleduca.com.vc/" + previewMobile) : "/placeholder.svg"}
+                                    alt="Thumbnail Mobile"
+                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                />
+                            </Box>
+                            <Box>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUploadMobile}
+                                    ref={fileInputMobileRef}
+                                    style={{ display: "none" }}
+                                />
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<Upload />}
+                                    onClick={handleClickMobile}
+                                    sx={{
+                                        borderRadius: "20px",
+                                        fontWeight: "600",
+                                        border: "none",
+                                        boxShadow: "0 0 2px rgba(255,255,255,0.4)",
+                                    }}
+                                >
+                                    Alterar Imagem
+                                </Button>
+                            </Box>
+                        </Box>
+                    </Box>
+
+                    {/* Campos do curso */}
                     <TextField
                         label="Título do Curso"
                         value={titulo}
@@ -350,15 +428,52 @@ const EditarCurso = () => {
                             ))}
                         </Select>
                     </FormControl>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "2rem" }}>
-                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flexStart", gap: "1rem" }}>
-                            <Button variant="outlined" sx={{ boxShadow:"0 0 2px rgba(255,255,255,0.4)",border:"none",fontWeight: "600", borderRadius: "20px" }} onClick={() => navigate('/cursos')}>Cancelar</Button>
-                            <Button type="submit" variant="contained" color="primary" sx={{ borderRadius: "20px", fontWeight: "600" }}>
+
+                    {/* Botões */}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginTop: "2rem",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "flexStart",
+                                gap: "1rem",
+                            }}
+                        >
+                            <Button
+                                variant="outlined"
+                                sx={{
+                                    boxShadow: "0 0 2px rgba(255,255,255,0.4)",
+                                    border: "none",
+                                    fontWeight: "600",
+                                    borderRadius: "20px",
+                                }}
+                                onClick={() => navigate("/cursos")}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                sx={{ borderRadius: "20px", fontWeight: "600" }}
+                            >
                                 Salvar Alterações
                             </Button>
                         </Box>
                         <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-                            <Button onClick={handleDelete} sx={{ borderRadius: "20px", bgcolor: "red", color: "#ffffff", fontWeight: "600" }}>Excluir curso</Button>
+                            <Button
+                                onClick={handleDelete}
+                                sx={{ borderRadius: "20px", bgcolor: "red", color: "#ffffff", fontWeight: "600" }}
+                            >
+                                Excluir curso
+                            </Button>
                         </Box>
                     </Box>
                 </Box>
@@ -370,11 +485,7 @@ const EditarCurso = () => {
                 onClose={() => setSnackbarOpen(false)}
                 anchorOrigin={{ vertical: "top", horizontal: "center" }}
             >
-                <Alert
-                    onClose={() => setSnackbarOpen(false)}
-                    severity={snackbarSeverity}
-                    sx={{ width: "100%" }}
-                >
+                <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
                     {snackbarMessage}
                 </Alert>
             </Snackbar>

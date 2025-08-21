@@ -43,6 +43,7 @@ const Cursos = () => {
       });
       setCursos(response.data);
       setCursosPorCategoria(response.data); // Initially show all courses
+      console.log(response.data)
     } catch (error) {
       setError("Erro ao carregar os cursos. Tente novamente mais tarde.");
     }
