@@ -30,7 +30,6 @@ import {
   Person,
   Person3,
   PersonAdd,
-  PlayArrow,
 } from "@mui/icons-material";
 import theme from "../../theme/theme";
 import Swal from "sweetalert2";
@@ -42,14 +41,26 @@ const miniDrawerWidth = 60;
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  "&:hover": {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-  },
+  backgroundColor: "transparent",
+  border: "1px solid rgba(255,148,0,0.2)",
+  transition: "all 0.4s ease",
   marginLeft: theme.spacing(2),
   width: "100%",
-  [theme.breakpoints.up("sm")]: {
-    width: "auto",
+  maxWidth: "300px",
+  display: "flex",
+  alignItems: "center",
+  "&:hover": {
+    borderColor: "rgba(255,148,0,0.4)",
+    borderRadius: "12px",
+  },
+  "&:focus-within": {
+    border: "1px solid orange",
+    borderRadius: "12px",
+    boxShadow: "0 0 0 3px rgba(255,148,0,0.2)",
+    maxWidth: "380px", // expande o bloco inteiro ao focar
+  },
+  [theme.breakpoints.down("sm")]: {
+    maxWidth: "100%",
   },
 }));
 
@@ -69,13 +80,12 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   "& .MuiInputBase-input": {
     padding: theme.spacing(1, 1, 1, 0),
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create("width"),
-    width: "100%",
-    [theme.breakpoints.up("sm")]: {
-      width: "20ch",
-      "&:focus": {
-        width: "28ch",
-      },
+    transition: theme.transitions.create(["width"], {
+      duration: theme.transitions.duration.standard,
+    }),
+    width: "20ch",
+    "&:focus": {
+      width: "28ch",
     },
   },
 }));
@@ -101,23 +111,19 @@ const Home = () => {
     { text: "Cursos", icon: <SchoolIcon sx={{ color: theme.palette.primary.light }} />, path: "/cursos" },
     { text: "Instrutores", icon: <PersonAdd sx={{ color: theme.palette.primary.light }} />, path: "/instrutores" },
     { text: "Planos", icon: <AirplaneTicket sx={{ color: theme.palette.primary.light }} />, path: "/planos" },
-    {text: "Usuários", icon: <Person3 sx={{color:theme.palette.primary.light}}/>, path:"/usuarios" },
-
+    { text: "Usuários", icon: <Person3 sx={{ color: theme.palette.primary.light }} />, path: "/usuarios" },
   ];
 
-  // Handle search input change
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  // Handle search submission
   const handleSearchSubmit = async (event) => {
     if (event.key === "Enter" && searchQuery.trim()) {
       try {
         const token = localStorage.getItem("token");
         const headers = { Authorization: `Bearer ${token}` };
 
-        // Query all relevant endpoints
         const [cursosRes, instrutoresRes, categoriasRes, planosRes] = await Promise.all([
           axios.get(`https://api.digitaleduca.com.vc/curso/cursos?search=${encodeURIComponent(searchQuery)}`, { headers }),
           axios.get(`https://api.digitaleduca.com.vc/instrutor?search=${encodeURIComponent(searchQuery)}`, { headers }),
@@ -132,7 +138,6 @@ const Home = () => {
           planos: planosRes.data || [],
         };
 
-        // Navigate to search results page with query and results
         navigate(`/search?query=${encodeURIComponent(searchQuery)}`, { state: { results } });
         setSearchQuery("");
       } catch (error) {
@@ -147,7 +152,7 @@ const Home = () => {
   };
 
   const drawer = (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column"}}>
       <Toolbar />
       <Divider />
       <List sx={{ cursor: "pointer" }}>
@@ -158,7 +163,7 @@ const Home = () => {
           </ListItem>
         ))}
       </List>
-      <Box sx={{ flexGrow: 1 }} />
+      <Box sx={{ flexGrow: 1 }}/>
       <Divider />
       <List sx={{ cursor: "pointer" }}>
         <ListItem
@@ -203,6 +208,10 @@ const Home = () => {
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
           backgroundColor: theme.palette.secondary.dark,
+          borderBottom: "1px solid rgba(255,148,0,0.2)",
+          borderLeft: "1px solid rgba(255,148,0,0.2)",
+          borderRight: "1px solid rgba(255,148,0,0.2)",
+          borderRadius: "0 0 30px 30px"
         }}
       >
         <Toolbar
@@ -237,7 +246,7 @@ const Home = () => {
             />
           </Box>
 
-          <Search sx={{ flex: 1, maxWidth: "300px" }}>
+          <Search>
             <SearchIconWrapper>
               <SearchIcon />
             </SearchIconWrapper>

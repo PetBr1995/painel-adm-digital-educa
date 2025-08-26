@@ -76,6 +76,7 @@ const Instrutor = () => {
             "& .MuiOutlinedInput-root": {
               borderRadius: "50px", // Bordas arredondadas
             },width:"50%"
+            
           }}
 
         />
