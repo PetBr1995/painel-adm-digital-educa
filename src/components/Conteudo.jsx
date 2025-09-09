@@ -1,27 +1,19 @@
-import { Add, ArrowBack, Delete, PlusOne, VideoCall, Watch, PlayArrow, FolderOpen, VideoLibrary } from "@mui/icons-material";
+import { Add, ArrowBack, Delete, VideoCall, Watch, PlayArrow, FolderOpen, VideoLibrary } from "@mui/icons-material";
 import {
   Box,
   Button,
   Divider,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
   CircularProgress,
-  ListSubheader,
-  IconButton,
-  alpha,
-  Paper,
-  Container,
-  Card,
-  CardContent,
-  CardActions,
   Chip,
   Stack,
   Avatar,
   Grid,
   Fade,
-  Skeleton
+  Card,
+  CardContent,
+  Container,
+  alpha
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -34,6 +26,7 @@ const Conteudo = () => {
   const navigate = useNavigate();
 
   const [modulos, setModulos] = useState([]);
+  const [videosSoltos, setVideosSoltos] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchConteudo = async () => {
@@ -44,8 +37,14 @@ const Conteudo = () => {
         { headers: { Authorization: "Bearer " + localStorage.getItem("token") } }
       );
 
-      console.log("Resposta da API:", response.data);
-      setModulos(response.data.modulos || response.data.módulos || []);
+      const modulosAPI = response.data.modulos || response.data.módulos || [];
+      setModulos(modulosAPI);
+
+      // Pegar vídeos soltos (sem módulo)
+      const todosVideos = response.data.videos || [];
+      const soltos = todosVideos.filter(video => !video.moduloId);
+      setVideosSoltos(soltos);
+
     } catch (error) {
       console.error("Erro ao buscar módulos e vídeos:", error.response || error);
     } finally {
@@ -78,13 +77,17 @@ const Conteudo = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
-      setModulos((prevModulos) =>
-        prevModulos.map((modulo) =>
-          modulo.id === moduloId
-            ? { ...modulo, videos: modulo.videos.filter((v) => v.id !== videoId) }
-            : modulo
-        )
-      );
+      if(moduloId) {
+        setModulos((prevModulos) =>
+          prevModulos.map((modulo) =>
+            modulo.id === moduloId
+              ? { ...modulo, videos: modulo.videos.filter((v) => v.id !== videoId) }
+              : modulo
+          )
+        );
+      } else {
+        setVideosSoltos((prev) => prev.filter(v => v.id !== videoId));
+      }
 
       Swal.fire({
         title: 'Deletado!',
@@ -105,7 +108,7 @@ const Conteudo = () => {
   };
 
   const getTotalVideos = () => {
-    return modulos.reduce((total, modulo) => total + (modulo.videos?.length || 0), 0);
+    return modulos.reduce((total, modulo) => total + (modulo.videos?.length || 0), 0) + videosSoltos.length;
   };
 
   useEffect(() => {
@@ -117,11 +120,11 @@ const Conteudo = () => {
       {[1, 2, 3].map((item) => (
         <Card key={item} sx={{ mb: 3 }}>
           <CardContent>
-            <Skeleton variant="text" width="60%" height={32} sx={{ mb: 1 }} />
-            <Skeleton variant="text" width="40%" height={20} sx={{ mb: 2 }} />
             <Stack spacing={1}>
-              <Skeleton variant="rectangular" height={60} sx={{ borderRadius: 1 }} />
-              <Skeleton variant="rectangular" height={60} sx={{ borderRadius: 1 }} />
+              <Box sx={{ height: 32, bgcolor: alpha(theme.palette.grey[300], 0.4), mb: 1 }} />
+              <Box sx={{ height: 20, bgcolor: alpha(theme.palette.grey[300], 0.3), mb: 2 }} />
+              <Box sx={{ height: 60, bgcolor: alpha(theme.palette.grey[300], 0.2), borderRadius: 1, mb: 1 }} />
+              <Box sx={{ height: 60, bgcolor: alpha(theme.palette.grey[300], 0.2), borderRadius: 1 }} />
             </Stack>
           </CardContent>
         </Card>
@@ -137,12 +140,10 @@ const Conteudo = () => {
           <Button
             onClick={() => navigate("/cursos")}
             startIcon={<ArrowBack />}
-            sx={{ 
+            sx={{
               mb: 3,
               color: theme.palette.text.secondary,
-              '&:hover': {
-                bgcolor: alpha(theme.palette.primary.main, 0.08),
-              }
+              '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.08) }
             }}
           >
             Voltar aos conteúdos
@@ -151,42 +152,23 @@ const Conteudo = () => {
           {/* Stats Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
             <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ 
-                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                color: 'white'
-              }}>
+              <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`, color: 'white' }}>
                 <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar sx={{ bgcolor: alpha('#fff', 0.2) }}>
-                    <FolderOpen />
-                  </Avatar>
+                  <Avatar sx={{ bgcolor: alpha('#fff', 0.2) }}><FolderOpen /></Avatar>
                   <Box>
-                    <Typography variant="h4" fontWeight="bold">
-                      {loading ? '-' : modulos.length}
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Módulos
-                    </Typography>
+                    <Typography variant="h4" fontWeight="bold">{loading ? '-' : modulos.length}</Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>Módulos</Typography>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
-
             <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ 
-                background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
-                color: 'white'
-              }}>
+              <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`, color: 'white' }}>
                 <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar sx={{ bgcolor: alpha('#fff', 0.2) }}>
-                    <VideoLibrary />
-                  </Avatar>
+                  <Avatar sx={{ bgcolor: alpha('#fff', 0.2) }}><VideoLibrary /></Avatar>
                   <Box>
-                    <Typography variant="h4" fontWeight="bold">
-                      {loading ? '-' : getTotalVideos()}
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Vídeos
-                    </Typography>
+                    <Typography variant="h4" fontWeight="bold">{loading ? '-' : getTotalVideos()}</Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>Vídeos</Typography>
                   </Box>
                 </CardContent>
               </Card>
@@ -197,21 +179,16 @@ const Conteudo = () => {
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <Button
               startIcon={<Add />}
-              onClick={() =>
-                navigate("/cadastromodulo", { state: { conteudoId: id } })
-              }
+              onClick={() => navigate("/cadastromodulo", { state: { conteudoId: id } })}
               variant="outlined"
               size="large"
-              sx={{ 
+              sx={{
                 borderRadius: 3,
                 borderColor: theme.palette.primary.main,
                 color: theme.palette.primary.main,
                 px: 3,
                 py: 1.5,
-                '&:hover': {
-                  bgcolor: alpha(theme.palette.primary.main, 0.08),
-                  borderColor: theme.palette.primary.dark,
-                }
+                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.08), borderColor: theme.palette.primary.dark }
               }}
             >
               Criar Módulo
@@ -221,18 +198,14 @@ const Conteudo = () => {
               startIcon={<VideoCall />}
               variant="contained"
               size="large"
-              onClick={() =>
-                navigate("/upload-video", { state: { conteudoId: id, moduloId: null } })
-              }
-              sx={{ 
+              onClick={() => navigate("/upload-video", { state: { conteudoId: id, moduloId: null } })}
+              sx={{
                 borderRadius: 3,
                 px: 3,
                 py: 1.5,
                 fontWeight: 600,
                 background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                '&:hover': {
-                  background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                }
+                '&:hover': { background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})` }
               }}
             >
               Adicionar Vídeo
@@ -242,47 +215,15 @@ const Conteudo = () => {
 
         <Divider sx={{ mb: 4 }} />
 
-        {/* Content Section */}
-        <Box>
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              mb: 3, 
-              fontWeight: 600,
-              color: theme.palette.text.primary,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}
-          >
-            <FolderOpen color="primary" />
-            Módulos do Curso
-          </Typography>
-
-          {loading ? (
-            <LoadingSkeleton />
-          ) : modulos.length === 0 ? (
-            <Card sx={{ 
-              textAlign: 'center', 
-              py: 8,
-              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)}, ${alpha(theme.palette.secondary.main, 0.05)})`
-            }}>
+        {/* Modules Section */}
+        {loading ? <LoadingSkeleton /> : (
+          modulos.length === 0 ? (
+            <Card sx={{ textAlign: 'center', py: 8, background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)}, ${alpha(theme.palette.secondary.main, 0.05)})` }}>
               <CardContent>
                 <FolderOpen sx={{ fontSize: 80, color: theme.palette.grey[400], mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                  Nenhum módulo cadastrado
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Comece criando seu primeiro módulo
-                </Typography>
-                <Button
-                  startIcon={<Add />}
-                  variant="contained"
-                  onClick={() =>
-                    navigate("/cadastromodulo", { state: { conteudoId: id } })
-                  }
-                  sx={{ borderRadius: 3 }}
-                >
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>Nenhum módulo cadastrado</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Comece criando seu primeiro módulo</Typography>
+                <Button startIcon={<Add />} variant="contained" onClick={() => navigate("/cadastromodulo", { state: { conteudoId: id } })} sx={{ borderRadius: 3 }}>
                   Criar Primeiro Módulo
                 </Button>
               </CardContent>
@@ -291,143 +232,36 @@ const Conteudo = () => {
             <Stack spacing={3}>
               {modulos.map((modulo, index) => (
                 <Fade in timeout={300 + index * 100} key={modulo.id}>
-                  <Card 
-                    elevation={0}
-                    sx={{ 
-                      borderRadius: 3,
-                      border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                      overflow: 'hidden',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: theme.shadows[8],
-                        borderColor: alpha(theme.palette.primary.main, 0.3),
-                      }
-                    }}
-                  >
+                  <Card sx={{ borderRadius: 3, border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`, overflow: 'hidden', transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-2px)', boxShadow: theme.shadows[8], borderColor: alpha(theme.palette.primary.main, 0.3) } }}>
                     <CardContent sx={{ p: 0 }}>
-                      {/* Module Header */}
-                      <Box sx={{ 
-                        p: 3, 
-                        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.secondary.main, 0.08)})`
-                      }}>
+                      <Box sx={{ p: 3, background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.secondary.main, 0.08)})` }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                           <Box sx={{ flex: 1 }}>
-                            <Typography 
-                              variant="h6" 
-                              sx={{ 
-                                fontWeight: 600,
-                                color: theme.palette.text.primary,
-                                mb: 1
-                              }}
-                            >
-                              {modulo.titulo}
-                            </Typography>
-                            <Typography 
-                              variant="body2" 
-                              color="text.secondary"
-                              sx={{ mb: 2 }}
-                            >
-                              {modulo.descricao || "Sem descrição"}
-                            </Typography>
+                            <Typography variant="h6" sx={{ fontWeight: 600, color: theme.palette.text.primary, mb: 1 }}>{modulo.titulo}</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{modulo.descricao || "Sem descrição"}</Typography>
                           </Box>
-                          <Chip 
-                            label={`${modulo.videos?.length || 0} vídeos`}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                          />
+                          <Chip label={`${modulo.videos?.length || 0} vídeos`} size="small" color="primary" variant="outlined" />
                         </Box>
-
-                        <Button
-                          size="small"
-                          startIcon={<Add />}
-                          variant="contained"
-                          onClick={() =>
-                            navigate("/uploadvideomodulo", { state: { conteudoId: id, moduloId: modulo.id } })
-                          }
-                          sx={{ 
-                            borderRadius: 2,
-                            textTransform: 'none',
-                            fontWeight: 500
-                          }}
-                        >
-                          Adicionar Vídeo
-                        </Button>
+                        <Button size="small" startIcon={<Add />} variant="contained" onClick={() => navigate("/uploadvideomodulo", { state: { conteudoId: id, moduloId: modulo.id } })} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 500 }}>Adicionar Vídeo</Button>
                       </Box>
 
-                      {/* Videos List */}
+                      {/* Videos inside module */}
                       {modulo.videos && modulo.videos.length > 0 ? (
                         <Box sx={{ p: 2 }}>
                           <Stack spacing={2}>
                             {modulo.videos.map((video, videoIndex) => (
                               <Fade in timeout={500 + videoIndex * 100} key={video.id}>
-                                <Card
-                                  variant="outlined"
-                                  sx={{
-                                    borderRadius: 2,
-                                    transition: 'all 0.2s ease',
-                                    '&:hover': {
-                                      bgcolor: alpha(theme.palette.primary.main, 0.04),
-                                      borderColor: alpha(theme.palette.primary.main, 0.2),
-                                    }
-                                  }}
-                                >
-                                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                <Card variant="outlined" sx={{ borderRadius: 2, transition: 'all 0.2s ease', '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04), borderColor: alpha(theme.palette.primary.main, 0.2) } }}>
+                                  <CardContent sx={{ p: 2 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                      <Avatar sx={{ 
-                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                        color: theme.palette.primary.main
-                                      }}>
-                                        <PlayArrow />
-                                      </Avatar>
-                                      
+                                      <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main }}><PlayArrow /></Avatar>
                                       <Box sx={{ flex: 1 }}>
-                                        <Typography 
-                                          variant="subtitle1" 
-                                          sx={{ fontWeight: 500, mb: 0.5 }}
-                                        >
-                                          {video.titulo}
-                                        </Typography>
-                                        <Typography 
-                                          variant="body2" 
-                                          color="text.secondary"
-                                          sx={{ fontSize: '0.875rem' }}
-                                        >
-                                          {video.url ? 'Link disponível' : 'Sem link'}
-                                        </Typography>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 0.5 }}>{video.titulo}</Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>{video.url ? 'Link disponível' : 'Sem link'}</Typography>
                                       </Box>
-
                                       <Stack direction="row" spacing={1}>
-                                        <IconButton 
-                                          size="small"
-                                          onClick={() => deleteVideo(video.id, modulo.id)}
-                                          sx={{ 
-                                            color: theme.palette.error.main,
-                                            '&:hover': {
-                                              bgcolor: alpha(theme.palette.error.main, 0.1)
-                                            }
-                                          }}
-                                        >
-                                          <Delete fontSize="small" />
-                                        </IconButton>
-                                        
-                                        {video.url && (
-                                          <Button
-                                            size="small"
-                                            startIcon={<Watch />}
-                                            variant="outlined"
-                                            onClick={() => window.open(video.url, "_blank")}
-                                            sx={{ 
-                                              borderRadius: 2,
-                                              textTransform: 'none',
-                                              minWidth: 'auto',
-                                              px: 2
-                                            }}
-                                          >
-                                            Assistir
-                                          </Button>
-                                        )}
+                                        <Button size="small" startIcon={<Watch />} variant="outlined" onClick={() => video.url && window.open(video.url, "_blank")} sx={{ borderRadius: 2, textTransform: 'none', minWidth: 'auto', px: 2 }}>Assistir</Button>
+                                        <Button size="small" variant="outlined" color="error" onClick={() => deleteVideo(video.id, modulo.id)}>Deletar</Button>
                                       </Stack>
                                     </Box>
                                   </CardContent>
@@ -437,15 +271,9 @@ const Conteudo = () => {
                           </Stack>
                         </Box>
                       ) : (
-                        <Box sx={{ 
-                          p: 4, 
-                          textAlign: 'center',
-                          bgcolor: alpha(theme.palette.grey[500], 0.05)
-                        }}>
+                        <Box sx={{ p: 4, textAlign: 'center', bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
                           <VideoLibrary sx={{ fontSize: 48, color: theme.palette.grey[400], mb: 1 }} />
-                          <Typography variant="body2" color="text.secondary">
-                            Nenhum vídeo cadastrado neste módulo
-                          </Typography>
+                          <Typography variant="body2" color="text.secondary">Nenhum vídeo cadastrado neste módulo</Typography>
                         </Box>
                       )}
                     </CardContent>
@@ -453,8 +281,35 @@ const Conteudo = () => {
                 </Fade>
               ))}
             </Stack>
-          )}
-        </Box>
+          )
+        )}
+
+        {/* Videos without module */}
+        {videosSoltos.length > 0 && (
+          <Box sx={{ mt: 5 }}>
+            <Typography variant="h5" sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <VideoLibrary color="primary" /> Vídeos sem módulo
+            </Typography>
+            <Stack spacing={2}>
+              {videosSoltos.map((video) => (
+                <Card key={video.id} variant="outlined" sx={{ borderRadius: 2 }}>
+                  <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main }}><PlayArrow /></Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>{video.titulo}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>{video.url ? 'Link disponível' : 'Sem link'}</Typography>
+                    </Box>
+                    <Stack direction="row" spacing={1}>
+                      {video.url && <Button size="small" startIcon={<Watch />} variant="outlined" onClick={() => window.open(video.url, "_blank")} sx={{ borderRadius: 2, textTransform: 'none', minWidth: 'auto', px: 2 }}>Assistir</Button>}
+                      <Button size="small" variant="outlined" color="error" onClick={() => deleteVideo(video.id, null)}>Deletar</Button>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
+          </Box>
+        )}
+
       </Container>
     </Box>
   );

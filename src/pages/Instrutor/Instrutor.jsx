@@ -1,4 +1,4 @@
-import { Add, Edit, SearchOutlined } from '@mui/icons-material';
+import { Add, Edit, SearchOutlined, PersonOutlined, SchoolOutlined } from '@mui/icons-material';
 import {
   Box,
   Typography,
@@ -10,165 +10,237 @@ import {
   Divider,
   Stack,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Avatar,
+  Chip,
+  alpha
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import theme from '../../theme/theme';
 
 const Instrutor = () => {
   const navigate = useNavigate();
   const [instrutor, setInstrutor] = useState([]);
-  const [busca, setBusca] = useState(""); // Mudado para string
+  const [busca, setBusca] = useState("");
 
   const getInstructor = () => {
     axios.get('http://10.10.10.62:3000/instrutor', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    }).then((response) => {
-      setInstrutor(response.data);
-    }).catch((error) => {
-      console.error('Erro ao buscar instrutores:', error);
-    });
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then((response) => setInstrutor(response.data))
+      .catch((error) => console.error('Erro ao buscar instrutores:', error));
   };
 
   useEffect(() => {
     getInstructor();
   }, []);
 
-  // Filtra os instrutores com base no nome ou formação
   const instrutoresFiltrados = instrutor.filter((instructor) =>
     instructor.nome?.toLowerCase().includes(busca.toLowerCase()) ||
     instructor.formacao?.toLowerCase().includes(busca.toLowerCase())
   );
 
   return (
-    <Box>
-      {/* Header */}
-      <Box sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        mb: 4,
-        flexWrap: "wrap",
-        gap: 2
-      }}>
-        <Box>
-          <Typography variant='h5' fontWeight={600}>Instrutores</Typography>
-          <Typography variant='body1' color='text.secondary'>Gerencie seus instrutores</Typography>
-        </Box>
-
-        {/* Barra de Pesquisa */}
-        <TextField
-          variant='outlined'
-          placeholder="Pesquisar instrutor..."
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <SearchOutlined />
-              </InputAdornment>
-            )
-          }}
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "50px", // Bordas arredondadas
-            },width:"50%"
-            
-          }}
-
-        />
-
-        <Button
-          endIcon={<Add />}
-          onClick={() => navigate('/cadastrarinstrutor')}
-          variant='contained'
-          sx={{
-            borderRadius: '20px',
-            backgroundColor: '#FDBB30',
-            color: '#000',
-            fontWeight: 600,
-            "&:hover": { backgroundColor: '#f4a000' }
-          }}
-        >
-          Novo Instrutor
-        </Button>
-      </Box>
-
-      {/* Lista de Cartões */}
-      <Box
-        sx={{
-          mt: 3,
+    <Box sx={{ minHeight: '100vh', bgcolor: alpha(theme.palette.primary.main, 0.02), py: 4 }}>
+      <Box sx={{ maxWidth: '1400px', mx: 'auto', px: 3 }}>
+        {/* Header */}
+        <Box sx={{
           display: "flex",
-          justifyContent: "center",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 4,
           flexWrap: "wrap",
-          gap: 3
-        }}
-      >
-        {instrutoresFiltrados.length === 0 ? (
-          <Typography variant="body1" color="text.secondary">
-            Nenhum instrutor encontrado.
-          </Typography>
-        ) : (
-          instrutoresFiltrados.map((instructor) => (
-            <Card
-              key={instructor.id}
+          gap: 2,
+          p: 3,
+          borderRadius: 3,
+          background: alpha(theme.palette.primary.main, 0.05),
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+        }}>
+          <Box>
+            <Typography variant='h4' fontWeight={700} sx={{ color: theme.palette.text.primary, mb: 1 }}>
+              Instrutores
+            </Typography>
+            <Typography variant='body1' color='text.secondary' sx={{ mb: 2 }}>
+              Gerencie seus instrutores cadastrados
+            </Typography>
+            <Chip
+              label={`${instrutor.length} instrutores`}
+              size="small"
               sx={{
-                width: 320,
-                borderRadius: 3,
-                boxShadow: 3,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                transition: "all 0.3s ease",
-                border: "1px solid rgba(253,187,48,0)",
-                "&:hover": { transform: "translateX(2px)" },
-                cursor: "pointer"
+                backgroundColor: alpha(theme.palette.primary.main, 0.3),
+                color: theme.palette.primary.light,
+                fontWeight: 600
+              }}
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <TextField
+              variant='outlined'
+              placeholder="Buscar instrutor..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchOutlined sx={{ color: '#666' }} />
+                  </InputAdornment>
+                )
+              }}
+              sx={{
+                width: 300,
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  backgroundColor: 'transparent',
+                  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: theme.palette.primary.main },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: theme.palette.primary.main }
+                }
+              }}
+            />
+
+            <Button
+              startIcon={<Add />}
+              onClick={() => navigate('/cadastrarinstrutor')}
+              variant='contained'
+              sx={{
+                borderRadius: 2,
+                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                
+                fontWeight: 600,
+                px: 3,
+                py: 1.2,
+                textTransform: 'none',
+                boxShadow: 'none',
+                "&:hover": {
+                  background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }
               }}
             >
-              <CardMedia
-                component="img"
-                height="180"
-                image="/logo192.png"
-                alt="Instrutor"
+              Novo Instrutor
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Lista de Cards */}
+        <Box sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+          gap: 3
+        }}>
+          {instrutoresFiltrados.length === 0 ? (
+            <Box sx={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              py: 6,
+              color: 'text.secondary'
+            }}>
+              <PersonOutlined sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+              <Typography variant="h6">
+                {busca ? 'Nenhum instrutor encontrado' : 'Nenhum instrutor cadastrado'}
+              </Typography>
+            </Box>
+          ) : (
+            instrutoresFiltrados.map((instructor) => (
+              <Card
+                key={instructor.id}
                 sx={{
-                  objectFit: 'contain',
-                  backgroundColor: "#1a1a1a",
-                  p: 2,
-                  borderTopLeftRadius: 12,
-                  borderTopRightRadius: 12
+                  borderRadius: 3,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+                  transition: "all 0.2s ease",
+                  cursor: "pointer",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: theme.shadows[8],
+                    borderColor: alpha(theme.palette.primary.main, 0.3),
+                  }
                 }}
-              />
-              <CardHeader
-                title={instructor.nome}
-                titleTypographyProps={{ variant: 'h6', fontWeight: 600 }}
-              />
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  {instructor.formacao}
-                </Typography>
-              </CardContent>
-              <Divider />
-              <CardContent>
-                <Stack direction="row" spacing={2} justifyContent="center">
+              >
+                {/* Imagem */}
+                <Box sx={{ position: 'relative', background: alpha(theme.palette.primary.main, 0.05) }}>
+                  <CardMedia
+                    component="img"
+                    height="160"
+                    image="/logo192.png"
+                    alt={instructor.nome}
+                    sx={{ objectFit: 'contain', p: 2 }}
+                  />
+                  <Avatar
+                    sx={{
+                      position: 'absolute',
+                      bottom: -20,
+                      right: 16,
+                      width: 40,
+                      height: 40,
+                      backgroundColor: theme.palette.primary.main,
+                      color: '#fff',
+                      fontWeight: 700,
+                      border: '2px solid white',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                    }}
+                  >
+                    {instructor.nome?.charAt(0).toUpperCase()}
+                  </Avatar>
+                </Box>
+
+                {/* Conteúdo */}
+                <CardHeader
+                  title={instructor.nome}
+                  titleTypographyProps={{ variant: 'h6', fontWeight: 600, noWrap: true }}
+                  sx={{ pb: 1 }}
+                />
+
+                <CardContent sx={{ pt: 0 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                    <SchoolOutlined sx={{ color: theme.palette.primary.main, fontSize: 18 }} />
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {instructor.formacao}
+                    </Typography>
+                  </Box>
+                </CardContent>
+
+                <Divider />
+
+                <CardContent>
                   <Button
                     variant="contained"
                     startIcon={<Edit />}
-                    sx={{ borderRadius: '20px', fontWeight: "600" }}
+                    fullWidth
+                    sx={{
+                      borderRadius: 2,
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                      
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      boxShadow: 'none',
+                      "&:hover": {
+                        background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                      }
+                    }}
                     onClick={() =>
                       navigate(`/editarinstrutor/${instructor.id}`, { state: { instrutor: instructor } })
                     }
                   >
                     Editar
                   </Button>
-                  {/* Botão de excluir comentado */}
-                </Stack>
-              </CardContent>
-            </Card>
-          ))
-        )}
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </Box>
       </Box>
     </Box>
   );

@@ -12,10 +12,19 @@ import {
     FormControl,
     FormHelperText,
     Alert,
+    InputAdornment
 } from "@mui/material";
+import {
+    Check,
+    Title,
+    AttachMoney,
+    Description,
+    DateRange,
+    Numbers
+} from "@mui/icons-material";
 import axios from "axios";
+import { alpha } from "@mui/material/styles";
 import theme from "../theme/theme";
-import { Check } from "@mui/icons-material";
 
 const CadastraPlano = ({ setFormPlanos }) => {
     const [nome, setNome] = useState("");
@@ -24,13 +33,10 @@ const CadastraPlano = ({ setFormPlanos }) => {
     const [intervalo, setIntervalo] = useState("");
     const [qtd, setQtd] = useState("");
     const [errors, setErrors] = useState({});
-    const [success, setSuccess] = useState(false);  
-    
+    const [success, setSuccess] = useState(false);
 
     const cadastrarPlano = (e) => {
         e.preventDefault();
-
-        // Reset errors and success
         setErrors({});
         setSuccess(false);
 
@@ -38,30 +44,29 @@ const CadastraPlano = ({ setFormPlanos }) => {
             .post(
                 "http://10.10.10.62:3000/planos/create",
                 {
-                    nome: nome,
+                    nome,
                     preco: parseFloat(preco) || 0,
                     descricao: desc,
-                    intervalo: intervalo,
+                    intervalo,
                     intervaloCount: parseInt(qtd) || 0,
                 },
                 {
                     headers: {
-                        Authorization: `bearer ${localStorage.getItem("token")}`,
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
                 }
             )
-            .then((response) => {
-                console.log(response);
-                setSuccess(true); // Set success state to show alert
+            .then(() => {
+                setSuccess(true);
                 setTimeout(() => {
-                    setFormPlanos(false); // Close form after 2 seconds
+                    setFormPlanos(false);
                 }, 2000);
             })
             .catch((error) => {
-                if (error.response && error.response.data && error.response.data.message) {
+                if (error.response?.data?.message) {
                     const errorMessages = error.response.data.message.reduce((acc, msg) => {
                         if (msg.includes("intervalo")) {
-                            acc.intervalo = "Intervalo deve ser: dia, semana, mês ou ano";
+                            acc.intervalo = "Intervalo deve ser: mês ou ano";
                         }
                         if (msg.includes("intervaloCount")) {
                             acc.qtd = "Quantidade deve ser pelo menos 1";
@@ -70,11 +75,9 @@ const CadastraPlano = ({ setFormPlanos }) => {
                     }, {});
                     setErrors(errorMessages);
                 }
-                console.log(error);
             });
     };
 
-    // Clear success message when form is closed
     useEffect(() => {
         if (!setFormPlanos) {
             setSuccess(false);
@@ -85,21 +88,47 @@ const CadastraPlano = ({ setFormPlanos }) => {
         <>
             <Paper
                 sx={{
-                    p: 2,
-                    width: "450px",
-                    margin: "2rem auto",
-                    borderRadius: "12px",
-                    boxShadow: "0 0 2px rgba(255,255,255,0.4)",
+                    p: 4,
+                    maxWidth: 600,
+                    mx: "auto",
+                    mt: 6,
+                    borderRadius: 4,
+                    background: `linear-gradient(135deg, ${alpha(
+                        theme.palette.primary.main,
+                        0.08
+                    )}, ${alpha(theme.palette.primary.main, 0.02)})`,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                    mb:4
                 }}
             >
-                <Typography variant="h4" sx={{ textAlign: "center", fontWeight: "600" }}>
+                <Typography
+                    variant="h5"
+                    sx={{
+                        textAlign: "center",
+                        fontWeight: 700,
+                        mb: 3,
+                        color: theme.palette.text.primary,
+                    }}
+                >
                     Cadastrar Plano
                 </Typography>
+
                 {success && (
-                    <Alert icon={<Check />} severity="success" sx={{ mb: 2 }}>
-                        Plano Cadastrado com Sucesso!!
+                    <Alert
+                        icon={<Check />}
+                        severity="success"
+                        sx={{
+                            mb: 3,
+                            borderRadius: "12px",
+                            fontWeight: "600",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        }}
+                    >
+                        Plano cadastrado com sucesso!
                     </Alert>
                 )}
+
                 <TextField
                     type="text"
                     label="Nome"
@@ -110,7 +139,15 @@ const CadastraPlano = ({ setFormPlanos }) => {
                     onChange={(e) => setNome(e.target.value)}
                     error={!!errors.nome}
                     helperText={errors.nome}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Title color="primary" />
+                            </InputAdornment>
+                        ),
+                    }}
                 />
+
                 <TextField
                     type="number"
                     label="Preço"
@@ -122,7 +159,15 @@ const CadastraPlano = ({ setFormPlanos }) => {
                     error={!!errors.preco}
                     helperText={errors.preco}
                     inputProps={{ min: 0, step: "0.01" }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <AttachMoney color="primary" />
+                            </InputAdornment>
+                        ),
+                    }}
                 />
+
                 <TextField
                     type="text"
                     label="Descrição"
@@ -135,7 +180,15 @@ const CadastraPlano = ({ setFormPlanos }) => {
                     onChange={(e) => setDesc(e.target.value)}
                     error={!!errors.desc}
                     helperText={errors.desc}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Description color="primary" />
+                            </InputAdornment>
+                        ),
+                    }}
                 />
+
                 <FormControl fullWidth margin="normal" error={!!errors.intervalo}>
                     <InputLabel>Intervalo</InputLabel>
                     <Select
@@ -143,12 +196,21 @@ const CadastraPlano = ({ setFormPlanos }) => {
                         name="intervalo"
                         value={intervalo}
                         onChange={(e) => setIntervalo(e.target.value)}
+                        sx={{ borderRadius: "12px" }}
+                        startAdornment={
+                            <InputAdornment position="start">
+                                <DateRange color="primary" />
+                            </InputAdornment>
+                        }
                     >
                         <MenuItem value="month">Mês</MenuItem>
                         <MenuItem value="year">Ano</MenuItem>
                     </Select>
-                    {errors.intervalo && <FormHelperText>{errors.intervalo}</FormHelperText>}
+                    {errors.intervalo && (
+                        <FormHelperText>{errors.intervalo}</FormHelperText>
+                    )}
                 </FormControl>
+
                 <TextField
                     type="number"
                     label="Quantidade"
@@ -160,25 +222,59 @@ const CadastraPlano = ({ setFormPlanos }) => {
                     error={!!errors.qtd}
                     helperText={errors.qtd}
                     inputProps={{ min: 1 }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Numbers color="primary" />
+                            </InputAdornment>
+                        ),
+                    }}
                 />
-                <Box sx={{ mt: 2, display: "flex", gap: "1rem", justifyContent: "center", alignItems: "center" }}>
+
+                <Box
+                    sx={{
+                        mt: 4,
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 2,
+                    }}
+                >
                     <Button
                         onClick={() => setFormPlanos(false)}
                         variant="outlined"
-                        sx={{ fontWeight: "600" }}
+                        sx={{
+                            borderRadius: 3,
+                            fontWeight: 600,
+                            textTransform: "none",
+                            px: 3,
+                            boxShadow: "0 0 4px rgba(0,0,0,0.15)",
+                        }}
                     >
                         Cancelar
                     </Button>
                     <Button
                         variant="contained"
-                        sx={{ fontWeight: "600" }}
+                        sx={{
+                            borderRadius: 3,
+                            fontWeight: 700,
+                            textTransform: "none",
+                            px: 4,
+                            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                            boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                                background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                                boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+                                transform: "translateY(-2px)",
+                            },
+                        }}
                         onClick={cadastrarPlano}
                     >
                         Cadastrar
                     </Button>
                 </Box>
             </Paper>
-            <Divider />
+            
         </>
     );
 };

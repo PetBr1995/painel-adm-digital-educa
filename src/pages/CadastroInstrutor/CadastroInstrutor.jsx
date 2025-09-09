@@ -8,13 +8,10 @@ import {
   Typography,
   Box,
   Button,
-  Divider,
-  FormControl,
-  InputLabel,
-  OutlinedInput,
-  InputAdornment,
+  TextField,
   useTheme,
-  TextField
+  alpha,
+  CircularProgress
 } from "@mui/material";
 import axios from "axios";
 import { useState } from "react";
@@ -65,27 +62,49 @@ const CadastroInstrutor = () => {
 
   return (
     <>
-      <Box sx={{ mb: 5, display: "flex", justifyContent: "flexStart", alignItems: "center", gap: '1rem' }}>
-        <Button onClick={() => navigate('/instrutores')}>
+      {/* Cabeçalho */}
+      <Box sx={{ mb: 5, display: "flex", alignItems: "center", gap: '1rem' }}>
+        <Button
+          onClick={() => navigate('/instrutores')}
+          sx={{
+            borderRadius: "50%",
+            minWidth: "40px",
+            width: "40px",
+            height: "40px",
+            backgroundColor: alpha(theme.palette.primary.main, 0.1),
+            color: theme.palette.primary.main,
+            "&:hover": { backgroundColor: alpha(theme.palette.primary.main, 0.2) }
+          }}
+        >
           <ArrowBack />
         </Button>
         <Box>
-          <Typography variant="h5" fontWeight={"700"}>Novo Instrutor</Typography>
-          <Typography variant="body1">Cadastre a informações do instrutor</Typography>
+          <Typography variant="h5" fontWeight={700} sx={{ color: theme.palette.text.primary }}>
+            Novo Instrutor
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Cadastre as informações do instrutor
+          </Typography>
         </Box>
       </Box>
 
+      {/* Card de formulário */}
       <Box
         sx={{
-          maxWidth: 500,
+          maxWidth: 600,
           mx: "auto",
           p: 4,
-          borderRadius: "16px",
-          backgroundColor: theme.palette.background.paper,
-          boxShadow: "0 0 2px rgba(255,255,255,0.2)",
+          borderRadius: "20px",
+          background: alpha(theme.palette.primary.main, 0.05),
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.08)"
         }}
       >
-        <Typography variant="h4" sx={{ fontWeight: 500, textAlign: "start", mb: 3 }}>
+        <Typography
+          variant="h5"
+          fontWeight={600}
+          sx={{ mb: 3, color: theme.palette.primary.main }}
+        >
           Informações do Instrutor
         </Typography>
 
@@ -93,8 +112,13 @@ const CadastroInstrutor = () => {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
 
             {/* Nome */}
-
-            <TextField label="Nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
+            <TextField
+              label="Nome"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              required
+              InputProps={{ startAdornment: <Person sx={{ mr: 1, color: theme.palette.primary.main }} /> }}
+            />
 
             {/* Formação */}
             <TextField
@@ -102,6 +126,7 @@ const CadastroInstrutor = () => {
               value={formacao}
               onChange={(e) => setFormacao(e.target.value)}
               required
+              InputProps={{ startAdornment: <School sx={{ mr: 1, color: theme.palette.primary.main }} /> }}
             />
 
             {/* Sobre */}
@@ -112,33 +137,49 @@ const CadastroInstrutor = () => {
               required
               multiline
               rows={4}
+              InputProps={{ startAdornment: <Info sx={{ mr: 1, color: theme.palette.primary.main }} /> }}
             />
 
-            {/* Botão */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-
+            {/* Ações */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: "1rem", mt: 2 }}>
               <Button
                 variant="contained"
                 type="submit"
                 disabled={isLoading}
                 sx={{
-                  borderRadius:"20px",
-                  mt: 0,
-                  backgroundColor: "#FDBB30",
-                  color: "#000",
-                  fontWeight: "600",
+                  borderRadius: "12px",
+                  px: 4,
+                  py: 1.2,
+                  fontWeight: 600,
+                  textTransform: "none",
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                  boxShadow: "none",
                   "&:hover": {
-                    backgroundColor: "#f4a000",
-                  },
+                    background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.15)"
+                  }
                 }}
               >
-                {isLoading ? "Cadastrando..." : "Cadastrar"}
+                {isLoading ? <CircularProgress size={22} color="inherit" /> : "Cadastrar"}
               </Button>
+
               <Button
-                sx={{ borderRadius: "20px", border:"none", boxShadow:"0 0 2px rgba(255,255,255,0.4)" }}
                 variant="outlined"
                 disabled={isLoading}
                 onClick={() => navigate('/instrutores')}
+                sx={{
+                  borderRadius: "12px",
+                  px: 4,
+                  py: 1.2,
+                  fontWeight: 600,
+                  textTransform: "none",
+                  borderColor: alpha(theme.palette.primary.main, 0.4),
+                  color: theme.palette.primary.main,
+                  "&:hover": {
+                    borderColor: theme.palette.primary.main,
+                    backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                  }
+                }}
               >
                 Cancelar
               </Button>
