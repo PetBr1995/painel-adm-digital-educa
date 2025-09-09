@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import * as tus from "tus-js-client";
 import {
   Box,
   Button,
+  Card,
   Container,
   FormControl,
+  InputLabel,
   MenuItem,
   Select,
   TextField,
@@ -20,19 +23,17 @@ import {
 import {
   ArrowBack,
   CloudUpload as CloudUploadIcon,
-  Save as SaveIcon,
+  Send as SendIcon,
   VideoLibrary,
   Image as ImageIcon,
   Person,
   Category,
   School,
-  Edit,
 } from "@mui/icons-material";
-import { useNavigate, useParams } from "react-router-dom";
-import theme from "../../theme/theme";
+import { useNavigate } from "react-router-dom";
+import theme from "../theme/theme";
 
-export default function EditarConteudo() {
-  const { id } = useParams();
+export default function CadastrarConteudo() {
   const [form, setForm] = useState({
     titulo: "",
     descricao: "",
@@ -45,9 +46,7 @@ export default function EditarConteudo() {
   });
 
   const [video, setVideo] = useState(null);
-  const [videoAtual, setVideoAtual] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
   const [alert, setAlert] = useState({ show: false, message: "", type: "info" });
   const [categorias, setCategorias] = useState([]);
   const [instrutores, setInstrutores] = useState([]);
@@ -58,10 +57,6 @@ export default function EditarConteudo() {
   const [thumbnailDesktop, setThumbnailDesktop] = useState(null);
   const [thumbnailMobile, setThumbnailMobile] = useState(null);
   const [thumbnailDestaque, setThumbnailDestaque] = useState(null);
-  
-  const [thumbnailDesktopAtual, setThumbnailDesktopAtual] = useState(null);
-  const [thumbnailMobileAtual, setThumbnailMobileAtual] = useState(null);
-  const [thumbnailDestaqueAtual, setThumbnailDestaqueAtual] = useState(null);
 
   const navigate = useNavigate();
 
@@ -71,73 +66,39 @@ export default function EditarConteudo() {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      await Promise.all([fetchConteudo(), fetchCategorias(), fetchInstrutores()]);
-      setLoadingData(false);
+    const fetchCategorias = async () => {
+      try {
+        setCategoriasLoading(true);
+        const res = await axios.get("http://10.10.10.62:3000/categorias/list", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setCategorias(res.data || []);
+      } catch (err) {
+        console.error("❌ Erro ao carregar categorias:", err);
+        showAlert("Erro ao carregar categorias", "error");
+      } finally {
+        setCategoriasLoading(false);
+      }
     };
 
-    fetchData();
-  }, [id]);
+    const fetchInstrutores = async () => {
+      try {
+        setInstrutoresLoading(true);
+        const res = await axios.get("http://10.10.10.62:3000/instrutor", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setInstrutores(res.data || []);
+      } catch (err) {
+        console.error("❌ Erro ao carregar instrutores:", err);
+        showAlert("Erro ao carregar instrutores", "error");
+      } finally {
+        setInstrutoresLoading(false);
+      }
+    };
 
-  const fetchConteudo = async () => {
-    try {
-      const res = await axios.get(`http://10.10.10.62:3000/conteudos/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      const conteudo = res.data;
-      
-      setForm({
-        titulo: conteudo.titulo || "",
-        descricao: conteudo.descricao || "",
-        categoriaId: conteudo.categoriaId || "",
-        tipo: conteudo.tipo || "CURSO",
-        level: conteudo.level || "Iniciante",
-        aprendizagem: conteudo.aprendizagem || "",
-        requisitos: conteudo.requisitos || "",
-        instrutorId: conteudo.instrutorId || "",
-      });
-
-      // Definir URLs das thumbnails atuais se existirem
-      if (conteudo.thumbnailDesktop) setThumbnailDesktopAtual(conteudo.thumbnailDesktop);
-      if (conteudo.thumbnailMobile) setThumbnailMobileAtual(conteudo.thumbnailMobile);
-      if (conteudo.thumbnailDestaque) setThumbnailDestaqueAtual(conteudo.thumbnailDestaque);
-      if (conteudo.videoUrl) setVideoAtual({ url: conteudo.videoUrl, nome: conteudo.titulo });
-
-    } catch (err) {
-      console.error("❌ Erro ao carregar conteúdo:", err);
-      showAlert("Erro ao carregar dados do conteúdo", "error");
-    }
-  };
-
-  const fetchCategorias = async () => {
-    try {
-      setCategoriasLoading(true);
-      const res = await axios.get("http://10.10.10.62:3000/categorias/list", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      setCategorias(res.data || []);
-    } catch (err) {
-      console.error("❌ Erro ao carregar categorias:", err);
-      showAlert("Erro ao carregar categorias", "error");
-    } finally {
-      setCategoriasLoading(false);
-    }
-  };
-
-  const fetchInstrutores = async () => {
-    try {
-      setInstrutoresLoading(true);
-      const res = await axios.get("http://10.10.10.62:3000/instrutor", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      setInstrutores(res.data || []);
-    } catch (err) {
-      console.error("❌ Erro ao carregar instrutores:", err);
-      showAlert("Erro ao carregar instrutores", "error");
-    } finally {
-      setInstrutoresLoading(false);
-    }
-  };
+    fetchCategorias();
+    fetchInstrutores();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -148,10 +109,10 @@ export default function EditarConteudo() {
     const file = e.target.files[0];
     if (!file) return;
     setVideo({ file, titulo: file.name.replace(/\.[^/.]+$/, "") });
-    showAlert("Novo vídeo selecionado", "success");
+    showAlert("Vídeo introdutório selecionado", "success");
   };
 
-  const ImageUploader = ({ label, id, value, onChange, currentImage }) => (
+  const ImageUploader = ({ label, id, value, onChange }) => (
     <Box sx={{ textAlign: "center" }}>
       <Typography variant="body2" fontWeight="600" sx={{ mb: 1.5, color: "text.primary" }}>
         {label}
@@ -159,7 +120,7 @@ export default function EditarConteudo() {
       <Paper
         elevation={2}
         sx={{
-          border: (value || currentImage) ? `2px solid ${theme.palette.primary.main}` : `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
+          border: value ? `2px solid ${theme.palette.primary.main}` : `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
           width: 140,
           height: 140,
           borderRadius: 3,
@@ -170,7 +131,7 @@ export default function EditarConteudo() {
           cursor: "pointer",
           transition: "all 0.3s ease",
           mx: "auto",
-          bgcolor: (value || currentImage) ? "transparent" : alpha(theme.palette.primary.main, 0.02),
+          bgcolor: value ? "transparent" : alpha(theme.palette.primary.main, 0.02),
           "&:hover": {
             borderColor: theme.palette.primary.main,
             bgcolor: alpha(theme.palette.primary.main, 0.04),
@@ -188,7 +149,7 @@ export default function EditarConteudo() {
             const file = e.target.files[0];
             if (!file) return;
             onChange(file);
-            showAlert("Nova imagem selecionada", "success");
+            showAlert("Imagem selecionada com sucesso", "success");
           }}
         />
         <label htmlFor={id} style={{ width: "100%", height: "100%", cursor: "pointer" }}>
@@ -196,18 +157,6 @@ export default function EditarConteudo() {
             <Box
               component="img"
               src={URL.createObjectURL(value)}
-              alt={label}
-              sx={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: 2
-              }}
-            />
-          ) : currentImage ? (
-            <Box
-              component="img"
-              src={currentImage}
               alt={label}
               sx={{
                 width: "100%",
@@ -234,6 +183,7 @@ export default function EditarConteudo() {
     if (!form.descricao.trim()) return showAlert("A descrição é obrigatória", "error");
     if (!form.categoriaId) return showAlert("Selecione uma categoria", "error");
     if (!form.instrutorId) return showAlert("Selecione um instrutor", "error");
+    if (!video) return showAlert("Selecione o vídeo introdutório", "error");
 
     setLoading(true);
 
@@ -247,18 +197,15 @@ export default function EditarConteudo() {
       formData.append("level", String(form.level));
       formData.append("aprendizagem", String(form.aprendizagem));
       formData.append("requisitos", String(form.requisitos));
-
-      if (video) {
-        formData.append("fileSize", Number(video.file.size));
-        formData.append("video", video.file);
-      }
+      formData.append("fileSize", Number(video.file.size));
+      formData.append("video", video.file);
 
       if (thumbnailDesktop) formData.append("thumbnailDesktop", thumbnailDesktop);
       if (thumbnailMobile) formData.append("thumbnailMobile", thumbnailMobile);
       if (thumbnailDestaque) formData.append("thumbnailDestaque", thumbnailDestaque);
 
-      const { data } = await axios.put(
-        `http://10.10.10.62:3000/conteudos/${id}`,
+      const { data } = await axios.post(
+        "http://10.10.10.62:3000/conteudos/create",
         formData,
         {
           headers: {
@@ -268,31 +215,29 @@ export default function EditarConteudo() {
         }
       );
 
-      showAlert("Conteúdo atualizado com sucesso!", "success");
-      setTimeout(() => navigate('/cursos'), 2000);
-      
+      showAlert("Conteúdo cadastrado com sucesso!", "success");
+      setForm({
+        titulo: "",
+        descricao: "",
+        categoriaId: "",
+        tipo: "CURSO",
+        level: "Iniciante",
+        aprendizagem: "",
+        requisitos: "",
+        instrutorId: ""
+      });
+      setVideo(null);
+      setThumbnailDesktop(null);
+      setThumbnailMobile(null);
+      setThumbnailDestaque(null);
+      setProgress(0);
     } catch (err) {
-      console.error("🔥 Erro na atualização:", err);
-      showAlert("Erro durante a atualização do conteúdo", "error");
+      console.error("🔥 Erro no cadastro:", err);
+      showAlert("Erro durante o cadastro do conteúdo", "error");
     } finally {
       setLoading(false);
     }
   };
-
-  if (loadingData) {
-    return (
-      <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>
-        <Container maxWidth="md">
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 3, textAlign: "center" }}>
-            <LinearProgress sx={{ mb: 2, borderRadius: 4 }} />
-            <Typography variant="h6" color="text.secondary">
-              Carregando dados do conteúdo...
-            </Typography>
-          </Paper>
-        </Container>
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>
@@ -329,9 +274,9 @@ export default function EditarConteudo() {
         >
           {/* Título da página */}
           <Stack direction="row" alignItems="center" justifyContent="center" spacing={2} mb={4}>
-            <Edit sx={{ fontSize: 32, color: "primary.main" }} />
+            <VideoLibrary sx={{ fontSize: 32, color: "primary.main" }} />
             <Typography variant="h4" fontWeight="700" color="text.primary">
-              Editar Conteúdo
+              Cadastrar Novo Conteúdo
             </Typography>
           </Stack>
 
@@ -368,7 +313,8 @@ export default function EditarConteudo() {
               <Typography variant="h6" fontWeight="700" sx={{ mb: 3, color: "text.primary" }}>
                 📝 Informações Básicas
               </Typography>
-              <Stack spacing={3}>
+              <Grid container spacing={3}>
+
                 <TextField
                   fullWidth
                   name="titulo"
@@ -397,6 +343,7 @@ export default function EditarConteudo() {
                   }}
                 />
 
+
                 <TextField
                   fullWidth
                   name="aprendizagem"
@@ -411,7 +358,6 @@ export default function EditarConteudo() {
                     }
                   }}
                 />
-                
                 <TextField
                   fullWidth
                   name="requisitos"
@@ -426,7 +372,7 @@ export default function EditarConteudo() {
                     }
                   }}
                 />
-              </Stack>
+              </Grid>
             </Paper>
 
             {/* Seção: Configurações */}
@@ -514,7 +460,6 @@ export default function EditarConteudo() {
                       )}
                     </Select>
                   </FormControl>
-                  
                   <Box sx={{ mt: 2 }}>
                     <Typography
                       variant="body2"
@@ -561,7 +506,6 @@ export default function EditarConteudo() {
                     id="thumbnailDesktop"
                     value={thumbnailDesktop}
                     onChange={setThumbnailDesktop}
-                    currentImage={thumbnailDesktopAtual}
                   />
                 </Grid>
                 <Grid item xs={12} sm={4}>
@@ -570,7 +514,6 @@ export default function EditarConteudo() {
                     id="thumbnailMobile"
                     value={thumbnailMobile}
                     onChange={setThumbnailMobile}
-                    currentImage={thumbnailMobileAtual}
                   />
                 </Grid>
                 <Grid item xs={12} sm={4}>
@@ -579,7 +522,6 @@ export default function EditarConteudo() {
                     id="thumbnailDestaque"
                     value={thumbnailDestaque}
                     onChange={setThumbnailDestaque}
-                    currentImage={thumbnailDestaqueAtual}
                   />
                 </Grid>
               </Grid>
@@ -592,8 +534,8 @@ export default function EditarConteudo() {
                 p: 4,
                 textAlign: "center",
                 borderRadius: 3,
-                border: (video || videoAtual) ? `2px solid ${theme.palette.primary.main}` : `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
-                bgcolor: (video || videoAtual) ? alpha(theme.palette.primary.main, 0.02) : "transparent",
+                border: video ? `2px solid ${theme.palette.primary.main}` : `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
+                bgcolor: video ? alpha(theme.palette.primary.main, 0.02) : "transparent",
                 transition: "all 0.3s ease",
                 "&:hover": {
                   borderColor: theme.palette.primary.main,
@@ -624,25 +566,15 @@ export default function EditarConteudo() {
                       fontSize: "1rem",
                     }}
                   >
-                    {video ? "Alterar Vídeo" : videoAtual ? "Substituir Vídeo Atual" : "Selecionar Novo Vídeo"}
+                    {video ? "Alterar Vídeo Introdutório" : "Selecionar Vídeo Introdutório *"}
                   </Button>
                   {video && (
                     <Box sx={{ mt: 2 }}>
                       <Typography variant="body1" fontWeight="600" color="text.primary">
-                        Novo: {video.file.name}
+                        {video.file.name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         {(video.file.size / (1024 * 1024)).toFixed(2)} MB
-                      </Typography>
-                    </Box>
-                  )}
-                  {!video && videoAtual && (
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body1" fontWeight="600" color="text.primary">
-                        Vídeo Atual: {videoAtual.nome}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        (Clique para substituir)
                       </Typography>
                     </Box>
                   )}
@@ -666,8 +598,8 @@ export default function EditarConteudo() {
               variant="contained"
               size="large"
               onClick={handleSubmit}
-              disabled={loading}
-              startIcon={!loading && <SaveIcon />}
+              disabled={loading || !video}
+              startIcon={!loading && <SendIcon />}
               sx={{
                 py: 2,
                 fontSize: "1.1rem",
@@ -687,7 +619,7 @@ export default function EditarConteudo() {
                 transition: "all 0.3s ease",
               }}
             >
-              {loading ? "Salvando..." : "Salvar Alterações"}
+              {loading ? "Enviando..." : "Cadastrar Conteúdo"}
             </Button>
           </Stack>
         </Paper>

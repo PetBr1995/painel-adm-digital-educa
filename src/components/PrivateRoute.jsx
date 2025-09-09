@@ -15,7 +15,7 @@ export const PrivateRoute = ({ children }) => {
             }
 
             try {
-                const response = await axios.get('https://api.digitaleduca.com.vc/auth/check', {
+                const response = await axios.get('http://10.10.10.62:3000/auth/check', {
                     headers: { Authorization: 'Bearer ' + token },
 
                 })

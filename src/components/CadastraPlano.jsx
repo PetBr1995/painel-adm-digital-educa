@@ -36,7 +36,7 @@ const CadastraPlano = ({ setFormPlanos }) => {
 
         axios
             .post(
-                "https://api.digitaleduca.com.vc/planos/create",
+                "http://10.10.10.62:3000/planos/create",
                 {
                     nome: nome,
                     preco: parseFloat(preco) || 0,

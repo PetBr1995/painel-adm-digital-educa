@@ -1,0 +1,78 @@
+.swal-theme-popup {
+    background-color: #121829 !important;
+    /* Fundo escuro */
+    color: #FFFFFF !important;
+    /* Texto */
+    border: 1px solid rgba(255, 148, 0, 0.2) !important;
+    /* Borda sutil */
+    border-radius: 15px !important;
+    font-family: 'Roboto', sans-serif;
+    padding: 2rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    /* Profundidade mais suave */
+}
+
+.swal-theme-title {
+    color: #FFB800 !important;
+    /* Amarelo destaque */
+    font-weight: 500;
+    font-size: 1.9rem;
+    /* Levemente menor para suavidade */
+    text-align: center;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: 0.5px;
+    /* Melhor legibilidade */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.swal-theme-button {
+    background-color: #FFB800 !important;
+    /* Amarelo destaque */
+    color: #0A1128 !important;
+    /* Fundo escuro */
+    border-radius: 10px !important;
+    /* Mais suave */
+    border: 1px solid rgba(255, 148, 0, 0.2) !important;
+    /* Mesma borda sutil */
+    padding: 0.6rem 1.6rem !important;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease-in-out;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: .3s;
+}
+
+.swal-theme-cancel {
+    background-color: transparent;
+    color: #FFB800 !important;
+    /* Fundo escuro */
+    border-radius: 10px !important;
+    /* Mais suave */
+    border: 2px solid rgba(255, 148, 0, 0.2) !important;
+    /* Mesma borda sutil */
+    padding: 0.6rem 1.6rem !important;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease-in-out;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: .3s;
+}
+
+.swal-theme-cancel:hover {
+    background-color: transparent !important;
+    /* Hover levemente mais fechado */
+    box-shadow: 0 0px 12px rgba(255, 184, 0, 0.2);
+    /* Glow suave */
+}
+
+.swal-theme-button:hover {
+    background-color: #e0a700 !important;
+    /* Hover levemente mais fechado */
+    box-shadow: 0 4px 12px rgba(255, 184, 0, 0.2);
+    /* Glow suave */
+}

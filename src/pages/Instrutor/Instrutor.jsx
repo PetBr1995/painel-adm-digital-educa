@@ -22,7 +22,7 @@ const Instrutor = () => {
   const [busca, setBusca] = useState(""); // Mudado para string
 
   const getInstructor = () => {
-    axios.get('https://api.digitaleduca.com.vc/instrutor', {
+    axios.get('http://10.10.10.62:3000/instrutor', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }

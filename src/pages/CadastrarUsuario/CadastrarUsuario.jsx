@@ -46,7 +46,7 @@ const CadastrarUsuario = () => {
 
         axios
             .post(
-                "https://api.digitaleduca.com.vc/usuario/admin/create",
+                "http://10.10.10.62:3000/usuario/admin/create",
                 {
                     nome,
                     email,

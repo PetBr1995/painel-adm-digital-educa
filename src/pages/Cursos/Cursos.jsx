@@ -12,46 +12,49 @@ import {
   Tooltip,
   Divider,
   Modal,
+  alpha,
+  Container,
+  Fade,
+  Backdrop,
+  Paper,
 } from "@mui/material";
-import PersonIcon from "@mui/icons-material/Person";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EditIcon from "@mui/icons-material/Edit";
-import SettingsIcon from "@mui/icons-material/Settings";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import AddIcon from "@mui/icons-material/Add";
+import CategoryIcon from "@mui/icons-material/Category";
+import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import theme from "../../theme/theme";
 import CadastrarCategorias from "../../components/CadastrarCategorias";
 
-const Cursos = () => {
+const Conteudos = () => {
   const navigate = useNavigate();
-  const [cursos, setCursos] = useState([]);
   const [categorias, setCategorias] = useState([]);
-  const [cursosPorCategoria, setCursosPorCategoria] = useState([]);
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState("todos");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [conteudos, setConteudos] = useState([]);
 
-  const getCursos = async () => {
+  const getConteudos = async () => {
     try {
-      const response = await axios.get("https://api.digitaleduca.com.vc/curso/cursos", {
+      const response = await axios.get("http://10.10.10.62:3000/conteudos", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      setCursos(response.data);
-      setCursosPorCategoria(response.data); // Initially show all courses
       console.log(response.data)
-    } catch (error) {
-      setError("Erro ao carregar os cursos. Tente novamente mais tarde.");
+      setConteudos(response.data);
+    } catch (err) {
+      console.error("Erro ao carregar conteúdos:", err);
+      setError("Erro ao carregar os conteúdos. Tente novamente mais tarde.");
     }
   };
 
   const getCategorias = async () => {
     try {
-      const response = await axios.get("https://api.digitaleduca.com.vc/categoria/list", {
+      const response = await axios.get("http://10.10.10.62:3000/categorias/list", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -70,276 +73,464 @@ const Cursos = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      await Promise.all([getCursos(), getCategorias()]);
+      await getCategorias();
+      await getConteudos();
       setLoading(false);
     };
     fetchData();
   }, []);
 
-  useEffect(() => {
-    // Filter courses based on selected category
-    if (categoriaSelecionada === "todos") {
-      setCursosPorCategoria(cursos);
-    } else {
-      const filtrados = cursos.filter(
-        (curso) => curso?.categoria?.id === categoriaSelecionada
-      );
-      setCursosPorCategoria(filtrados);
-    }
-  }, [categoriaSelecionada, cursos]);
-
   return (
-    <Box sx={{ p: { xs: 2, md: 4 } }}>
-      {/* Header */}
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        justifyContent="space-between"
-        alignItems={{ xs: "flex-start", sm: "center" }}
-        mb={4}
-        gap={2}
-      >
-        <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Cursos
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Gerencie todos os seus cursos cadastrados
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default", pb: 6 }}>
+      <Container maxWidth="lg" sx={{ pt: { xs: 2, md: 4 } }}>
+        {/* Header com design mais limpo */}
+        <Paper
+          elevation={2}
           sx={{
-            borderRadius: "20px",
-            px: 3,
-            py: 1,
-            fontWeight: "bold",
-            textTransform: "none",
-            bgcolor: "primary.main",
-            "&:hover": { bgcolor: "primary.dark", color: theme.palette.primary.light, boxShadow: "inset 0 0 5px rgba(0,0,0,0.5)" },
-            boxShadow: "inset 0 0 5px rgba(0,0,0,0.5)",
-            transition: ".4s",
+            p: { xs: 3, md: 4 },
+            mb: 4,
+            borderRadius: 3,
+            bgcolor: "background.paper",
+            border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
           }}
-          onClick={() => navigate("/cadastrarcurso")}
         >
-          Novo Curso
-        </Button>
-      </Stack>
-
-      {/* Category Filter */}
-      <Divider sx={{ mb: 4 }} />
-      <Box sx={{ flexWrap:"wrap",display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-
-          <Button
-            variant="contained"
-            sx={{ borderRadius: "20px", fontWeight: "600" }}
-            onClick={() => setShowForm(true)}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            gap={3}
           >
-            Cadastrar Categoria
-          </Button>
-        </Stack>
-        <Grid container spacing={2} mb={3}>
-          <Grid item>
+            <Box>
+              <Stack direction="row" alignItems="center" gap={2} mb={1}>
+                <VideoLibraryIcon
+                  sx={{
+                    fontSize: 32,
+                    color: "primary.main",
+                  }}
+                />
+                <Typography
+                  variant="h4"
+                  fontWeight="700"
+                  color="text.primary"
+                >
+                  Conteúdos
+                </Typography>
+              </Stack>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{ mb: 0.5 }}
+              >
+                Gerencie todos os seus conteúdos de vídeo de forma intuitiva
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontWeight: 500 }}
+              >
+                {conteudos.length} {conteudos.length === 1 ? 'conteúdo' : 'conteúdos'} {conteudos.length === 1 ? 'cadastrado' : 'cadastrados'}
+              </Typography>
+            </Box>
             <Button
-              variant={categoriaSelecionada === "todos" ? "contained" : "outlined"}
-              onClick={() => setCategoriaSelecionada("todos")}
+              variant="contained"
+              startIcon={<AddIcon />}
+              size="large"
               sx={{
+                borderRadius: "12px",
+                px: 4,
+                py: 1.5,
                 fontWeight: "600",
-                borderRadius: "20px",
-                border: "none",
-                boxShadow: "0 0 2px rgba(255,255,255,0.4)",
+                textTransform: "none",
+                fontSize: "1rem",
+                bgcolor: "primary.main",
+                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.25)}`,
+                "&:hover": {
+                  bgcolor: "primary.dark",
+                  boxShadow: `0 6px 16px ${alpha(theme.palette.primary.main, 0.35)}`,
+                  transform: "translateY(-2px)",
+                },
+                transition: "all 0.3s ease",
               }}
+              onClick={() => navigate("/cadastrarconteudo")}
             >
-              Todos
+              Cadastrar Conteúdo
             </Button>
-          </Grid>
-          {categorias.map((cat) => (
-            <Grid item key={cat.id}>
-              <Button
-                variant={categoriaSelecionada === cat.id ? "contained" : "outlined"}
-                onClick={() => setCategoriaSelecionada(cat.id)}
+          </Stack>
+        </Paper>
+
+        {/* Seção de categorias mais discreta */}
+        <Paper
+          elevation={1}
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 2,
+            bgcolor: "background.paper",
+            border: `1px solid ${alpha(theme.palette.divider, 0.06)}`,
+          }}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" alignItems="center" gap={2}>
+              <CategoryIcon sx={{ color: "primary.main", fontSize: 24 }} />
+              <Typography variant="h6" fontWeight="600" color="text.primary">
+                Gerenciar Categorias
+              </Typography>
+            </Stack>
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              sx={{
+                borderRadius: "10px",
+                fontWeight: "600",
+                textTransform: "none",
+                borderColor: alpha(theme.palette.primary.main, 0.4),
+                color: "primary.main",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  transform: "translateY(-1px)",
+                },
+                transition: "all 0.2s ease",
+              }}
+              onClick={() => setShowForm(true)}
+            >
+              Nova Categoria
+            </Button>
+          </Stack>
+        </Paper>
+
+        {/* Content Area */}
+        {loading ? (
+          <Paper
+            elevation={1}
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: 400,
+              borderRadius: 3,
+              bgcolor: "background.paper",
+            }}
+          >
+            <Stack alignItems="center" spacing={3}>
+              <CircularProgress size={50} thickness={4} />
+              <Typography variant="h6" color="text.secondary" fontWeight="500">
+                Carregando conteúdos...
+              </Typography>
+            </Stack>
+          </Paper>
+        ) : error ? (
+          <Paper
+            elevation={1}
+            sx={{
+              bgcolor: alpha(theme.palette.error.main, 0.08),
+              borderRadius: 3,
+              p: 4,
+              textAlign: "center",
+              border: `1px solid ${alpha(theme.palette.error.main, 0.15)}`,
+            }}
+          >
+            <Typography color="error.main" variant="h6" fontWeight="600">
+              {error}
+            </Typography>
+          </Paper>
+        ) : conteudos.length === 0 ? (
+          <Paper
+            elevation={1}
+            sx={{
+              borderRadius: 3,
+              p: { xs: 4, md: 6 },
+              textAlign: "center",
+              bgcolor: "background.paper",
+              border: `2px dashed ${alpha(theme.palette.primary.main, 0.15)}`,
+              minHeight: 400,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Stack spacing={4} alignItems="center" maxWidth={500}>
+              <VideoLibraryIcon
                 sx={{
+                  fontSize: 80,
+                  color: alpha(theme.palette.primary.main, 0.4),
+                }}
+              />
+              <Typography
+                variant="h5"
+                color="text.primary"
+                fontWeight="700"
+              >
+                Comece criando seus conteúdos
+              </Typography>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                align="center"
+                sx={{ lineHeight: 1.6 }}
+              >
+                Você ainda não tem nenhum conteúdo cadastrado. Que tal criar seu primeiro vídeo?
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                size="large"
+                onClick={() => navigate("/cadastrarconteudo")}
+                sx={{
+                  borderRadius: "14px",
+                  px: 4,
+                  py: 1.5,
                   fontWeight: "600",
-                  borderRadius: "20px",
-                  border: "none",
-                  boxShadow: "0 0 2px rgba(255,255,255,0.4)",
+                  textTransform: "none",
+                  fontSize: "1.1rem",
+                  bgcolor: "primary.main",
+                  boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.25)}`,
+                  "&:hover": {
+                    bgcolor: "primary.dark",
+                    boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.35)}`,
+                    transform: "translateY(-2px)",
+                  },
+                  transition: "all 0.3s ease",
                 }}
               >
-                {cat.nome}
+                Cadastrar Primeiro Conteúdo
               </Button>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-      <Divider sx={{ mb: 4 }} />
-
-      {/* States */}
-      {loading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Typography color="error" align="center">
-          {error}
-        </Typography>
-      ) : cursosPorCategoria.length === 0 ? (
-        <Typography align="center" color="text.secondary">
-          Nenhum curso encontrado para {categoriaSelecionada === "todos" ? "todas as categorias" : "esta categoria"}.
-        </Typography>
-      ) : (
-        <Grid container spacing={3}>
-          {cursosPorCategoria.map((curso) => {
-            const totalVideos = curso.modulos?.reduce(
-              (acc, mod) => acc + (mod.videos?.length || 0),
-              0
-            );
-
-            return (
-              <Grid item xs={12} sm={6} md={4} key={curso.id}>
-                <Card
-                  onClick={() => navigate(`/modulos`, { state: { curso } })}
-                  sx={{
-                    borderRadius: 3,
-                    boxShadow: 3,
-                    height: "100%",
-                    width: "300px",
-                    display: "flex",
-                    flexDirection: "column",
-                    cursor: "pointer",
-                    transition: "transform 0.3s, box-shadow 0.3s",
-                    "&:hover": {
-                      transform: "translateY(-5px)",
-                      boxShadow: 6,
-                    },
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    height="160"
-                    image={
-                      curso.thumbnail
-                        ? "https://api.digitaleduca.com.vc/" + curso.thumbnail
-                        : "/placeholder-image.jpg"
-                    }
-                    alt={curso.titulo}
-                    sx={{ objectFit: "cover", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-                  />
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography
-                      variant="h6"
-                      fontWeight="bold"
-                      sx={{
-                        mb: 1,
-                        overflow: "hidden",
-                        whiteSpace: "nowrap",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {curso.titulo}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        mb: 1.5,
-                        minHeight: "3em",
-                      }}
-                    >
-                      {curso.descricao}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="primary.main"
-                      sx={{ mb: 1, fontWeight: 500 }}
-                    >
-                      {curso.categoria?.nome || "Sem categoria"}
-                    </Typography>
-                    <Stack direction="row" spacing={1} mb={2}>
-                      <Chip
-                        label={`${curso.modulos?.length || 0} ${curso.modulos?.length === 1 ? "módulo" : "módulos"}`}
-                        size="small"
-                        variant="outlined"
+            </Stack>
+          </Paper>
+        ) : (
+          <Grid container spacing={4}>
+            {conteudos.map((conteudo, index) => (
+              <Grid item xs={12} sm={6} lg={4} key={conteudo.id}>
+                <Fade in timeout={300 + index * 100}>
+                  <Card
+                    sx={{
+                      borderRadius: 3,
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      bgcolor: "background.paper",
+                      border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                      boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.06)}`,
+                      transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                      "&:hover": {
+                        transform: "translateY(-8px)",
+                        boxShadow: `0 16px 40px ${alpha(theme.palette.common.black, 0.12)}`,
+                        border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                        "& .card-media": {
+                          transform: "scale(1.05)",
+                        },
+                        "& .play-overlay": {
+                          opacity: 1,
+                        },
+                      },
+                    }}
+                  >
+                    <Box sx={{ position: "relative", overflow: "hidden" }}>
+                      <CardMedia
+                        component="img"
+                        height="200"
+                        image={
+                          conteudo.thumbnailDesktop
+                            ? "http://10.10.10.62:3000/" + conteudo.thumbnailDesktop
+                            : "/placeholder-image.jpg"
+                        }
+                        alt={conteudo.titulo}
+                        className="card-media"
                         sx={{
-                          bgcolor: theme.palette.primary.light,
-                          color: theme.palette.secondary.dark,
+                          objectFit: "cover",
+                          borderTopLeftRadius: 12,
+                          borderTopRightRadius: 12,
+                          transition: "transform 0.4s ease",
                         }}
                       />
-                      <Chip
-                        label={`${totalVideos} ${totalVideos === 1 ? "vídeo" : "vídeos"}`}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </Stack>
-                    <Stack direction="row" spacing={1}>
-                      <Tooltip title="Editar curso">
-                        <Button
-                          variant="outlined"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/editarcurso/${curso.id}`);
-                          }}
-                          fullWidth
-                          startIcon={<EditIcon />}
+                      <Box
+                        className="play-overlay"
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          bgcolor: alpha(theme.palette.common.black, 0.6),
+                          opacity: 0,
+                          transition: "opacity 0.3s ease",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderTopLeftRadius: 12,
+                          borderTopRightRadius: 12,
+                        }}
+                      >
+                        <PlayArrowIcon sx={{ fontSize: 50, color: "white" }} />
+                      </Box>
+                    </Box>
+                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                      <Typography
+                        variant="h6"
+                        fontWeight="700"
+                        sx={{
+                          mb: 2,
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                          textOverflow: "ellipsis",
+                          color: "text.primary",
+                        }}
+                      >
+                        {conteudo.titulo}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          mb: 2,
+                          minHeight: "3em",
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {conteudo.descricao}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          mb: 2,
+                          fontWeight: 600,
+                          color: "primary.main",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        {conteudo.categoria?.nome || "Sem categoria"}
+                      </Typography>
+                      <Stack direction="row" spacing={1} mb={3} flexWrap="wrap" gap={1}>
+                        <Chip
+                          label={conteudo.tipo}
+                          size="small"
                           sx={{
-                            textTransform: "none",
-                            borderRadius: "20px",
+                            bgcolor: alpha(theme.palette.primary.main, 0.12),
+                            color: "primary.main",
+                            fontWeight: "600",
                             border: "none",
-                            boxShadow: "0 0 6px rgba(255,255,255,0.4)",
+                            fontSize: "0.75rem",
                           }}
-                        >
-                          Editar
-                        </Button>
-                      </Tooltip>
-                      <Tooltip title="Gerenciar módulos">
-                        <Button
-                          variant="contained"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/modulos`, { state: { curso } });
+                        />
+                        <Chip
+                          label={conteudo.level || "Não definido"}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            borderColor: alpha(theme.palette.text.secondary, 0.25),
+                            color: "text.secondary",
+                            fontWeight: "500",
+                            fontSize: "0.75rem",
                           }}
-                          fullWidth
-                          startIcon={<SettingsIcon />}
-                          sx={{ textTransform: "none", borderRadius: "20px" }}
-                        >
-                          Módulos
-                        </Button>
-                      </Tooltip>
-                    </Stack>
-                  </CardContent>
-                </Card>
+                        />
+                      </Stack>
+                      <Stack direction="row" spacing={2}>
+                        <Tooltip title="Editar conteúdo" arrow>
+                          <Button
+                            variant="outlined"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/editarconteudo/${conteudo.id}`);
+                            }}
+                            fullWidth
+                            startIcon={<EditIcon />}
+                            sx={{
+                              textTransform: "none",
+                              borderRadius: "10px",
+                              borderColor: alpha(theme.palette.primary.main, 0.3),
+                              color: "primary.main",
+                              fontWeight: "600",
+                              py: 1,
+                              fontSize: "0.875rem",
+                              "&:hover": {
+                                borderColor: "primary.main",
+                                bgcolor: alpha(theme.palette.primary.main, 0.04),
+                                transform: "translateY(-1px)",
+                              },
+                              transition: "all 0.2s ease",
+                            }}
+                          >
+                            Editar
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="Gerenciar conteúdo" arrow>
+                          <Button
+                            variant="contained"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/conteudos/${conteudo.id}`);
+                            }}
+                            fullWidth
+                            startIcon={<PlayArrowIcon />}
+                            sx={{
+                              textTransform: "none",
+                              borderRadius: "10px",
+                              fontWeight: "600",
+                              py: 1,
+                              fontSize: "0.875rem",
+                              bgcolor: "primary.main",
+                              "&:hover": {
+                                bgcolor: "primary.dark",
+                                transform: "translateY(-1px)",
+                              },
+                              transition: "all 0.2s ease",
+                            }}
+                          >
+                            Gerenciar
+                          </Button>
+                        </Tooltip>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Fade>
               </Grid>
-            );
-          })}
-        </Grid>
-      )}
+            ))}
+          </Grid>
+        )}
 
-      <Modal open={showForm} onClose={() => setShowForm(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "transparent",
-            boxShadow: 24,
-            p: 4,
-            borderRadius: 2,
-            width: 400,
+        {/* Modal com estilo mais sóbrio */}
+        <Modal
+          open={showForm}
+          onClose={() => setShowForm(false)}
+          closeAfterTransition
+          BackdropComponent={Backdrop}
+          BackdropProps={{
+            timeout: 500,
+            sx: {
+              backdropFilter: "blur(4px)",
+              bgcolor: alpha(theme.palette.common.black, 0.6),
+            }
           }}
         >
-          <CadastrarCategorias
-            setForm={setShowForm}
-            onCategoriaCadastrada={handleCategoriaCadastrada}
-          />
-        </Box>
-      </Modal>
+          <Fade in={showForm}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                bgcolor: "background.paper",
+                boxShadow: `0 12px 40px ${alpha(theme.palette.common.black, 0.2)}`,
+                p: 4,
+                borderRadius: 3,
+                width: { xs: "90%", sm: 450 },
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              }}
+            >
+              <CadastrarCategorias
+                setForm={setShowForm}
+                onCategoriaCadastrada={handleCategoriaCadastrada}
+              />
+            </Box>
+          </Fade>
+        </Modal>
+      </Container>
     </Box>
   );
 };
 
-export default Cursos;
+export default Conteudos;

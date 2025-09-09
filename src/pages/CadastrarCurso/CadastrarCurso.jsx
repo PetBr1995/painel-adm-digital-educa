@@ -64,7 +64,7 @@ const CadastrarCurso = () => {
     }
 
     axios
-      .post("https://api.digitaleduca.com.vc/curso/create", formData, {
+      .post("http://10.10.10.62:3000/curso/create", formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           "Content-Type": "multipart/form-data",
@@ -92,7 +92,7 @@ const CadastrarCurso = () => {
     const token = localStorage.getItem("token");
 
     axios
-      .get("https://api.digitaleduca.com.vc/instrutor", {
+      .get("http://10.10.10.62:3000/instrutor", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -112,7 +112,7 @@ const CadastrarCurso = () => {
     const token = localStorage.getItem("token");
 
     axios
-      .get("https://api.digitaleduca.com.vc/categoria/list", {
+      .get("http://10.10.10.62:3000/categoria/list", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

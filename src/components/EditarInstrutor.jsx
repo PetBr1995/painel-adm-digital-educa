@@ -37,7 +37,7 @@ const EditarInstrutor = () => {
       setLoading(false);
     } else if (id) {
       // Busca os dados da API
-      axios.get(`https://api.digitaleduca.com.vc/instrutor/${id}`, {
+      axios.get(`http://10.10.10.62:3000/instrutor/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`
         }
@@ -79,7 +79,7 @@ const EditarInstrutor = () => {
       console.log("Dados enviados:", { nome, formacao, sobre });
 
       await axios.put(
-        `https://api.digitaleduca.com.vc/instrutor/update/${instrutorFromState.id}`,
+        `http://10.10.10.62:3000/instrutor/update/${instrutorFromState.id}`,
         { nome, formacao, sobre },
         {
           headers: {

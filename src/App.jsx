@@ -22,6 +22,11 @@ import SearchResults from './components/SearchResults';
 import Podcast from './pages/Podcast/Podcast';
 import CadastrarUsuario from './pages/CadastrarUsuario/CadastrarUsuario';
 import Usuarios from './pages/Usuarios/Usuarios';
+import ConteudoForm from './components/CadastrarConteudo';
+import ConteudoUploader from './components/TesteCadastroConteudo';
+import Conteudo from './components/Conteudo';
+import UploadVideoModulo from './components/UploadVideoModulo';
+import EditarConteudo from './pages/EditarCurso/EditarCurso';
 
 
 function App() {
@@ -54,12 +59,15 @@ function App() {
           <Route path='upload-video' element={<UploadVideo />} />
           <Route path='planos' element={<Planos />} />
           <Route path='cadastrarplano' element={<CadastraPlano />} />
-          <Route path='/editarcurso/:id' element={<EditarCurso />} />
+          <Route path='editarconteudo/:id' element={<EditarConteudo />} />
           <Route path="/editarinstrutor/:id" element={<EditarInstrutor />} />
           <Route path='/editar-modulo' element={<EditarModulo />} />
           <Route path='/podcast' element={<Podcast />} />
           <Route path='/cadastrarusuario' element={<CadastrarUsuario />} />
           <Route path='/usuarios' element={<Usuarios />} />
+          <Route path='/cadastrarconteudo' element={<ConteudoForm />} />
+          <Route path='/conteudos/:id' element={<Conteudo />} />
+          <Route path='/uploadvideomodulo' element={<UploadVideoModulo />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,101 +1,282 @@
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import TextField from '@mui/material/TextField'
-import { use, useState } from 'react'
-import Button from '@mui/material/Button'
-import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
-import theme from '../../theme/theme'
-import { ArrowForward, Visibility, VisibilityOff } from '@mui/icons-material'
-import { CardMedia, IconButton, InputAdornment } from '@mui/material'
-import Swal from 'sweetalert2'
+import React, { useState } from "react";
+import {
+    Box,
+    TextField,
+    Typography,
+    Button,
+    IconButton,
+    InputAdornment,
+    CircularProgress,
+    Fade,
+    Divider,
+    Link
+} from "@mui/material";
+import {
+    ArrowForwardIos,
+    Visibility,
+    VisibilityOff,
+    Email,
+    Lock,
+    Login as LoginIcon,
+    PersonAdd as PersonAddIcon
+} from "@mui/icons-material";
+import axios from "axios";
+import theme from "../../theme/theme";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import "./swal-custom.css";
+
 const Login = () => {
-
     const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [senha, setSenha] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+    const navigate = useNavigate();
 
-    const [showPassword, setShowPassword] = useState(false)
-    const handleClickShowPassword = () => setShowPassword((show) => !show);
+    const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const validatePassword = (password) => password.length >= 6;
 
-    const navigate = useNavigate()
-    const handleLogar = (e) => {
+    const handleEmailChange = (e) => {
+        const value = e.target.value;
+        setEmail(value);
+        setErrors((prev) => ({
+            ...prev,
+            email: value && !validateEmail(value) ? "Email inválido" : null,
+        }));
+    };
+
+    const handlePasswordChange = (e) => {
+        const value = e.target.value;
+        setSenha(value);
+        setErrors((prev) => ({
+            ...prev,
+            senha:
+                value && !validatePassword(value)
+                    ? "Senha deve ter pelo menos 6 caracteres"
+                    : null,
+        }));
+    };
+
+    const handleClickShowPassword = () => setShowPassword(!showPassword);
+    const handleMouseDownPassword = (event) => event.preventDefault();
+
+    const handleLogin = async (e) => {
         e.preventDefault();
-        axios.post('https://api.digitaleduca.com.vc/auth/login', {
-            email: email,
-            senha: password
-        }).then(function (response) {
-            localStorage.setItem('token', response.data.access_token
-            )
-            console.log(response)
-            navigate('/dashboard')
-        }).catch(function (error) {
-            console.log(error)
 
+        if (!validateEmail(email) || !validatePassword(senha)) return;
+
+        setLoading(true);
+        try {
+            const response = await axios.post("http://10.10.10.62:3000/auth/login", {
+                email,
+                senha,
+            });
+
+            localStorage.setItem("token", response.data.access_token);
+
+            await Swal.fire({
+                icon: "success",
+                title: "Login realizado com sucesso!",
+                timer: 1500,
+                showConfirmButton: false,
+                customClass: {
+                    popup: "swal-theme-popup",
+                    title: "swal-theme-title",
+                },
+            });
+
+            navigate("/dashboard", { replace: true });
+        } catch (error) {
             Swal.fire({
                 icon: "error",
                 title: "Credenciais inválidas",
-                text: "Email ou senha inválidos",
-                footer:"Tente novamente..."
+                text: "Verifique seu email e senha e tente novamente",
+                customClass: {
+                    popup: "swal-theme-popup",
+                    title: "swal-theme-title",
+                    confirmButton: "swal-theme-button",
+                },
+                showClass: { popup: "animate__animated animate__fadeInDown" },
+                hideClass: { popup: "animate__animated animate__fadeOutUp" },
             });
-
-        })
-
-    }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <Box component={'form'} onSubmit={handleLogar} sx={{ width: "100vw", height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <Box
+            sx={{
+                width: "100%",
+                minHeight: "100vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                px: 2,
+                position: "relative",
+                background: "linear-gradient(135deg, rgba(255,184,0,0.02) 0%, rgba(30,42,70,0.05) 100%)",
+            }}
+        >
+            <Fade in timeout={800}>
+                <Box
+                    component="form"
+                    onSubmit={handleLogin}
+                    sx={{
+                        p: 5,
+                        borderRadius: 3,
+                        width: "100%",
+                        maxWidth: 400,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 3,
+                        background: "rgba(18, 24, 41, 0.8)",
+                        backdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255, 184, 0, 0.1)",
+                        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                        position: "relative",
+                        overflow: "hidden",
+                        "&::before": {
+                            content: '""',
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: "2px",
+                            background: "linear-gradient(90deg, transparent, #FFB800, transparent)",
+                            animation: "shimmer 2s infinite",
+                        },
+                        "@keyframes shimmer": {
+                            "0%": { transform: "translateX(-100%)" },
+                            "100%": { transform: "translateX(100%)" },
+                        },
+                    }}
+                >
+                    <Box sx={{ textAlign: "center" }}>
+                        <Box
+                            component="img"
+                            src="https://i.imgur.com/fumQcmz.png"
+                            alt="Digital Educa Logo"
+                            sx={{
+                                height: 60,
+                                mb: 2,
+                                transition: "transform 0.3s ease",
+                                "&:hover": { transform: "scale(1.05)" },
+                            }}
+                        />
+                        <Typography
+                            color="text.secondary"
+                            variant="body1"
+                            sx={{ opacity: 0.8, fontSize: "0.95rem", letterSpacing: "0.5px" }}
+                        >
+                            Acesse sua conta administrativa
+                        </Typography>
+                    </Box>
 
-            <Box sx={{ p: 2, width: 500, height: 500, borderRadius: "30px", display: "flex", flexDirection: "column", justifyContent: "center", boxShadow: `inset 0 0 6px rgba(0,0,0,0.3) ` }}>
-                <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-                    <CardMedia component="img" image='https://i.imgur.com/fumQcmz.png' sx={{ maxWidth: "150px", mb: "2rem" }} />
-                </Box>
-                <Typography variant='h5' sx={{ fontWeight: "600", textAlign: "start", pl: 2, mb: 4, color: theme.palette.primary.light }}>Acesse sua conta</Typography>
-
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", margin: '1rem' }}>
                     <TextField
                         label="Email"
+                        type="email"
                         fullWidth
+                        value={email}
+                        onChange={handleEmailChange}
+                        error={!!errors.email}
+                        helperText={errors.email}
                         required
-                        onChange={(e) => setEmail(e.target.value)}
-                        sx={{
-                            borderRadius: "15px", " & .MuiOutlinedInput-root": {
-                                borderRadius: "18px"
-                            }
+                        disabled={loading}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <Email
+                                        sx={{ color: theme.palette.text.secondary, fontSize: 20 }}
+                                    />
+                                </InputAdornment>
+                            ),
                         }}
                     />
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", margin: '1rem' }}>
+
                     <TextField
-                        type={showPassword ? 'text' : 'password'}
                         label="Senha"
+                        type={showPassword ? "text" : "password"}
                         fullWidth
+                        value={senha}
+                        onChange={handlePasswordChange}
+                        error={!!errors.senha}
+                        helperText={errors.senha}
                         required
-                        onChange={(e) => setPassword(e.target.value)}
-                        sx={{
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: '18px', // aqui você define o raio da borda
-                            }
-                        }}
+                        disabled={loading}
                         InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <Lock
+                                        sx={{ color: theme.palette.text.secondary, fontSize: 20 }}
+                                    />
+                                </InputAdornment>
+                            ),
                             endAdornment: (
-                                <InputAdornment position='end'>
-                                    <IconButton onClick={() => setShowPassword((prev) => !prev)}>
-                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        aria-label="toggle password visibility"
+                                        onClick={handleClickShowPassword}
+                                        onMouseDown={handleMouseDownPassword}
+                                        edge="end"
+                                        disabled={loading}
+                                    >
+                                        {showPassword ? (
+                                            <VisibilityOff sx={{ color: theme.palette.primary.light }} />
+                                        ) : (
+                                            <Visibility
+                                                sx={{ color: theme.palette.secondary.light }}
+                                            />
+                                        )}
                                     </IconButton>
                                 </InputAdornment>
-                            )
+                            ),
                         }}
-
                     />
-                </Box>
-                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                    <Button type='submit' variant='contained' sx={{ boxShadow: `inset 0 0 5px rgba(0,0,0,0.5)`, color: theme.palette.secondary.dark, fontWeight: "600", width: "50%", height: "55px", marginTop: "2rem", fontSize: "1.2rem", borderRadius: "18px" }}>
-                        Entrar
-                    </Button>
-                </Box>
-            </Box>
-        </Box>
-    )
-}
 
-export default Login
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        fullWidth
+                        disabled={loading || !validateEmail(email) || !validatePassword(senha)}
+                        startIcon={
+                            loading ? (
+                                <CircularProgress size={20} color="inherit" />
+                            ) : (
+                                <LoginIcon />
+                            )
+                        }
+                    >
+                        {loading ? "Entrando..." : "Entrar"}
+                    </Button>
+
+
+                    {/* 
+                    <Divider sx={{ my: 1 }}>
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontSize: "0.8rem" }}
+                        >
+                            ou
+                        </Typography>
+                    </Divider>
+
+                    <Button
+                        startIcon={<PersonAddIcon />}
+                        endIcon={<ArrowForwardIos sx={{ fontSize: 16 }} />}
+                        variant="outlined"
+                        fullWidth
+                        disabled={loading}
+                        onClick={() => navigate("/cadastro")}
+                    >
+                        Criar uma conta
+                    </Button>
+                    */}
+                </Box>
+            </Fade>
+        </Box>
+    );
+};
+
+export default Login;

@@ -80,11 +80,11 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
       // intervaloCount: parsedQtd,
     };
     console.log("Sending payload to server:", JSON.stringify(payload, null, 2));
-    console.log("Request URL:", `https://api.digitaleduca.com.vc/planos/update/${id}`);
+    console.log("Request URL:", `http://10.10.10.62:3000/planos/update/${id}`);
 
     try {
       const response = await axios.put(
-        `https://api.digitaleduca.com.vc/planos/update/${id}`,
+        `http://10.10.10.62:3000/planos/update/${id}`,
         payload,
         {
           headers: {

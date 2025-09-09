@@ -41,7 +41,7 @@ const CadastroInstrutor = () => {
 
     axios
       .post(
-        "https://api.digitaleduca.com.vc/instrutor/create",
+        "http://10.10.10.62:3000/instrutor/create",
         { nome, formacao, sobre },
         { headers: { Authorization: `bearer ${token}` } }
       )
