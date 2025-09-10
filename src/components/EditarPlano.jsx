@@ -10,9 +10,20 @@ import {
   InputLabel,
   FormControl,
   Alert,
+  InputAdornment,
+  FormHelperText,
 } from "@mui/material";
 import axios from "axios";
-import { Check } from "@mui/icons-material";
+import {
+  Check,
+  Title,
+  AttachMoney,
+  Description,
+  DateRange,
+  Numbers,
+} from "@mui/icons-material";
+import { alpha } from "@mui/material/styles";
+import theme from "../theme/theme";
 
 const EditarPlano = ({ plano, setOpen, onUpdate }) => {
   const [nome, setNome] = useState("");
@@ -26,7 +37,6 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
   const id = plano?._id || plano?.id;
 
   useEffect(() => {
-    console.log("Plano received from state:", JSON.stringify(plano, null, 2));
     if (plano) {
       setNome(plano.nome || "");
       setPreco(plano.preco?.toString() || "");
@@ -43,56 +53,24 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
 
     if (!id) {
       setErrors({ general: "ID do plano não encontrado" });
-      console.error("ID is undefined. Plano object:", JSON.stringify(plano, null, 2));
       return;
     }
 
-    const parsedPreco = parseFloat(preco);
-    const parsedQtd = parseInt(qtd);
-
-    if (!nome) {
-      setErrors({ general: "Nome é obrigatório" });
-      return;
-    }
-    if (!desc) {
-      setErrors({ general: "Descrição é obrigatória" });
-      return;
-    }
-    if (isNaN(parsedPreco)) {
-      setErrors({ general: "Preço inválido" });
-      return;
-    }
-    if (!intervalo || !["month", "year"].includes(intervalo)) {
-      setErrors({ general: "Intervalo inválido" });
-      return;
-    }
-    if (isNaN(parsedQtd) || parsedQtd <= 0) {
-      setErrors({ general: "Quantidade inválida" });
-      return;
-    }
-
-    // Try partial payload to test server response
     const payload = {
       nome,
       descricao: desc,
-      // preco: parsedPreco,
-      // intervalo,
-      // intervaloCount: parsedQtd,
     };
-    console.log("Sending payload to server:", JSON.stringify(payload, null, 2));
-    console.log("Request URL:", `http://10.10.10.62:3000/planos/update/${id}`);
 
     try {
-      const response = await axios.put(
+      await axios.put(
         `http://10.10.10.62:3000/planos/update/${id}`,
         payload,
         {
           headers: {
-            Authorization: `bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
-      console.log("Server response:", JSON.stringify(response.data, null, 2));
 
       setSuccess(true);
       if (onUpdate) onUpdate();
@@ -102,9 +80,6 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
       }, 2000);
     } catch (error) {
       const responseMessage = error.response?.data?.message;
-      console.error("Server error details:", JSON.stringify(error.response?.data, null, 2));
-      console.error("Full error object:", JSON.stringify(error, null, 2));
-
       if (Array.isArray(responseMessage)) {
         const errorMessages = responseMessage.reduce((acc, msg) => {
           if (msg.includes("intervalo")) acc.intervalo = "Intervalo inválido";
@@ -121,18 +96,43 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
   return (
     <Paper
       sx={{
-        p: 2,
-        width: "100%",
-        borderRadius: "12px",
-        boxShadow: "0 0 2px rgba(255,255,255,0.4)",
+        p: 4,
+        maxWidth: 600,
+        mx: "auto",
+        mt: 6,
+        borderRadius: 4,
+        background: `linear-gradient(135deg, ${alpha(
+          theme.palette.primary.main,
+          0.08
+        )}, ${alpha(theme.palette.primary.main, 0.02)})`,
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+        boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+        mb: 4,
       }}
     >
-      <Typography variant="h4" sx={{ textAlign: "center", fontWeight: "600" }}>
+      <Typography
+        variant="h5"
+        sx={{
+          textAlign: "center",
+          fontWeight: 700,
+          mb: 3,
+          color: theme.palette.text.primary,
+        }}
+      >
         Editar Plano
       </Typography>
 
       {success && (
-        <Alert icon={<Check />} severity="success" sx={{ mb: 2 }}>
+        <Alert
+          icon={<Check />}
+          severity="success"
+          sx={{
+            mb: 3,
+            borderRadius: "12px",
+            fontWeight: "600",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+          }}
+        >
           Plano atualizado com sucesso!
         </Alert>
       )}
@@ -143,23 +143,41 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
       )}
 
       <TextField
+        type="text"
         label="Nome"
         fullWidth
         margin="normal"
         value={nome}
         onChange={(e) => setNome(e.target.value)}
-        required
+        error={!!errors.nome}
+        helperText={errors.nome}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Title color="primary" />
+            </InputAdornment>
+          ),
+        }}
       />
 
       <TextField
-        label="Preço (R$)"
+        type="number"
+        label="Preço"
         fullWidth
         margin="normal"
         value={preco}
         disabled
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <AttachMoney color="primary" />
+            </InputAdornment>
+          ),
+        }}
       />
 
       <TextField
+        type="text"
         label="Descrição"
         multiline
         rows={4}
@@ -167,30 +185,92 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
         margin="normal"
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
-        required
+        error={!!errors.desc}
+        helperText={errors.desc}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Description color="primary" />
+            </InputAdornment>
+          ),
+        }}
       />
 
-      <FormControl fullWidth margin="normal" disabled>
+      <FormControl fullWidth margin="normal" disabled error={!!errors.intervalo}>
         <InputLabel>Intervalo</InputLabel>
-        <Select value={intervalo}>
+        <Select
+          value={intervalo}
+          startAdornment={
+            <InputAdornment position="start">
+              <DateRange color="primary" />
+            </InputAdornment>
+          }
+        >
           <MenuItem value="month">Mês</MenuItem>
           <MenuItem value="year">Ano</MenuItem>
         </Select>
+        {errors.intervalo && (
+          <FormHelperText>{errors.intervalo}</FormHelperText>
+        )}
       </FormControl>
 
       <TextField
+        type="number"
         label="Quantidade"
         fullWidth
         margin="normal"
         value={qtd}
         disabled
+        error={!!errors.qtd}
+        helperText={errors.qtd}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Numbers color="primary" />
+            </InputAdornment>
+          ),
+        }}
       />
 
-      <Box sx={{mt: 2, display: "flex", gap: "1rem", justifyContent: "center" }}>
-        <Button sx={{borderRadius:"20px", fontWeight:"600", border:"none", boxShadow:"0 0 2px rgba(255,255,255,0.4)"}} onClick={() => setOpen(false)} variant="outlined">
+      <Box
+        sx={{
+          mt: 4,
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 2,
+        }}
+      >
+        <Button
+          onClick={() => setOpen(false)}
+          variant="outlined"
+          sx={{
+            borderRadius: 3,
+            fontWeight: 600,
+            textTransform: "none",
+            px: 3,
+            boxShadow: "0 0 4px rgba(0,0,0,0.15)",
+          }}
+        >
           Cancelar
         </Button>
-        <Button sx={{borderRadius:"20px", fontWeight:"600"}} onClick={updatePlan} variant="contained">
+        <Button
+          variant="contained"
+          sx={{
+            borderRadius: 3,
+            fontWeight: 700,
+            textTransform: "none",
+            px: 4,
+            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+            boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+            transition: "all 0.3s ease",
+            "&:hover": {
+              background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+              boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+              transform: "translateY(-2px)",
+            },
+          }}
+          onClick={updatePlan}
+        >
           Atualizar
         </Button>
       </Box>
