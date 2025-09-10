@@ -26,6 +26,9 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "./swal-custom.css";
 
+import Lottie from 'lottie-react'
+import animationData from '../../assets/Wave Loop.json'
+
 const Login = () => {
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
@@ -115,9 +118,27 @@ const Login = () => {
                 justifyContent: "center",
                 px: 2,
                 position: "relative",
-                background: "linear-gradient(135deg, rgba(255,184,0,0.02) 0%, rgba(30,42,70,0.05) 100%)",
+                overflow: "hidden",
             }}
         >
+            {/* Lottie de fundo */}
+            <Box
+                sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    zIndex: 0,
+                }}
+            >
+                <Lottie
+                    animationData={animationData}
+                    loop={true}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+            </Box>
+
             <Fade in timeout={800}>
                 <Box
                     component="form"
@@ -135,6 +156,7 @@ const Login = () => {
                         border: "1px solid rgba(255, 184, 0, 0.1)",
                         boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
                         position: "relative",
+                        zIndex: 1, // garante que o formulário fique acima da animação
                         overflow: "hidden",
                         "&::before": {
                             content: '""',
@@ -249,30 +271,6 @@ const Login = () => {
                     >
                         {loading ? "Entrando..." : "Entrar"}
                     </Button>
-
-
-                    {/* 
-                    <Divider sx={{ my: 1 }}>
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ fontSize: "0.8rem" }}
-                        >
-                            ou
-                        </Typography>
-                    </Divider>
-
-                    <Button
-                        startIcon={<PersonAddIcon />}
-                        endIcon={<ArrowForwardIos sx={{ fontSize: 16 }} />}
-                        variant="outlined"
-                        fullWidth
-                        disabled={loading}
-                        onClick={() => navigate("/cadastro")}
-                    >
-                        Criar uma conta
-                    </Button>
-                    */}
                 </Box>
             </Fade>
         </Box>
