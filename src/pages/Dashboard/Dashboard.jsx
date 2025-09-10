@@ -91,7 +91,6 @@ const Dashboard = () => {
       });
   };
 
-
   const [conteudos, setConteudos] = useState([])
 
   const getConteudos = () => {
@@ -122,20 +121,26 @@ const Dashboard = () => {
   };
 
   const listarUsuarios = () => {
-    return axios.get('http://10.10.10.62:3000/usuario/admin/usuarios', {
+    return axios.get('https://api.digitaleduca.com.vc/usuario/admin/usuarios', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`
       }
     }).then((response) => {
       const todosUsuarios = response.data;
+
       const ativos = todosUsuarios.filter(user =>
+        user.stripeCustomerId && // Verifica se o stripeCustomerId existe e não é nulo
         user.assinaturas?.some(assinatura => assinatura.status === "ATIVA")
       );
 
       setUsuarios(todosUsuarios);
       setUsuariosAtivos(ativos.length);
 
-      const receitaEstimada = ativos.length * 49.90;
+      const receitaEstimada = ativos.reduce((total, user) => {
+        const assinaturaAtiva = user.assinaturas?.find(a => a.status === "ATIVA");
+        return total + (assinaturaAtiva?.valorPago ?? 0);
+      }, 0);
+
       setMetricas(prev => ({
         ...prev,
         receitaMensal: receitaEstimada,
@@ -156,12 +161,15 @@ const Dashboard = () => {
       });
   };
 
+  
+
   const getPlanos = () => {
     return axios.get('http://10.10.10.62:3000/planos', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     }).then((response) => {
+      console.log(response)
       setPlanos(response.data);
     }).catch((error) => {
       console.log("Erro ao buscar planos:", error);
@@ -177,7 +185,7 @@ const Dashboard = () => {
         getCategorias(),
         getPlanos(),
         listarUsuarios(),
-        getConteudos()
+        getConteudos(),
       ]);
     } finally {
       setLoading(false);
@@ -191,7 +199,7 @@ const Dashboard = () => {
   const summaryData = [
     {
       label: "Conteúdos",
-      value: cursos.length,
+      value: conteudos.length,
       icon: <SchoolIcon fontSize="large" />,
       bgColor: theme.palette.primary.main,
       link: "/cursos",
@@ -235,7 +243,7 @@ const Dashboard = () => {
   const metricsCards = [
     {
       title: "Receita Mensal",
-      value: `R$ ${metricas.receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value:  `R$ ${metricas.receitaMensal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
       icon: <MoneyIcon />,
       progress: 75,
       subtitle: "Baseada em assinaturas ativas",

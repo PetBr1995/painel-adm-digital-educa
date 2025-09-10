@@ -108,7 +108,7 @@ const Usuarios = () => {
     const usuariosInativos = usuarios.length - usuariosAtivos;
 
     return (
-        <Container maxWidth="xl" sx={{ py: 4, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+        <Container sx={{ py: 4, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
             {/* Header melhorado */}
             <Paper
                 elevation={0}

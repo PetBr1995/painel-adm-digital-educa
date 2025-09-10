@@ -312,6 +312,13 @@ const Home = () => {
                 cancelButtonText: "Cancelar",
                 background: theme.palette.background.paper,
                 color: theme.palette.text.primary,
+                customClass: {
+                  popup: "swal-thema-popup"
+                },
+                didOpen: () => {
+                  const container = document.querySelector(".swal2-container");
+                  if (container) container.style.zIndex = 20000;
+                }
               }).then((result) => {
                 if (result.isConfirmed) {
                   localStorage.removeItem("token");

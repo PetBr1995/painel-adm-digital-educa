@@ -115,11 +115,11 @@ const CadastrarUsuario = () => {
             <Paper
                 elevation={0}
                 sx={{
-                    background:`linear-gradient(135deg, ${alpha(theme.palette.primary.light,0.08)},${alpha(theme.palette.primary.light,0.02)})`,
+                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.08)},${alpha(theme.palette.primary.light, 0.02)})`,
                     borderRadius: 3,
                     p: 4,
                     mb: 4,
-                    border:`1px solid ${alpha(theme.palette.primary.light,0.2)}`
+                    border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`
                 }}
             >
                 <Box sx={{
@@ -185,13 +185,13 @@ const CadastrarUsuario = () => {
                 elevation={0}
                 sx={{
                     borderRadius: 4,
-                    border: `1px solid ${alpha(theme.palette.primary.light,0.2)}`,
+                    border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
                     overflow: 'hidden'
                 }}
             >
                 {/* Header do formulário */}
                 <Box sx={{
-                    background: `linear-gradient(145deg, ${alpha(theme.palette.primary.light,0.08)},${alpha(theme.palette.secondary.dark,0.02)})`,
+                    background: alpha(theme.palette.primary.light, 0.08),
                     color: '#ffffff',
                     p: 3,
                     textAlign: 'center'

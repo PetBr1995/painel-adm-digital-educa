@@ -127,8 +127,8 @@ const Login = () => {
                     position: "absolute",
                     top: 0,
                     left: 0,
-                    width: "100%",
-                    height: "100%",
+                    width: "100vw",
+                    height: "100vh",
                     zIndex: 0,
                 }}
             >
@@ -136,6 +136,9 @@ const Login = () => {
                     animationData={animationData}
                     loop={true}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    rendererSettings={{
+                        preserveAspectRatio: "xMidYmid slice", 
+                    }}    
                 />
             </Box>
 
