@@ -5,15 +5,27 @@ import {
     Typography,
     Paper,
     IconButton,
-    InputAdornment
+    InputAdornment,
+    Container,
+    Grid,
+    alpha,
+    Divider
 } from "@mui/material";
 import theme from "../../theme/theme";
 import { useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import {
+    Visibility,
+    VisibilityOff,
+    PersonAddOutlined,
+    EmailOutlined,
+    PhoneOutlined,
+    LockOutlined,
+    ArrowBack,
+    PersonOutlined
+} from "@mui/icons-material";
 
 const CadastrarUsuario = () => {
     const navigate = useNavigate();
@@ -98,114 +110,296 @@ const CadastrarUsuario = () => {
     };
 
     return (
-        <Box sx={{ maxWidth: "600px", margin: "auto", mt: 6 }}>
-            <Box
+        <Container maxWidth="md" sx={{ py: 4 }}>
+            {/* Header melhorado */}
+            <Paper
+                elevation={0}
                 sx={{
-                    fontWeight: "600",
+                    background:`linear-gradient(135deg, ${alpha(theme.palette.primary.light,0.08)},${alpha(theme.palette.primary.light,0.02)})`,
+                    borderRadius: 3,
+                    p: 4,
                     mb: 4,
+                    border:`1px solid ${alpha(theme.palette.primary.light,0.2)}`
+                }}
+            >
+                <Box sx={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between"
-                }}
-            >
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: "600", mb: 1 }}>
-                        Cadastrar Usuário
-                    </Typography>
-                    <Typography
-                        variant="body1"
-                        sx={{ fontWeight: "300", color: "gray", mb: 3 }}
-                    >
-                        Preencha as informações do usuário abaixo
-                    </Typography>
-                </Box>
-                <Box>
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 2
+                }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <PersonAddOutlined
+                            sx={{
+                                fontSize: 40,
+                                color: '#FDBB30',
+                                p: 1,
+                                borderRadius: 2,
+                                backgroundColor: alpha('#FDBB30', 0.1)
+                            }}
+                        />
+                        <Box>
+                            <Typography variant="h4" sx={{
+                                fontWeight: 700,
+                                color: '#ffffff',
+                                mb: 0.5
+                            }}>
+                                Cadastrar Usuário
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                color="text.secondary"
+                                sx={{ fontSize: '1.1rem' }}
+                            >
+                                Preencha as informações para criar um novo usuário
+                            </Typography>
+                        </Box>
+                    </Box>
+
                     <Button
-                        variant="text"
+                        variant="outlined"
+                        startIcon={<ArrowBack />}
                         onClick={() => navigate("/usuarios")}
                         sx={{
-                            boxShadow: "0 0 2px rgba(255,255,255,0.4)",
-                            borderRadius: "20px"
+                            borderRadius: 2,
+                            borderColor: '#FDBB30',
+                            color: '#FDBB30',
+                            fontWeight: 600,
+                            px: 3,
+                            py: 1,
+                            textTransform: 'none',
+                            "&:hover": {
+                                borderColor: '#f4a000',
+                                backgroundColor: alpha('#FDBB30', 0.04)
+                            }
                         }}
                     >
-                        Todos os usuários
+                        Voltar para Usuários
                     </Button>
                 </Box>
-            </Box>
+            </Paper>
 
+            {/* Formulário melhorado */}
             <Paper
-                elevation={3}
+                elevation={0}
                 sx={{
-                    padding: 4,
-                    borderRadius: 2,
-                    backgroundColor: theme.palette.background.paper
+                    borderRadius: 4,
+                    border: `1px solid ${alpha(theme.palette.primary.light,0.2)}`,
+                    overflow: 'hidden'
                 }}
             >
-                <Box component="form" noValidate autoComplete="off">
-                    <TextField
-                        label="Nome"
-                        fullWidth
-                        margin="normal"
-                        value={nome}
-                        onChange={(e) => setNome(e.target.value)}
-                    />
-                    <TextField
-                        label="Email"
-                        type="email"
-                        fullWidth
-                        margin="normal"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Senha"
-                        type={mostrarSenha ? "text" : "password"}
-                        fullWidth
-                        margin="normal"
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                        required
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <IconButton
-                                        onClick={() => setMostrarSenha(!mostrarSenha)}
-                                        edge="end"
-                                    >
-                                        {mostrarSenha ? <VisibilityOff /> : <Visibility />}
-                                    </IconButton>
-                                </InputAdornment>
-                            )
-                        }}
-                    />
-                    <TextField
-                        label="Celular"
-                        type="tel"
-                        fullWidth
-                        margin="normal"
-                        value={celular}
-                        onChange={handleCelularChange}
-                        inputProps={{ maxLength: 15 }} // Ex: (99) 99999-9999
-                    />
+                {/* Header do formulário */}
+                <Box sx={{
+                    background: `linear-gradient(145deg, ${alpha(theme.palette.primary.light,0.08)},${alpha(theme.palette.secondary.dark,0.02)})`,
+                    color: '#ffffff',
+                    p: 3,
+                    textAlign: 'center'
+                }}>
+                    <PersonOutlined sx={{ fontSize: 48, mb: 1 }} />
+                    <Typography variant="h6" fontWeight={700}>
+                        Dados do Novo Usuário
+                    </Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>
+                        Todos os campos são obrigatórios
+                    </Typography>
+                </Box>
 
-                    <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                {/* Campos do formulário */}
+                <Box sx={{ p: 4 }}>
+                    <Grid container spacing={3}>
+                        {/* Nome */}
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Nome completo"
+                                fullWidth
+                                value={nome}
+                                onChange={(e) => setNome(e.target.value)}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <PersonOutlined sx={{ color: '#FDBB30' }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 3,
+                                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        }
+                                    }
+                                }}
+                            />
+                        </Grid>
+
+                        {/* Email */}
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                label="Email"
+                                type="email"
+                                fullWidth
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <EmailOutlined sx={{ color: '#FDBB30' }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 3,
+                                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        }
+                                    }
+                                }}
+                            />
+                        </Grid>
+
+                        {/* Celular */}
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                label="Celular"
+                                type="tel"
+                                fullWidth
+                                value={celular}
+                                onChange={handleCelularChange}
+                                inputProps={{ maxLength: 15 }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <PhoneOutlined sx={{ color: '#FDBB30' }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 3,
+                                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        }
+                                    }
+                                }}
+                            />
+                        </Grid>
+
+                        {/* Senha */}
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Senha"
+                                type={mostrarSenha ? "text" : "password"}
+                                fullWidth
+                                value={senha}
+                                onChange={(e) => setSenha(e.target.value)}
+                                required
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <LockOutlined sx={{ color: '#FDBB30' }} />
+                                        </InputAdornment>
+                                    ),
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() => setMostrarSenha(!mostrarSenha)}
+                                                edge="end"
+                                                sx={{
+                                                    color: '#FDBB30',
+                                                    "&:hover": {
+                                                        backgroundColor: alpha('#FDBB30', 0.1)
+                                                    }
+                                                }}
+                                            >
+                                                {mostrarSenha ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 3,
+                                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        }
+                                    }
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+
+                    <Divider sx={{ my: 4, borderColor: alpha('#FDBB30', 0.2) }} />
+
+                    {/* Botões */}
+                    <Box sx={{
+                        display: "flex",
+                        gap: 2,
+                        justifyContent: "center",
+                        flexWrap: "wrap"
+                    }}>
                         <Button
-                            variant="text"
-                            color="primary"
-                            onClick={cadastrarUsuario}
+                            variant="outlined"
+                            onClick={() => navigate("/usuarios")}
                             sx={{
-                                boxShadow: "0 0 2px rgba(255,255,255,0.4)",
-                                borderRadius: "20px",
-                                fontWeight: "600"
+                                borderRadius: 3,
+                                borderColor: '#ccc',
+                                color: '#ffffff',
+                                fontWeight: 600,
+                                px: 4,
+                                py: 1.2,
+                                textTransform: 'none',
+                                minWidth: 140,
+                                "&:hover": {
+                                    borderColor: '#999',
+                                    backgroundColor: alpha('#000', 0.04)
+                                }
                             }}
                         >
-                            Cadastrar
+                            Cancelar
+                        </Button>
+
+                        <Button
+                            variant="contained"
+                            onClick={cadastrarUsuario}
+                            startIcon={<PersonAddOutlined />}
+                            sx={{
+                                borderRadius: 3,
+                                background: 'linear-gradient(45deg, #FDBB30 30%, #f4a000 90%)',
+                                color: '#000',
+                                fontWeight: 700,
+                                px: 4,
+                                py: 1.2,
+                                textTransform: 'none',
+                                minWidth: 160,
+                                boxShadow: '0 4px 15px rgba(253,187,48,0.3)',
+                                "&:hover": {
+                                    background: 'linear-gradient(45deg, #f4a000 30%, #e89000 90%)',
+                                    boxShadow: '0 6px 20px rgba(253,187,48,0.4)',
+                                    transform: 'translateY(-1px)'
+                                }
+                            }}
+                        >
+                            Cadastrar Usuário
                         </Button>
                     </Box>
                 </Box>
             </Paper>
-        </Box>
+        </Container>
     );
 };
 

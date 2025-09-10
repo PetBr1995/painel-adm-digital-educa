@@ -85,13 +85,13 @@ const Conteudos = () => {
       <Container maxWidth="lg" sx={{ pt: { xs: 2, md: 4 } }}>
         {/* Header com design mais limpo */}
         <Paper
-          elevation={2}
+          elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
             mb: 4,
             borderRadius: 3,
-            bgcolor: "background.paper",
-            border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.08)},${alpha(theme.palette.primary.light, 0.02)})`,
+            border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
           }}
         >
           <Stack
@@ -160,13 +160,13 @@ const Conteudos = () => {
 
         {/* Seção de categorias mais discreta */}
         <Paper
-          elevation={1}
+          elevation={0}
           sx={{
             p: 3,
             mb: 4,
             borderRadius: 2,
-            bgcolor: "background.paper",
-            border: `1px solid ${alpha(theme.palette.divider, 0.06)}`,
+            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.08)},${alpha(theme.palette.primary.light, 0.02)})`,
+            border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
           }}
         >
           <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -308,11 +308,12 @@ const Conteudos = () => {
                       height: "100%",
                       display: "flex",
                       flexDirection: "column",
-                      bgcolor: "background.paper",
+                      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.08)},${alpha(theme.palette.primary.light, 0.02)})`,
                       border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
                       boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.06)}`,
                       transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
                       "&:hover": {
+                        cursor: "pointer",
                         transform: "translateY(-8px)",
                         boxShadow: `0 16px 40px ${alpha(theme.palette.common.black, 0.12)}`,
                         border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,

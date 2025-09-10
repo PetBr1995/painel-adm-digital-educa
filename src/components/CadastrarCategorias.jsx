@@ -18,6 +18,7 @@ import {
 } from "@mui/icons-material";
 import axios from "axios";
 import { useState } from "react";
+import theme from "../theme/theme";
 
 const CadastrarCategorias = ({ setForm, onCategoriaCadastrada }) => {
   const [nome, setNome] = useState("");
@@ -91,16 +92,17 @@ const CadastrarCategorias = ({ setForm, onCategoriaCadastrada }) => {
 
   return (
     <Paper
-      elevation={6}
+      elevation={0}
       sx={{
         width: "100%",
         maxWidth: 420,
         p: 4,
         borderRadius: 3,
         margin: "auto",
-        border: `1px solid ${alpha('#1976d2', 0.08)}`,
+        border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
         position: 'relative',
         overflow: 'hidden',
+        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.08)}, ${alpha(theme.palette.primary.light, 0.02)})`,
         "&::before": {
           content: '""',
           position: 'absolute',
@@ -108,7 +110,7 @@ const CadastrarCategorias = ({ setForm, onCategoriaCadastrada }) => {
           left: 0,
           right: 0,
           height: 4,
-          background: 'linear-gradient(90deg, #1976d2, #42a5f5)',
+          background: `linear-gradient(135deg, ${theme.palette.primary.light}, ${theme.palette.primary.dark})`,
         }
       }}
     >

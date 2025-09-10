@@ -1,9 +1,9 @@
-import { 
-  Box, 
-  Grid, 
-  Paper, 
-  Typography, 
-  Card, 
+import {
+  Box,
+  Grid,
+  Paper,
+  Typography,
+  Card,
   CardContent,
   LinearProgress,
   Chip,
@@ -56,7 +56,7 @@ const Dashboard = () => {
     taxaConclusao: 0,
     tendencia: {
       cursos: "+8%",
-      instrutores: "+12%", 
+      instrutores: "+12%",
       alunos: "+15%"
     }
   });
@@ -70,16 +70,16 @@ const Dashboard = () => {
       })
       .then((response) => {
         setCursos(response.data);
-        
+
         const cursosAtivos = response.data.filter(curso => curso.ativo !== false);
         const totalAvaliacoes = response.data.reduce((acc, curso) => {
           const avaliacao = parseFloat(curso.avaliacao) || 0;
           return acc + avaliacao;
         }, 0);
-        const mediaAvaliacoes = cursosAtivos.length > 0 
-          ? (totalAvaliacoes / cursosAtivos.length).toFixed(1) 
+        const mediaAvaliacoes = cursosAtivos.length > 0
+          ? (totalAvaliacoes / cursosAtivos.length).toFixed(1)
           : "0.0";
-        
+
         setMetricas(prev => ({
           ...prev,
           avaliacaoMedia: mediaAvaliacoes,
@@ -90,6 +90,24 @@ const Dashboard = () => {
         console.log("Erro ao buscar cursos:", error);
       });
   };
+
+
+  const [conteudos, setConteudos] = useState([])
+
+  const getConteudos = () => {
+    axios.get('http://10.10.10.62:3000/conteudos', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    }).then(function (response) {
+      console.log(response)
+      setConteudos(response.data)
+
+    }).catch(function (error) {
+      console.log(error)
+    })
+  }
+
 
   const getInstrutores = () => {
     return axios.get("http://10.10.10.62:3000/instrutor", {
@@ -116,7 +134,7 @@ const Dashboard = () => {
 
       setUsuarios(todosUsuarios);
       setUsuariosAtivos(ativos.length);
-      
+
       const receitaEstimada = ativos.length * 49.90;
       setMetricas(prev => ({
         ...prev,
@@ -158,7 +176,8 @@ const Dashboard = () => {
         getInstrutores(),
         getCategorias(),
         getPlanos(),
-        listarUsuarios()
+        listarUsuarios(),
+        getConteudos()
       ]);
     } finally {
       setLoading(false);
@@ -216,7 +235,7 @@ const Dashboard = () => {
   const metricsCards = [
     {
       title: "Receita Mensal",
-      value: `R$ ${metricas.receitaMensal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+      value: `R$ ${metricas.receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: <MoneyIcon />,
       progress: 75,
       subtitle: "Baseada em assinaturas ativas",
