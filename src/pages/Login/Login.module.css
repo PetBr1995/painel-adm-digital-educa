@@ -1,0 +1,28 @@
+.backgroundAnimation {
+    position: relative;
+}
+
+.backgroundAnimation::after {
+    position: absolute;
+    content: "";
+    left: 0;
+    bottom: 0;
+    width: 100%; /* mais espaço para suavizar */
+    height: 100%;
+    pointer-events: none;
+    background: linear-gradient(
+      to left,
+      rgba(30, 42, 70, 1) 0%,
+      rgba(30, 42, 70, 0.95) 20%,
+      rgba(30, 42, 70, 0.8) 30%,
+      rgba(30, 42, 70, 0.8) 50%,
+      rgba(30, 42, 70, 0.7) 75%,
+      rgba(30, 42, 70, 0.8) 80%,
+      rgba(30, 42, 70, 0.95) 95%,
+      rgba(30, 42, 70, 1) 100%
+    );
+    backdrop-filter: blur(2px); /* 👈 aumenta o blur para evitar a linha marcada */
+  }
+
+
+  

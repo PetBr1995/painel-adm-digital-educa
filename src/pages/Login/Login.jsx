@@ -9,8 +9,12 @@ import {
     CircularProgress,
     Fade,
     Divider,
-    Link
+    Link,
+    alpha
 } from "@mui/material";
+
+import styles from '../Login/Login.module.css'
+
 import {
     ArrowForwardIos,
     Visibility,
@@ -138,7 +142,8 @@ const Login = () => {
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     rendererSettings={{
                         preserveAspectRatio: "xMidYmid slice", 
-                    }}    
+                    }}      
+                    className={styles.backgroundAnimation}
                 />
             </Box>
 

@@ -16,8 +16,21 @@ import {
   ListItemIcon,
   CircularProgress,
   Alert,
-  AlertTitle
+  AlertTitle,
+  alpha
 } from "@mui/material";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from "recharts";
+
 import {
   School as SchoolIcon,
   PersonAdd as PersonAddIcon,
@@ -32,7 +45,8 @@ import {
   Refresh as RefreshIcon,
   People as PeopleIcon,
   MenuBook as MenuBookIcon,
-  CardMembership as CardMembershipIcon
+  CardMembership as CardMembershipIcon,
+  Circle
 } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -151,6 +165,21 @@ const Dashboard = () => {
     });
   };
 
+  const [allUsers, setAllUsers] = useState([])
+
+  const getAllUsers = () => {
+    axios.get('http://10.10.10.62:3000/usuario/admin/usuarios', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    }).then(function (response) {
+      setAllUsers(response.data)
+      console.log(response)
+    }).catch(function (error) {
+      console.log(error)
+    })
+  }
+
   const getCategorias = () => {
     return axios.get('http://10.10.10.62:3000/categoria/list')
       .then((response) => {
@@ -161,7 +190,7 @@ const Dashboard = () => {
       });
   };
 
-  
+
 
   const getPlanos = () => {
     return axios.get('http://10.10.10.62:3000/planos', {
@@ -186,6 +215,7 @@ const Dashboard = () => {
         getPlanos(),
         listarUsuarios(),
         getConteudos(),
+        getAllUsers()
       ]);
     } finally {
       setLoading(false);
@@ -228,43 +258,17 @@ const Dashboard = () => {
       subtitle: "Com assinatura ativa"
     },
 
-    {
-      label: "Categorias",
-      value: categorias.length,
-      icon: <CategoryIcon fontSize="large" />,
-      bgColor: theme.palette.warning.main,
-      link: "/categorias",
-      trend: "0%",
-      trendUp: null,
-      subtitle: "Áreas de conhecimento"
-    },
   ];
 
   const metricsCards = [
     {
       title: "Receita Mensal",
-      value:  `R$ ${metricas.receitaMensal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+      value: `R$ ${metricas.receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: <MoneyIcon />,
       progress: 75,
       subtitle: "Baseada em assinaturas ativas",
       color: "success"
     },
-    {
-      title: "Novas Inscrições",
-      value: metricas.novasInscricoes,
-      icon: <AssignmentIcon />,
-      progress: 60,
-      subtitle: "Novos alunos este mês",
-      color: "info"
-    },
-    {
-      title: "Avaliação Média",
-      value: `${metricas.avaliacaoMedia || "0.0"}⭐`,
-      icon: <StarIcon />,
-      progress: (parseFloat(metricas.avaliacaoMedia || 0) / 5) * 100,
-      subtitle: "Satisfação dos alunos",
-      color: "warning"
-    }
   ];
 
   if (loading) {
@@ -275,6 +279,11 @@ const Dashboard = () => {
       </Box>
     );
   }
+
+  const data = [
+    { name: 'Janeiro', Total: `${allUsers.length}`, Ativos: `${usuariosAtivos}` },
+  ];
+
 
   return (
     <Box sx={{ p: 3, backgroundColor: theme.palette.background.default, minHeight: "100vh" }}>
@@ -334,6 +343,252 @@ const Dashboard = () => {
         ))}
       </Grid>
 
+      {/*Charts*/}
+      <section style={{ display: "flex", justifyContent: "flex-start", gap: "2rem", alignItems: "center", flexWrap: "wrap" }}>
+
+        <Paper
+          elevation={2}
+          sx={{
+            width: "550px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 6,
+            borderRadius: "16px",
+            p: 3,
+            border: `1px solid ${alpha(theme.palette.primary.light, 0.15)}`,
+            background: theme.palette.background.paper,
+          }}
+        >
+          {/* Gráfico */}
+          <Box flex={1}>
+            <Typography
+              sx={{ textAlign: "center", mb: 2, fontWeight: 600 }}
+              variant="h6"
+              color="text.primary"
+            >
+              Indicadores dos Usuários
+            </Typography>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                data={data}
+                margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
+                barCategoryGap="25%"
+              >
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: theme.shadows[3],
+                  }}
+                />
+                <Legend />
+                <Bar
+                  dataKey="Ativos"
+                  fill={theme.palette.success.main}
+                  barSize={40}
+                  radius={[8, 8, 0, 0]}
+                />
+                <Bar
+                  dataKey="Total"
+                  fill={theme.palette.primary.light}
+                  barSize={40}
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </Box>
+
+          {/* Resumo ao lado */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              minWidth: "220px",
+              pl: 3,
+            }}
+          >
+            <Paper
+              elevation={1}
+              sx={{
+                p: 2,
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Avatar sx={{ bgcolor: theme.palette.success.main }}>
+                <PeopleIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  Usuários Ativos
+                </Typography>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={theme.palette.success.main}
+                >
+                  {usuariosAtivos}
+                </Typography>
+              </Box>
+            </Paper>
+
+            <Paper
+              elevation={1}
+              sx={{
+                p: 2,
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Avatar sx={{ bgcolor: theme.palette.primary.light }}>
+                <PeopleIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  Total de Usuários
+                </Typography>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={theme.palette.primary.main}
+                >
+                  {allUsers.length}
+                </Typography>
+              </Box>
+            </Paper>
+          </Box>
+        </Paper>
+
+        <Paper
+          elevation={2}
+          sx={{
+            width: "550px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 6,
+            borderRadius: "16px",
+            p: 3,
+            border: `1px solid ${alpha(theme.palette.primary.light, 0.15)}`,
+            background: theme.palette.background.paper,
+          }}
+        >
+          {/* Gráfico */}
+          <Box flex={1}>
+            <Typography
+              sx={{ textAlign: "center", mb: 2, fontWeight: 600 }}
+              variant="h6"
+              color="text.primary"
+            >
+              Indicadores dos Usuários
+            </Typography>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                data={data}
+                margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
+                barCategoryGap="25%"
+              >
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: theme.shadows[3],
+                  }}
+                />
+                <Legend />
+                <Bar
+                  dataKey="Ativos"
+                  fill={theme.palette.success.main}
+                  barSize={40}
+                  radius={[8, 8, 0, 0]}
+                />
+                <Bar
+                  dataKey="Total"
+                  fill={theme.palette.primary.light}
+                  barSize={40}
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </Box>
+
+          {/* Resumo ao lado */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              minWidth: "220px",
+              pl: 3,
+            }}
+          >
+            <Paper
+              elevation={1}
+              sx={{
+                p: 2,
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Avatar sx={{ bgcolor: theme.palette.success.main }}>
+                <PeopleIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  Usuários Ativos
+                </Typography>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={theme.palette.success.main}
+                >
+                  {usuariosAtivos}
+                </Typography>
+              </Box>
+            </Paper>
+
+            <Paper
+              elevation={1}
+              sx={{
+                p: 2,
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Avatar sx={{ bgcolor: theme.palette.primary.light }}>
+                <PeopleIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  Total de Usuários
+                </Typography>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={theme.palette.primary.main}
+                >
+                  {allUsers.length}
+                </Typography>
+              </Box>
+            </Paper>
+          </Box>
+        </Paper>
+      </section>
+
       {/* Métricas detalhadas */}
       <Grid container spacing={3} mb={4}>
         {metricsCards.map((metric, index) => (
@@ -370,92 +625,6 @@ const Dashboard = () => {
         ))}
       </Grid>
 
-      {/* Cursos populares */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 3 }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box display="flex" alignItems="center" mb={3}>
-                <Avatar sx={{ bgcolor: theme.palette.primary.main, mr: 2 }}>
-                  <PlayIcon />
-                </Avatar>
-                <Typography variant="h6" fontWeight="600">Cursos em Destaque</Typography>
-              </Box>
-              <Divider sx={{ mb: 2 }} />
-              {metricas.cursosPopulares.length > 0 ? (
-                <List>
-                  {metricas.cursosPopulares.slice(0, 5).map((curso, index) => (
-                    <ListItem key={curso.id || index} sx={{ px: 0 }}>
-                      <ListItemIcon>
-                        <Chip label={index + 1} size="small" color="primary" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={curso.nome || `Curso ${index + 1}`}
-                        secondary={curso.categoria?.nome || "Categoria não informada"}
-                      />
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <StarIcon sx={{ color: theme.palette.warning.main, fontSize: 16 }} />
-                        <Typography variant="body2">{curso.avaliacao ? parseFloat(curso.avaliacao).toFixed(1) : "4.5"}</Typography>
-                      </Box>
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Typography textAlign="center">Nenhum curso encontrado</Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Atividade recente */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 3 }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box display="flex" alignItems="center" mb={3}>
-                <Avatar sx={{ bgcolor: theme.palette.info.main, mr: 2 }}>
-                  <ScheduleIcon />
-                </Avatar>
-                <Typography variant="h6" fontWeight="600">Atividade Recente</Typography>
-              </Box>
-              <Divider sx={{ mb: 2 }} />
-              <List>
-                <ListItem sx={{ px: 0 }}>
-                  <ListItemIcon>
-                    <Avatar sx={{ bgcolor: theme.palette.success.main, width: 36, height: 36 }}>
-                      <PersonAddIcon fontSize="small" />
-                    </Avatar>
-                  </ListItemIcon>
-                  <ListItemText primary={`${metricas.novasInscricoes} novos alunos`} secondary="Inscritos nas últimas 24h" />
-                </ListItem>
-                <ListItem sx={{ px: 0 }}>
-                  <ListItemIcon>
-                    <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 36, height: 36 }}>
-                      <MenuBookIcon fontSize="small" />
-                    </Avatar>
-                  </ListItemIcon>
-                  <ListItemText primary={`${cursos.length} cursos publicados`} secondary="Total na plataforma" />
-                </ListItem>
-                <ListItem sx={{ px: 0 }}>
-                  <ListItemIcon>
-                    <Avatar sx={{ bgcolor: theme.palette.warning.main, width: 36, height: 36 }}>
-                      <StarIcon fontSize="small" />
-                    </Avatar>
-                  </ListItemIcon>
-                  <ListItemText primary={`Avaliação média: ${metricas.avaliacaoMedia || "0.0"}`} secondary="Baseada em todas as avaliações" />
-                </ListItem>
-                <ListItem sx={{ px: 0 }}>
-                  <ListItemIcon>
-                    <Avatar sx={{ bgcolor: theme.palette.secondary.main, width: 36, height: 36 }}>
-                      <CardMembershipIcon fontSize="small" />
-                    </Avatar>
-                  </ListItemIcon>
-                  <ListItemText primary={`${planos.length} planos disponíveis`} secondary="Opções de assinatura" />
-                </ListItem>
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
     </Box>
   );
 };
