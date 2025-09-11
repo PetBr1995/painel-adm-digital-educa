@@ -17,7 +17,8 @@ import {
   CircularProgress,
   Alert,
   AlertTitle,
-  alpha
+  alpha,
+  Container
 } from "@mui/material";
 
 import {
@@ -28,7 +29,10 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
 } from "recharts";
 
 import {
@@ -287,344 +291,344 @@ const Dashboard = () => {
 
   return (
     <Box sx={{ p: 3, backgroundColor: theme.palette.background.default, minHeight: "100vh" }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-        <Box>
-          <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
-            Dashboard DigitalEduca
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Visão geral da sua plataforma de ensino
-          </Typography>
+      <Container>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+          <Box>
+            <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
+              Dashboard DigitalEduca
+            </Typography>
+            <Typography variant="subtitle1" color="text.secondary">
+              Visão geral da sua plataforma de ensino
+            </Typography>
+          </Box>
+          <IconButton onClick={carregarDados} color="primary" sx={{ backgroundColor: theme.palette.background.paper, boxShadow: 2 }}>
+            <RefreshIcon />
+          </IconButton>
         </Box>
-        <IconButton onClick={carregarDados} color="primary" sx={{ backgroundColor: theme.palette.background.paper, boxShadow: 2 }}>
-          <RefreshIcon />
-        </IconButton>
-      </Box>
 
-      <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
-        <AlertTitle>Bem-vindo ao seu Dashboard!</AlertTitle>
-        Aqui você pode acompanhar o desempenho da sua plataforma em tempo real.
-      </Alert>
+        <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
+          <AlertTitle>Bem-vindo ao seu Dashboard!</AlertTitle>
+          Aqui você pode acompanhar o desempenho da sua plataforma em tempo real.
+        </Alert>
 
-      {/* Cards principais */}
-      <Grid container spacing={3} mb={4}>
-        {summaryData.map((item, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <Link to={item.link} style={{ textDecoration: "none" }}>
-              <Paper sx={{ p: 3, borderRadius: 4, background: item.bgColor, color: theme.palette.common.white }}>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                  <Box>
-                    <Typography variant="h2" fontWeight="bold">{item.value}</Typography>
-                    <Typography variant="h6">{item.label}</Typography>
-                    <Typography variant="caption">{item.subtitle}</Typography>
+        {/* Cards principais */}
+        <Grid container spacing={3} mb={4}>
+          {summaryData.map((item, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <Link to={item.link} style={{ textDecoration: "none" }}>
+                <Paper sx={{ p: 3, borderRadius: 4, background: item.bgColor, color: theme.palette.common.white }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                    <Box>
+                      <Typography variant="h2" fontWeight="bold">{item.value}</Typography>
+                      <Typography variant="h6">{item.label}</Typography>
+                      <Typography variant="caption">{item.subtitle}</Typography>
+                    </Box>
+                    <Avatar sx={{ bgcolor: "rgba(255,255,255,0.15)", width: 60, height: 60 }}>
+                      {item.icon}
+                    </Avatar>
                   </Box>
-                  <Avatar sx={{ bgcolor: "rgba(255,255,255,0.15)", width: 60, height: 60 }}>
-                    {item.icon}
-                  </Avatar>
+                  {item.trend && (
+                    <Box display="flex" alignItems="center">
+                      <Chip
+                        size="small"
+                        icon={item.trendUp ? <TrendingUpIcon /> : <TrendingDownIcon />}
+                        label={item.trend}
+                        sx={{
+                          bgcolor: item.trendUp
+                            ? theme.palette.success.light
+                            : theme.palette.error.light,
+                          color: theme.palette.common.white
+                        }}
+                      />
+                    </Box>
+                  )}
+                </Paper>
+              </Link>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/*Charts*/}
+        <section style={{ display: "flex", justifyContent: "flex-start", gap: "2rem", alignItems: "center", flexWrap: "wrap" }}>
+
+          <Paper
+            elevation={2}
+            sx={{
+              width: "550px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 6,
+              borderRadius: "16px",
+              p: 3,
+              border: `1px solid ${alpha(theme.palette.primary.light, 0.15)}`,
+              background: theme.palette.background.paper,
+            }}
+          >
+            {/* Gráfico */}
+            <Box flex={1}>
+              <Typography
+                sx={{ textAlign: "center", mb: 2, fontWeight: 600 }}
+                variant="h6"
+                color="text.primary"
+              >
+                Indicadores dos Usuários
+              </Typography>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart
+                  data={data}
+                  margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
+                  barCategoryGap="25%"
+                >
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: theme.shadows[3],
+                    }}
+                  />
+                  <Legend />
+                  <Bar
+                    dataKey="Ativos"
+                    fill={theme.palette.success.main}
+                    barSize={40}
+                    radius={[8, 8, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="Total"
+                    fill={theme.palette.primary.light}
+                    barSize={40}
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+
+            {/* Resumo ao lado */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                minWidth: "220px",
+                pl: 3,
+              }}
+            >
+              <Paper
+                elevation={1}
+                sx={{
+                  p: 2,
+                  borderRadius: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
+                <Avatar sx={{ bgcolor: theme.palette.success.main }}>
+                  <PeopleIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Usuários Ativos
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    fontWeight="bold"
+                    color={theme.palette.success.main}
+                  >
+                    {usuariosAtivos}
+                  </Typography>
                 </Box>
-                {item.trend && (
-                  <Box display="flex" alignItems="center">
-                    <Chip
-                      size="small"
-                      icon={item.trendUp ? <TrendingUpIcon /> : <TrendingDownIcon />}
-                      label={item.trend}
-                      sx={{
-                        bgcolor: item.trendUp
-                          ? theme.palette.success.light
-                          : theme.palette.error.light,
-                        color: theme.palette.common.white
-                      }}
-                    />
-                  </Box>
-                )}
               </Paper>
-            </Link>
-          </Grid>
-        ))}
-      </Grid>
 
-      {/*Charts*/}
-      <section style={{ display: "flex", justifyContent: "flex-start", gap: "2rem", alignItems: "center", flexWrap: "wrap" }}>
-
-        <Paper
-          elevation={2}
-          sx={{
-            width: "550px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 6,
-            borderRadius: "16px",
-            p: 3,
-            border: `1px solid ${alpha(theme.palette.primary.light, 0.15)}`,
-            background: theme.palette.background.paper,
-          }}
-        >
-          {/* Gráfico */}
-          <Box flex={1}>
-            <Typography
-              sx={{ textAlign: "center", mb: 2, fontWeight: 600 }}
-              variant="h6"
-              color="text.primary"
-            >
-              Indicadores dos Usuários
-            </Typography>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={data}
-                margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
-                barCategoryGap="25%"
+              <Paper
+                elevation={1}
+                sx={{
+                  p: 2,
+                  borderRadius: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                }}
               >
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: theme.shadows[3],
-                  }}
-                />
-                <Legend />
-                <Bar
-                  dataKey="Ativos"
-                  fill={theme.palette.success.main}
-                  barSize={40}
-                  radius={[8, 8, 0, 0]}
-                />
-                <Bar
-                  dataKey="Total"
-                  fill={theme.palette.primary.light}
-                  barSize={40}
-                  radius={[8, 8, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </Box>
-
-          {/* Resumo ao lado */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              minWidth: "220px",
-              pl: 3,
-            }}
-          >
-            <Paper
-              elevation={1}
-              sx={{
-                p: 2,
-                borderRadius: "12px",
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Avatar sx={{ bgcolor: theme.palette.success.main }}>
-                <PeopleIcon />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Usuários Ativos
-                </Typography>
-                <Typography
-                  variant="h6"
-                  fontWeight="bold"
-                  color={theme.palette.success.main}
-                >
-                  {usuariosAtivos}
-                </Typography>
-              </Box>
-            </Paper>
-
-            <Paper
-              elevation={1}
-              sx={{
-                p: 2,
-                borderRadius: "12px",
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Avatar sx={{ bgcolor: theme.palette.primary.light }}>
-                <PeopleIcon />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Total de Usuários
-                </Typography>
-                <Typography
-                  variant="h6"
-                  fontWeight="bold"
-                  color={theme.palette.primary.main}
-                >
-                  {allUsers.length}
-                </Typography>
-              </Box>
-            </Paper>
-          </Box>
-        </Paper>
-
-        <Paper
-          elevation={2}
-          sx={{
-            width: "550px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 6,
-            borderRadius: "16px",
-            p: 3,
-            border: `1px solid ${alpha(theme.palette.primary.light, 0.15)}`,
-            background: theme.palette.background.paper,
-          }}
-        >
-          {/* Gráfico */}
-          <Box flex={1}>
-            <Typography
-              sx={{ textAlign: "center", mb: 2, fontWeight: 600 }}
-              variant="h6"
-              color="text.primary"
-            >
-              Indicadores dos Usuários
-            </Typography>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={data}
-                margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
-                barCategoryGap="25%"
-              >
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: theme.shadows[3],
-                  }}
-                />
-                <Legend />
-                <Bar
-                  dataKey="Ativos"
-                  fill={theme.palette.success.main}
-                  barSize={40}
-                  radius={[8, 8, 0, 0]}
-                />
-                <Bar
-                  dataKey="Total"
-                  fill={theme.palette.primary.light}
-                  barSize={40}
-                  radius={[8, 8, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </Box>
-
-          {/* Resumo ao lado */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              minWidth: "220px",
-              pl: 3,
-            }}
-          >
-            <Paper
-              elevation={1}
-              sx={{
-                p: 2,
-                borderRadius: "12px",
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Avatar sx={{ bgcolor: theme.palette.success.main }}>
-                <PeopleIcon />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Usuários Ativos
-                </Typography>
-                <Typography
-                  variant="h6"
-                  fontWeight="bold"
-                  color={theme.palette.success.main}
-                >
-                  {usuariosAtivos}
-                </Typography>
-              </Box>
-            </Paper>
-
-            <Paper
-              elevation={1}
-              sx={{
-                p: 2,
-                borderRadius: "12px",
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Avatar sx={{ bgcolor: theme.palette.primary.light }}>
-                <PeopleIcon />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Total de Usuários
-                </Typography>
-                <Typography
-                  variant="h6"
-                  fontWeight="bold"
-                  color={theme.palette.primary.main}
-                >
-                  {allUsers.length}
-                </Typography>
-              </Box>
-            </Paper>
-          </Box>
-        </Paper>
-      </section>
-
-      {/* Métricas detalhadas */}
-      <Grid container spacing={3} mb={4}>
-        {metricsCards.map((metric, index) => (
-          <Grid item xs={12} md={4} key={index}>
-            <Card sx={{ borderRadius: 3, height: "100%" }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box display="flex" alignItems="center" mb={3}>
-                  <Avatar sx={{ bgcolor: theme.palette[metric.color].main, mr: 2 }}>
-                    {metric.icon}
-                  </Avatar>
-                  <Box flex={1}>
-                    <Typography variant="h6" fontWeight="600">{metric.title}</Typography>
-                    <Typography variant="body2">{metric.subtitle}</Typography>
-                  </Box>
+                <Avatar sx={{ bgcolor: theme.palette.primary.light }}>
+                  <PeopleIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Total de Usuários
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    fontWeight="bold"
+                    color={theme.palette.primary.main}
+                  >
+                    {allUsers.length}
+                  </Typography>
                 </Box>
-                <Typography variant="h4" fontWeight="bold" color={`${metric.color}.main`} mb={2}>
-                  {metric.value}
-                </Typography>
-                <LinearProgress
-                  variant="determinate"
-                  value={metric.progress}
-                  sx={{
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: theme.palette.grey[300],
-                    "& .MuiLinearProgress-bar": {
-                      backgroundColor: theme.palette[metric.color].main
-                    }
-                  }}
-                />
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+              </Paper>
+            </Box>
+          </Paper>
 
+          <Paper
+            elevation={2}
+            sx={{
+              width: "550px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 6,
+              borderRadius: "16px",
+              p: 3,
+              border: `1px solid ${alpha(theme.palette.primary.light, 0.15)}`,
+              background: theme.palette.background.paper,
+            }}
+          >
+            {/* Gráfico */}
+            <Box flex={1}>
+              <Typography
+                sx={{ textAlign: "center", mb: 2, fontWeight: 600 }}
+                variant="h6"
+                color="text.primary"
+              >
+                Indicadores dos Usuários
+              </Typography>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: theme.shadows[3],
+                    }}
+                  />
+                  <Legend />
+                  <Pie
+                    data={[
+                      { name: "Ativos", value: usuariosAtivos },
+                      { name: "Total", value: allUsers.length },
+                    ]}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    innerRadius={60} // vira "doughnut chart"
+                    label
+                  >
+                    <Cell fill={theme.palette.success.main} />
+                    <Cell fill={theme.palette.primary.light} />
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+
+            </Box>
+
+            {/* Resumo ao lado */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                minWidth: "220px",
+                pl: 3,
+              }}
+            >
+              <Paper
+                elevation={1}
+                sx={{
+                  p: 2,
+                  borderRadius: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
+                <Avatar sx={{ bgcolor: theme.palette.success.main }}>
+                  <PeopleIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Usuários Ativos
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    fontWeight="bold"
+                    color={theme.palette.success.main}
+                  >
+                    {usuariosAtivos}
+                  </Typography>
+                </Box>
+              </Paper>
+
+              <Paper
+                elevation={1}
+                sx={{
+                  p: 2,
+                  borderRadius: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
+                <Avatar sx={{ bgcolor: theme.palette.primary.light }}>
+                  <PeopleIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Total de Usuários
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    fontWeight="bold"
+                    color={theme.palette.primary.main}
+                  >
+                    {allUsers.length}
+                  </Typography>
+                </Box>
+              </Paper>
+            </Box>
+          </Paper>
+        </section>
+
+        {/* Métricas detalhadas */}
+        <Grid container spacing={3} mb={4}>
+          {metricsCards.map((metric, index) => (
+            <Grid item xs={12} md={4} key={index}>
+              <Card sx={{ borderRadius: 3, height: "100%" }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" alignItems="center" mb={3}>
+                    <Avatar sx={{ bgcolor: theme.palette[metric.color].main, mr: 2 }}>
+                      {metric.icon}
+                    </Avatar>
+                    <Box flex={1}>
+                      <Typography variant="h6" fontWeight="600">{metric.title}</Typography>
+                      <Typography variant="body2">{metric.subtitle}</Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="h4" fontWeight="bold" color={`${metric.color}.main`} mb={2}>
+                    {metric.value}
+                  </Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={metric.progress}
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: theme.palette.grey[300],
+                      "& .MuiLinearProgress-bar": {
+                        backgroundColor: theme.palette[metric.color].main
+                      }
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
     </Box>
   );
 };
