@@ -209,139 +209,139 @@ const CadastrarUsuario = () => {
                 <Box sx={{ p: 4 }}>
                     <Grid container spacing={3}>
                         {/* Nome */}
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Nome completo"
-                                fullWidth
-                                value={nome}
-                                onChange={(e) => setNome(e.target.value)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <PersonOutlined sx={{ color: '#FDBB30' }} />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                sx={{
-                                    "& .MuiOutlinedInput-root": {
-                                        borderRadius: 3,
-                                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        },
-                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        }
+
+                        <TextField
+                            label="Nome completo"
+                            fullWidth
+                            value={nome}
+                            onChange={(e) => setNome(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <PersonOutlined sx={{ color: '#FDBB30' }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: 3,
+                                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: '#FDBB30',
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: '#FDBB30',
                                     }
-                                }}
-                            />
-                        </Grid>
+                                }
+                            }}
+                        />
+
 
                         {/* Email */}
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Email"
-                                type="email"
-                                fullWidth
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <EmailOutlined sx={{ color: '#FDBB30' }} />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                sx={{
-                                    "& .MuiOutlinedInput-root": {
-                                        borderRadius: 3,
-                                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        },
-                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        }
+
+                        <TextField
+                            label="Email"
+                            type="email"
+                            fullWidth
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <EmailOutlined sx={{ color: '#FDBB30' }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: 3,
+                                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: '#FDBB30',
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: '#FDBB30',
                                     }
-                                }}
-                            />
-                        </Grid>
+                                }
+                            }}
+                        />
+
 
                         {/* Celular */}
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                label="Celular"
-                                type="tel"
-                                fullWidth
-                                value={celular}
-                                onChange={handleCelularChange}
-                                inputProps={{ maxLength: 15 }}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <PhoneOutlined sx={{ color: '#FDBB30' }} />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                sx={{
-                                    "& .MuiOutlinedInput-root": {
-                                        borderRadius: 3,
-                                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        },
-                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        }
+
+                        <TextField
+                            label="Celular"
+                            type="tel"
+                            fullWidth
+                            value={celular}
+                            onChange={handleCelularChange}
+                            inputProps={{ maxLength: 15 }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <PhoneOutlined sx={{ color: '#FDBB30' }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: 3,
+                                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: '#FDBB30',
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: '#FDBB30',
                                     }
-                                }}
-                            />
-                        </Grid>
+                                }
+                            }}
+                        />
+
 
                         {/* Senha */}
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Senha"
-                                type={mostrarSenha ? "text" : "password"}
-                                fullWidth
-                                value={senha}
-                                onChange={(e) => setSenha(e.target.value)}
-                                required
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <LockOutlined sx={{ color: '#FDBB30' }} />
-                                        </InputAdornment>
-                                    ),
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() => setMostrarSenha(!mostrarSenha)}
-                                                edge="end"
-                                                sx={{
-                                                    color: '#FDBB30',
-                                                    "&:hover": {
-                                                        backgroundColor: alpha('#FDBB30', 0.1)
-                                                    }
-                                                }}
-                                            >
-                                                {mostrarSenha ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    )
-                                }}
-                                sx={{
-                                    "& .MuiOutlinedInput-root": {
-                                        borderRadius: 3,
-                                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        },
-                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        }
+
+                        <TextField
+                            label="Senha"
+                            type={mostrarSenha ? "text" : "password"}
+                            fullWidth
+                            value={senha}
+                            onChange={(e) => setSenha(e.target.value)}
+                            required
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <LockOutlined sx={{ color: '#FDBB30' }} />
+                                    </InputAdornment>
+                                ),
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={() => setMostrarSenha(!mostrarSenha)}
+                                            edge="end"
+                                            sx={{
+                                                color: '#FDBB30',
+                                                "&:hover": {
+                                                    backgroundColor: alpha('#FDBB30', 0.1)
+                                                }
+                                            }}
+                                        >
+                                            {mostrarSenha ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: 3,
+                                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: '#FDBB30',
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: '#FDBB30',
                                     }
-                                }}
-                            />
-                        </Grid>
+                                }
+                            }}
+                        />
                     </Grid>
+
 
                     <Divider sx={{ my: 4, borderColor: alpha('#FDBB30', 0.2) }} />
 
