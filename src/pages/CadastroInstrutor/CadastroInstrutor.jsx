@@ -38,7 +38,7 @@ const CadastroInstrutor = () => {
 
     axios
       .post(
-        "http://10.10.10.62:3000/instrutor/create",
+        "http://10.10.10.61:3000/instrutor/create",
         { nome, formacao, sobre },
         { headers: { Authorization: `bearer ${token}` } }
       )

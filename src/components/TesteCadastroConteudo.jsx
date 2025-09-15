@@ -29,7 +29,7 @@ export default function ConteudoUploader() {
       };
 
       // cria conteúdo no backend
-      const { data } = await axios.post("http://10.10.10.62:3000/conteudos/create", payload,{
+      const { data } = await axios.post("http://10.10.10.61:3000/conteudos/create", payload,{
         headers:{
             Authorization: "Bearer "+ localStorage.getItem('token')
         }

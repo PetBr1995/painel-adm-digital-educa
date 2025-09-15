@@ -35,7 +35,7 @@ export const Modulos = () => {
 
   const fetchCursoById = async (id) => {
     try {
-      const response = await axios.get(`http://10.10.10.62:3000/curso/${id}`, {
+      const response = await axios.get(`http://10.10.10.61:3000/curso/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`
         }
@@ -70,7 +70,7 @@ export const Modulos = () => {
       confirmButtonText: "Sim, excluir"
     }).then((result) => {
       if (result.isConfirmed) {
-        axios.delete(`http://10.10.10.62:3000/modulo-curso/${moduloId}`, {
+        axios.delete(`http://10.10.10.61:3000/modulo-curso/${moduloId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }
@@ -97,7 +97,7 @@ export const Modulos = () => {
       confirmButtonText: "Sim, excluir"
     }).then((result) => {
       if (result.isConfirmed) {
-        axios.delete(`http://10.10.10.62:3000/video/${videoId}`, {
+        axios.delete(`http://10.10.10.61:3000/video/${videoId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }

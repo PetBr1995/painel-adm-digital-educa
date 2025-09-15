@@ -63,7 +63,7 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
 
     try {
       await axios.put(
-        `http://10.10.10.62:3000/planos/update/${id}`,
+        `http://10.10.10.61:3000/planos/update/${id}`,
         payload,
         {
           headers: {

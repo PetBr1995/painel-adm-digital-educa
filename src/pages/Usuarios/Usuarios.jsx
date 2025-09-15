@@ -36,7 +36,7 @@ const Usuarios = () => {
     const navigate = useNavigate();
 
     const listarUsuarios = () => {
-        axios.get("http://10.10.10.62:3000/usuario/admin/usuarios", {
+        axios.get("http://10.10.10.61:3000/usuario/admin/usuarios", {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`
             }
@@ -63,7 +63,7 @@ const Usuarios = () => {
             cancelButtonText: "Cancelar"
         }).then((result) => {
             if (result.isConfirmed) {
-                axios.delete(`http://10.10.10.62:3000/usuario/admin/usuarios/${id}`, {
+                axios.delete(`http://10.10.10.61:3000/usuario/admin/usuarios/${id}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`
                     }

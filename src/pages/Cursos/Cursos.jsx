@@ -39,7 +39,7 @@ const Conteudos = () => {
 
   const getConteudos = async () => {
     try {
-      const response = await axios.get("http://10.10.10.62:3000/conteudos", {
+      const response = await axios.get("http://10.10.10.61:3000/conteudos", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -54,7 +54,7 @@ const Conteudos = () => {
 
   const getCategorias = async () => {
     try {
-      const response = await axios.get("http://10.10.10.62:3000/categorias/list", {
+      const response = await axios.get("http://10.10.10.61:3000/categorias/list", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -332,7 +332,7 @@ const Conteudos = () => {
                         height="200"
                         image={
                           conteudo.thumbnailDesktop
-                            ? "http://10.10.10.62:3000/" + conteudo.thumbnailDesktop
+                            ? "http://10.10.10.61:3000/" + conteudo.thumbnailDesktop
                             : "/placeholder-image.jpg"
                         }
                         alt={conteudo.titulo}

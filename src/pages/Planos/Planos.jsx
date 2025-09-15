@@ -36,7 +36,7 @@ const Planos = () => {
 
     const listarPlanos = () => {
         axios
-            .get('http://10.10.10.62:3000/planos', {
+            .get('http://10.10.10.61:3000/planos', {
                 headers: {
                     Authorization: `bearer ${localStorage.getItem("token")}`,
                 },

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import {
   Box,
   Drawer,
@@ -179,10 +180,10 @@ const Home = () => {
         const headers = { Authorization: `Bearer ${token}` };
 
         const [cursosRes, instrutoresRes, categoriasRes, planosRes] = await Promise.all([
-          axios.get(`http://10.10.10.62:3000/curso/cursos?search=${encodeURIComponent(searchQuery)}`, { headers }),
-          axios.get(`http://10.10.10.62:3000/instrutor?search=${encodeURIComponent(searchQuery)}`, { headers }),
-          axios.get(`http://10.10.10.62:3000/categoria/list?search=${encodeURIComponent(searchQuery)}`),
-          axios.get(`http://10.10.10.62:3000/planos?search=${encodeURIComponent(searchQuery)}`, { headers }),
+          axios.get(`http://10.10.10.61:3000/curso/cursos?search=${encodeURIComponent(searchQuery)}`, { headers }),
+          axios.get(`http://10.10.10.61:3000/instrutor?search=${encodeURIComponent(searchQuery)}`, { headers }),
+          axios.get(`http://10.10.10.61:3000/categoria/list?search=${encodeURIComponent(searchQuery)}`),
+          axios.get(`http://10.10.10.61:3000/planos?search=${encodeURIComponent(searchQuery)}`, { headers }),
         ]);
 
         const results = {
@@ -399,11 +400,12 @@ const Home = () => {
                 "&:hover": {
                   backgroundColor: alpha(theme.palette.primary.main, 0.2),
                   transform: `${drawerOpen && !isMobile ? "rotate(180deg)" : "rotate(0deg)"} scale(1.05)`,
-                }
+                },
               }}
             >
-              <MenuIcon />
+              {drawerOpen ? <MenuOpenIcon sx={{transform:"rotate(180deg)"}} /> : <MenuIcon />}
             </IconButton>
+
             <CardMedia
               component="img"
               height="45"
@@ -413,7 +415,7 @@ const Home = () => {
                 maxWidth: "160px",
                 filter: "brightness(1.1)",
                 transition: "filter 0.3s ease",
-                "&:hover": { filter: "brightness(1.2)" }
+                "&:hover": { filter: "brightness(1.2)" },
               }}
             />
           </Stack>

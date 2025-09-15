@@ -81,7 +81,7 @@ const Dashboard = () => {
 
   const getCursos = () => {
     return axios
-      .get("http://10.10.10.62:3000/curso/cursos", {
+      .get("http://10.10.10.61:3000/curso/cursos", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         }
@@ -112,7 +112,7 @@ const Dashboard = () => {
   const [conteudos, setConteudos] = useState([])
 
   const getConteudos = () => {
-    axios.get('http://10.10.10.62:3000/conteudos', {
+    axios.get('http://10.10.10.61:3000/conteudos', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`
       }
@@ -127,7 +127,7 @@ const Dashboard = () => {
 
 
   const getInstrutores = () => {
-    return axios.get("http://10.10.10.62:3000/instrutor", {
+    return axios.get("http://10.10.10.61:3000/instrutor", {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -172,7 +172,7 @@ const Dashboard = () => {
   const [allUsers, setAllUsers] = useState([])
 
   const getAllUsers = () => {
-    axios.get('http://10.10.10.62:3000/usuario/admin/usuarios', {
+    axios.get('http://10.10.10.61:3000/usuario/admin/usuarios', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -185,7 +185,7 @@ const Dashboard = () => {
   }
 
   const getCategorias = () => {
-    return axios.get('http://10.10.10.62:3000/categoria/list')
+    return axios.get('http://10.10.10.61:3000/categoria/list')
       .then((response) => {
         setCategorias(response.data);
       })
@@ -197,7 +197,7 @@ const Dashboard = () => {
 
 
   const getPlanos = () => {
-    return axios.get('http://10.10.10.62:3000/planos', {
+    return axios.get('http://10.10.10.61:3000/planos', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -434,7 +434,7 @@ const Dashboard = () => {
                     Usuários Ativos
                   </Typography>
                   <Typography
-                    variant="h6"
+                    variant="h4"
                     fontWeight="bold"
                     color={theme.palette.success.main}
                   >
@@ -461,7 +461,7 @@ const Dashboard = () => {
                     Total de Usuários
                   </Typography>
                   <Typography
-                    variant="h6"
+                    variant="h4"
                     fontWeight="bold"
                     color={theme.palette.primary.main}
                   >
@@ -554,7 +554,7 @@ const Dashboard = () => {
                     Usuários Ativos
                   </Typography>
                   <Typography
-                    variant="h6"
+                    variant="h4"
                     fontWeight="bold"
                     color={theme.palette.success.main}
                   >
@@ -581,7 +581,7 @@ const Dashboard = () => {
                     Total de Usuários
                   </Typography>
                   <Typography
-                    variant="h6"
+                    variant="h4"
                     fontWeight="bold"
                     color={theme.palette.primary.main}
                   >

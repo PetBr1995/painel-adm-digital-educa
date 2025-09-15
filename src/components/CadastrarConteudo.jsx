@@ -69,7 +69,7 @@ export default function CadastrarConteudo() {
     const fetchCategorias = async () => {
       try {
         setCategoriasLoading(true);
-        const res = await axios.get("http://10.10.10.62:3000/categorias/list", {
+        const res = await axios.get("http://10.10.10.61:3000/categorias/list", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setCategorias(res.data || []);
@@ -84,7 +84,7 @@ export default function CadastrarConteudo() {
     const fetchInstrutores = async () => {
       try {
         setInstrutoresLoading(true);
-        const res = await axios.get("http://10.10.10.62:3000/instrutor", {
+        const res = await axios.get("http://10.10.10.61:3000/instrutor", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setInstrutores(res.data || []);
@@ -205,7 +205,7 @@ export default function CadastrarConteudo() {
       if (thumbnailDestaque) formData.append("thumbnailDestaque", thumbnailDestaque);
 
       const { data } = await axios.post(
-        "http://10.10.10.62:3000/conteudos/create",
+        "http://10.10.10.61:3000/conteudos/create",
         formData,
         {
           headers: {

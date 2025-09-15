@@ -58,7 +58,7 @@ const CadastrarUsuario = () => {
 
         axios
             .post(
-                "http://10.10.10.62:3000/usuario/admin/create",
+                "http://10.10.10.61:3000/usuario/admin/create",
                 {
                     nome,
                     email,
