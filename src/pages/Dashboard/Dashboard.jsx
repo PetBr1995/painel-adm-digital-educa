@@ -498,6 +498,7 @@ const Dashboard = () => {
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Tooltip
+                    formatter={(value, name, props) => `${value} (${((value / allUsers.length) * 100).toFixed(1)}%)`}
                     contentStyle={{
                       borderRadius: "8px",
                       border: "none",
@@ -508,21 +509,24 @@ const Dashboard = () => {
                   <Pie
                     data={[
                       { name: "Ativos", value: usuariosAtivos },
-                      { name: "Total", value: allUsers.length },
+                      { name: "Inativos", value: allUsers.length - usuariosAtivos },
                     ]}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
-                    innerRadius={60} // vira "doughnut chart"
-                    label
+                    innerRadius={60} // vira doughnut chart
+                    label={({ name, value }) =>
+                      `${name}: ${((value / allUsers.length) * 100).toFixed(1)}%`
+                    }
                   >
-                    <Cell fill={theme.palette.success.main} />
-                    <Cell fill={theme.palette.primary.light} />
+                    <Cell fill={theme.palette.success.main} /> {/* Ativos */}
+                    <Cell fill={theme.palette.error.light} />   {/* Inativos */}
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
+
 
             </Box>
 
