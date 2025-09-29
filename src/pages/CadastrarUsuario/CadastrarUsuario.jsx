@@ -58,7 +58,7 @@ const CadastrarUsuario = () => {
 
         axios
             .post(
-                "http://10.10.10.61:3000/usuario/admin/create",
+                "https://testeapi.digitaleduca.com.vc/usuario/admin/create",
                 {
                     nome,
                     email,
@@ -93,7 +93,7 @@ const CadastrarUsuario = () => {
             })
             .catch((error) => {
                 if (error.response) {
-                    console.error("❌ Erro da API:", error.response.data);
+                    console.error("❌ Erro da API:", error.response);
                     Swal.fire(
                         "Erro",
                         error.response.data.message || "Verifique os dados e tente novamente.",

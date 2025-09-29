@@ -75,7 +75,7 @@ const Login = () => {
 
         setLoading(true);
         try {
-            const response = await axios.post("http://10.10.10.61:3000/auth/login", {
+            const response = await axios.post("https://testeapi.digitaleduca.com.vc/auth/login", {
                 email,
                 senha,
             });
@@ -141,8 +141,8 @@ const Login = () => {
                     loop={true}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     rendererSettings={{
-                        preserveAspectRatio: "xMidYmid slice", 
-                    }}      
+                        preserveAspectRatio: "xMidYmid slice",
+                    }}
                     className={styles.backgroundAnimation}
                 />
             </Box>

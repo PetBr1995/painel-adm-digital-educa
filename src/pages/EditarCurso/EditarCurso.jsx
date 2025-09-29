@@ -81,7 +81,7 @@ export default function EditarConteudo() {
 
   const fetchConteudo = async () => {
     try {
-      const res = await axios.get(`http://10.10.10.61:3000/conteudos/${id}`, {
+      const res = await axios.get(`https://testeapi.digitaleduca.com.vc/conteudos/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const conteudo = res.data;
@@ -112,7 +112,7 @@ export default function EditarConteudo() {
   const fetchCategorias = async () => {
     try {
       setCategoriasLoading(true);
-      const res = await axios.get("http://10.10.10.61:3000/categorias/list", {
+      const res = await axios.get("https://testeapi.digitaleduca.com.vc/categorias/list", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setCategorias(res.data || []);
@@ -127,7 +127,7 @@ export default function EditarConteudo() {
   const fetchInstrutores = async () => {
     try {
       setInstrutoresLoading(true);
-      const res = await axios.get("http://10.10.10.61:3000/instrutor", {
+      const res = await axios.get("https://testeapi.digitaleduca.com.vc/instrutor", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setInstrutores(res.data || []);
@@ -258,7 +258,7 @@ export default function EditarConteudo() {
       if (thumbnailDestaque) formData.append("thumbnailDestaque", thumbnailDestaque);
 
       const { data } = await axios.put(
-        `http://10.10.10.61:3000/conteudos/${id}`,
+        `https://testeapi.digitaleduca.com.vc/conteudos/${id}`,
         formData,
         {
           headers: {

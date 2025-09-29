@@ -1,7 +1,7 @@
 import { Box, TextField } from "@mui/material";
 import axios from 'axios'
 const cadastrar = () => {
-    axios.post('http://10.10.10.61:3000/subcategorias/create', {
+    axios.post('https://testeapi.digitaleduca.com.vc/subcategorias/create', {
 
     }, {
         headers: {

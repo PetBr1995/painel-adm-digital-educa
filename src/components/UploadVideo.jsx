@@ -175,7 +175,7 @@ const UploadVideo = () => {
       const token = localStorage.getItem("token");
 
       const { data } = await axios.post(
-        "http://10.10.10.61:3000/video/create",
+        "https://testeapi.digitaleduca.com.vc/video/create",
         payload,
         {
           headers: {
@@ -209,7 +209,7 @@ const UploadVideo = () => {
           onSuccess: async () => {
             try {
               await axios.post(
-                `http://10.10.10.61:3000/vimeo-client/video/${dbVideoId}/update-metadata`,
+                `https://testeapi.digitaleduca.com.vc/vimeo-client/video/${dbVideoId}/update-metadata`,
                 { name: currentVideo.titulo, description: "" },
                 { headers: { Authorization: `Bearer ${token}` } }
               );

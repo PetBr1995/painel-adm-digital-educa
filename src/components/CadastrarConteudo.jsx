@@ -1,6 +1,7 @@
+// Mantém todos os imports que você já tinha
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import * as tus from "tus-js-client";
+import Swal from "sweetalert2";
 import {
   Box,
   Button,
@@ -69,7 +70,7 @@ export default function CadastrarConteudo() {
     const fetchCategorias = async () => {
       try {
         setCategoriasLoading(true);
-        const res = await axios.get("http://10.10.10.61:3000/categorias/list", {
+        const res = await axios.get("https://testeapi.digitaleduca.com.vc/categorias/list", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setCategorias(res.data || []);
@@ -84,7 +85,7 @@ export default function CadastrarConteudo() {
     const fetchInstrutores = async () => {
       try {
         setInstrutoresLoading(true);
-        const res = await axios.get("http://10.10.10.61:3000/instrutor", {
+        const res = await axios.get("https://testeapi.digitaleduca.com.vc/instrutor", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setInstrutores(res.data || []);
@@ -108,7 +109,7 @@ export default function CadastrarConteudo() {
   const handleVideoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setVideo({ file, titulo: file.name.replace(/\.[^/.]+$/, "") });
+    setVideo(file);
     showAlert("Vídeo introdutório selecionado", "success");
   };
 
@@ -178,44 +179,67 @@ export default function CadastrarConteudo() {
     </Box>
   );
 
-  const handleSubmit = async () => {
-    if (!form.titulo.trim()) return showAlert("O título do conteúdo é obrigatório", "error");
-    if (!form.descricao.trim()) return showAlert("A descrição é obrigatória", "error");
-    if (!form.categoriaId) return showAlert("Selecione uma categoria", "error");
-    if (!form.instrutorId) return showAlert("Selecione um instrutor", "error");
-    if (!video) return showAlert("Selecione o vídeo introdutório", "error");
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("titulo", String(form.titulo).trim());
-      formData.append("descricao", String(form.descricao).trim());
-      formData.append("categoriaId", Number(form.categoriaId));
-      formData.append("instrutorId", Number(form.instrutorId));
-      formData.append("tipo", String(form.tipo).toUpperCase());
-      formData.append("level", String(form.level));
-      formData.append("aprendizagem", String(form.aprendizagem));
-      formData.append("requisitos", String(form.requisitos));
-      formData.append("fileSize", Number(video.file.size));
-      formData.append("video", video.file);
+      const token = localStorage.getItem("token");
 
-      if (thumbnailDesktop) formData.append("thumbnailDesktop", thumbnailDesktop);
-      if (thumbnailMobile) formData.append("thumbnailMobile", thumbnailMobile);
-      if (thumbnailDestaque) formData.append("thumbnailDestaque", thumbnailDestaque);
+      // Validações
+      if (!form.titulo.trim()) {
+        Swal.fire("Atenção", "Informe o título do conteúdo", "warning");
+        setLoading(false);
+        return;
+      }
+      if (!form.categoriaId) {
+        Swal.fire("Atenção", "Selecione uma categoria", "warning");
+        setLoading(false);
+        return;
+      }
+      if (!form.instrutorId) {
+        Swal.fire("Atenção", "Selecione um instrutor", "warning");
+        setLoading(false);
+        return;
+      }
+      if (!video) {
+        Swal.fire("Atenção", "Selecione um vídeo introdutório", "warning");
+        setLoading(false);
+        return;
+      }
+
+      // Montando FormData corretamente
+      const fd = new FormData();
+      fd.append("titulo", form.titulo.trim());
+      fd.append("descricao", form.descricao?.trim() || "");
+      fd.append("categoriaId", Number(form.categoriaId));
+      fd.append("tipo", form.tipo || "CURSO");
+      fd.append("level", form.level || "Iniciante");
+      fd.append("instrutorId", Number(form.instrutorId));
+      fd.append("aprendizagem", form.aprendizagem?.trim() || "");
+      fd.append("requisitos", form.requisitos?.trim() || "");
+      fd.append("fileSize", video.size);
+      fd.append("videoIntrodutorio", video);
+
+      if (thumbnailDesktop) fd.append("thumbnailDesktop", thumbnailDesktop);
+      if (thumbnailMobile) fd.append("thumbnailMobile", thumbnailMobile);
+      if (thumbnailDestaque) fd.append("thumbnailDestaque", thumbnailDestaque);
 
       const { data } = await axios.post(
-        "http://10.10.10.61:3000/conteudos/create",
-        formData,
+        "https://testeapi.digitaleduca.com.vc/conteudos/create",
+        fd,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
+          onUploadProgress: (e) => setProgress(Math.round((e.loaded * 100) / e.total)),
         }
       );
 
-      showAlert("Conteúdo cadastrado com sucesso!", "success");
+      Swal.fire("Sucesso", "Conteúdo cadastrado com sucesso!", "success");
+
+      // Reset
       setForm({
         titulo: "",
         descricao: "",
@@ -224,21 +248,27 @@ export default function CadastrarConteudo() {
         level: "Iniciante",
         aprendizagem: "",
         requisitos: "",
-        instrutorId: ""
+        instrutorId: "",
       });
       setVideo(null);
       setThumbnailDesktop(null);
       setThumbnailMobile(null);
       setThumbnailDestaque(null);
       setProgress(0);
-    } catch (err) {
-      console.error("🔥 Erro no cadastro:", err);
-      showAlert("Erro durante o cadastro do conteúdo", "error");
+
+    } catch (error) {
+      console.error("Erro completo:", error.response?.data || error);
+      Swal.fire(
+        "Erro",
+        error.response?.data?.message || "Não foi possível cadastrar o conteúdo",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  // ---------- A INTERFACE PERMANECE EXATAMENTE IGUAL ----------
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>
       <Container maxWidth="md">
@@ -386,7 +416,7 @@ export default function CadastrarConteudo() {
               }}
             >
               <Typography variant="h6" fontWeight="700" sx={{ mb: 3, color: "text.primary" }}>
-                ⚙️ Configurações
+                🖼️  Imagens do Conteúdo
               </Typography>
               <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
                 <Box sx={{ width: "70%" }}>
@@ -497,7 +527,7 @@ export default function CadastrarConteudo() {
               }}
             >
               <Typography variant="h6" fontWeight="700" sx={{ mb: 3, color: "text.primary" }}>
-                🖼️ Imagens do Conteúdo
+                ⚙️ Configurações
               </Typography>
               <Grid container spacing={4} justifyContent="center">
                 <Grid item xs={12} sm={4}>
@@ -571,10 +601,10 @@ export default function CadastrarConteudo() {
                   {video && (
                     <Box sx={{ mt: 2 }}>
                       <Typography variant="body1" fontWeight="600" color="text.primary">
-                        {video.file.name}
+                        {video.name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {(video.file.size / (1024 * 1024)).toFixed(2)} MB
+                        {(video.size / (1024 * 1024)).toFixed(2)} MB
                       </Typography>
                     </Box>
                   )}
@@ -627,3 +657,11 @@ export default function CadastrarConteudo() {
     </Box>
   );
 }
+
+
+
+
+
+
+
+

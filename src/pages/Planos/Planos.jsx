@@ -36,7 +36,7 @@ const Planos = () => {
 
     const listarPlanos = () => {
         axios
-            .get('http://10.10.10.61:3000/planos', {
+            .get('https://testeapi.digitaleduca.com.vc/planos', {
                 headers: {
                     Authorization: `bearer ${localStorage.getItem("token")}`,
                 },

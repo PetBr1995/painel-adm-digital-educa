@@ -81,7 +81,7 @@ const Dashboard = () => {
 
   const getCursos = () => {
     return axios
-      .get("http://10.10.10.61:3000/curso/cursos", {
+      .get("https://testeapi.digitaleduca.com.vc/curso/cursos", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         }
@@ -112,7 +112,7 @@ const Dashboard = () => {
   const [conteudos, setConteudos] = useState([])
 
   const getConteudos = () => {
-    axios.get('http://10.10.10.61:3000/conteudos', {
+    axios.get('https://testeapi.digitaleduca.com.vc/conteudos', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`
       }
@@ -127,7 +127,7 @@ const Dashboard = () => {
 
 
   const getInstrutores = () => {
-    return axios.get("http://10.10.10.61:3000/instrutor", {
+    return axios.get("https://testeapi.digitaleduca.com.vc/instrutor", {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -172,7 +172,7 @@ const Dashboard = () => {
   const [allUsers, setAllUsers] = useState([])
 
   const getAllUsers = () => {
-    axios.get('http://10.10.10.61:3000/usuario/admin/usuarios', {
+    axios.get('https://testeapi.digitaleduca.com.vc/usuario/admin/usuarios', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -185,7 +185,7 @@ const Dashboard = () => {
   }
 
   const getCategorias = () => {
-    return axios.get('http://10.10.10.61:3000/categoria/list')
+    return axios.get('https://testeapi.digitaleduca.com.vc/categoria/list')
       .then((response) => {
         setCategorias(response.data);
       })
@@ -197,7 +197,7 @@ const Dashboard = () => {
 
 
   const getPlanos = () => {
-    return axios.get('http://10.10.10.61:3000/planos', {
+    return axios.get('https://testeapi.digitaleduca.com.vc/planos', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -288,6 +288,7 @@ const Dashboard = () => {
     { name: 'Janeiro', Total: `${allUsers.length}`, Ativos: `${usuariosAtivos}` },
   ];
 
+  const porcentagemAtivos = 0
 
   return (
     <Box sx={{ p: 3, backgroundColor: theme.palette.background.default, minHeight: "100vh" }}>

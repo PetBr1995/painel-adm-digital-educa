@@ -22,7 +22,7 @@ const Cursos = () => {
 
   const getCategorias = async () => {
     try {
-      const response = await axios.get("http://10.10.10.61:3000/categoria/list", {
+      const response = await axios.get("https://testeapi.digitaleduca.com.vc/categoria/list", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
