@@ -1,11 +1,9 @@
-// Mantém todos os imports que você já tinha
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import {
   Box,
   Button,
-  Card,
   Container,
   FormControl,
   InputLabel,
@@ -15,22 +13,12 @@ import {
   Typography,
   Alert,
   Paper,
-  LinearProgress,
   Stack,
   Grid,
   Fade,
   alpha,
 } from "@mui/material";
-import {
-  ArrowBack,
-  CloudUpload as CloudUploadIcon,
-  Send as SendIcon,
-  VideoLibrary,
-  Image as ImageIcon,
-  Person,
-  Category,
-  School,
-} from "@mui/icons-material";
+import { ArrowBack, Send as SendIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import theme from "../theme/theme";
 
@@ -43,62 +31,54 @@ export default function CadastrarConteudo() {
     level: "Iniciante",
     aprendizagem: "",
     requisitos: "",
-    instrutorId: "",
+    videoIntrodutorio: "",
+    fileSize: 0,
+    thumbnailDesktop: "",
+    thumbnailMobile: "",
+    thumbnailDestaque: "",
   });
 
-  const [video, setVideo] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [alert, setAlert] = useState({ show: false, message: "", type: "info" });
+  const [alert, setAlert] = useState({
+    show: false,
+    message: "",
+    type: "info",
+  });
   const [categorias, setCategorias] = useState([]);
-  const [instrutores, setInstrutores] = useState([]);
   const [categoriasLoading, setCategoriasLoading] = useState(false);
-  const [instrutoresLoading, setInstrutoresLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
-
-  const [thumbnailDesktop, setThumbnailDesktop] = useState(null);
-  const [thumbnailMobile, setThumbnailMobile] = useState(null);
-  const [thumbnailDestaque, setThumbnailDestaque] = useState(null);
 
   const navigate = useNavigate();
 
   const showAlert = (message, type = "info") => {
     setAlert({ show: true, message, type });
-    setTimeout(() => setAlert({ show: false, message: "", type: "info" }), 5000);
+    setTimeout(
+      () => setAlert({ show: false, message: "", type: "info" }),
+      5000
+    );
   };
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
     const fetchCategorias = async () => {
       try {
         setCategoriasLoading(true);
-        const res = await axios.get("https://testeapi.digitaleduca.com.vc/categorias/list", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
+        const res = await axios.get(
+          "https://testeapi.digitaleduca.com.vc/categorias/list",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         setCategorias(res.data || []);
       } catch (err) {
-        console.error("❌ Erro ao carregar categorias:", err);
+        console.error("Erro ao carregar categorias:", err);
         showAlert("Erro ao carregar categorias", "error");
       } finally {
         setCategoriasLoading(false);
       }
     };
 
-    const fetchInstrutores = async () => {
-      try {
-        setInstrutoresLoading(true);
-        const res = await axios.get("https://testeapi.digitaleduca.com.vc/instrutor", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        setInstrutores(res.data || []);
-      } catch (err) {
-        console.error("❌ Erro ao carregar instrutores:", err);
-        showAlert("Erro ao carregar instrutores", "error");
-      } finally {
-        setInstrutoresLoading(false);
-      }
-    };
-
     fetchCategorias();
-    fetchInstrutores();
   }, []);
 
   const handleChange = (e) => {
@@ -106,140 +86,54 @@ export default function CadastrarConteudo() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleVideoChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setVideo(file);
-    showAlert("Vídeo introdutório selecionado", "success");
-  };
-
-  const ImageUploader = ({ label, id, value, onChange }) => (
-    <Box sx={{ textAlign: "center" }}>
-      <Typography variant="body2" fontWeight="600" sx={{ mb: 1.5, color: "text.primary" }}>
-        {label}
-      </Typography>
-      <Paper
-        elevation={2}
-        sx={{
-          border: value ? `2px solid ${theme.palette.primary.main}` : `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
-          width: 140,
-          height: 140,
-          borderRadius: 3,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          cursor: "pointer",
-          transition: "all 0.3s ease",
-          mx: "auto",
-          bgcolor: value ? "transparent" : alpha(theme.palette.primary.main, 0.02),
-          "&:hover": {
-            borderColor: theme.palette.primary.main,
-            bgcolor: alpha(theme.palette.primary.main, 0.04),
-            transform: "translateY(-2px)",
-            boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.15)}`,
-          }
-        }}
-      >
-        <input
-          accept="image/*"
-          style={{ display: "none" }}
-          id={id}
-          type="file"
-          onChange={(e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            onChange(file);
-            showAlert("Imagem selecionada com sucesso", "success");
-          }}
-        />
-        <label htmlFor={id} style={{ width: "100%", height: "100%", cursor: "pointer" }}>
-          {value ? (
-            <Box
-              component="img"
-              src={URL.createObjectURL(value)}
-              alt={label}
-              sx={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: 2
-              }}
-            />
-          ) : (
-            <Stack alignItems="center" justifyContent="center" sx={{ height: "100%", p: 2 }}>
-              <ImageIcon sx={{ fontSize: 32, color: "primary.main", mb: 1 }} />
-              <Typography variant="body2" color="primary.main" fontWeight="600" align="center">
-                Selecionar
-              </Typography>
-            </Stack>
-          )}
-        </label>
-      </Paper>
-    </Box>
-  );
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const token = localStorage.getItem("token");
+
+    if (!form.titulo.trim())
+      return Swal.fire("Atenção", "Informe o título do conteúdo", "warning");
+    if (!form.categoriaId)
+      return Swal.fire("Atenção", "Selecione uma categoria", "warning");
+    if (!form.videoIntrodutorio.trim())
+      return Swal.fire(
+        "Atenção",
+        "Informe a URL do vídeo introdutório",
+        "warning"
+      );
 
     try {
-      const token = localStorage.getItem("token");
+      const payload = {
+        titulo: form.titulo.trim(),
+        descricao: form.descricao.trim(),
+        categoriaId: Number(form.categoriaId),
+        tipo: form.tipo,
+        level: form.level,
+        aprendizagem: form.aprendizagem.trim(),
+        requisitos: form.requisitos.trim(),
+        videoIntrodutorio: form.videoIntrodutorio.trim(),
+        fileSize: form.fileSize,
+        thumbnailDesktop: form.thumbnailDesktop.trim(),
+        thumbnailMobile: form.thumbnailMobile.trim(),
+        thumbnailDestaque: form.thumbnailDestaque.trim(),
+      };
 
-      // Validações
-      if (!form.titulo.trim()) {
-        Swal.fire("Atenção", "Informe o título do conteúdo", "warning");
-        setLoading(false);
-        return;
-      }
-      if (!form.categoriaId) {
-        Swal.fire("Atenção", "Selecione uma categoria", "warning");
-        setLoading(false);
-        return;
-      }
-      if (!form.instrutorId) {
-        Swal.fire("Atenção", "Selecione um instrutor", "warning");
-        setLoading(false);
-        return;
-      }
-      if (!video) {
-        Swal.fire("Atenção", "Selecione um vídeo introdutório", "warning");
-        setLoading(false);
-        return;
-      }
+      console.log("🚀 Payload enviado:", payload);
 
-      // Montando FormData corretamente
-      const fd = new FormData();
-      fd.append("titulo", form.titulo.trim());
-      fd.append("descricao", form.descricao?.trim() || "");
-      fd.append("categoriaId", Number(form.categoriaId));
-      fd.append("tipo", form.tipo || "CURSO");
-      fd.append("level", form.level || "Iniciante");
-      fd.append("instrutorId", Number(form.instrutorId));
-      fd.append("aprendizagem", form.aprendizagem?.trim() || "");
-      fd.append("requisitos", form.requisitos?.trim() || "");
-      fd.append("fileSize", video.size);
-      fd.append("videoIntrodutorio", video);
-
-      if (thumbnailDesktop) fd.append("thumbnailDesktop", thumbnailDesktop);
-      if (thumbnailMobile) fd.append("thumbnailMobile", thumbnailMobile);
-      if (thumbnailDestaque) fd.append("thumbnailDestaque", thumbnailDestaque);
-
-      const { data } = await axios.post(
+      const response = await axios.post(
         "https://testeapi.digitaleduca.com.vc/conteudos/create",
-        fd,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
           },
-          onUploadProgress: (e) => setProgress(Math.round((e.loaded * 100) / e.total)),
         }
       );
 
+      console.log("✅ Resposta do backend:", response.data);
       Swal.fire("Sucesso", "Conteúdo cadastrado com sucesso!", "success");
 
-      // Reset
       setForm({
         titulo: "",
         descricao: "",
@@ -248,19 +142,20 @@ export default function CadastrarConteudo() {
         level: "Iniciante",
         aprendizagem: "",
         requisitos: "",
-        instrutorId: "",
+        videoIntrodutorio: "",
+        fileSize: 0,
+        thumbnailDesktop: "",
+        thumbnailMobile: "",
+        thumbnailDestaque: "",
       });
-      setVideo(null);
-      setThumbnailDesktop(null);
-      setThumbnailMobile(null);
-      setThumbnailDestaque(null);
-      setProgress(0);
+    } catch (err) {
+      console.error("❌ Erro completo:", err);
+      console.error("❌ Erro response.data:", err.response?.data);
+      console.error("❌ Erro response.status:", err.response?.status);
 
-    } catch (error) {
-      console.error("Erro completo:", error.response?.data || error);
       Swal.fire(
         "Erro",
-        error.response?.data?.message || "Não foi possível cadastrar o conteúdo",
+        err.response?.data?.message || "Não foi possível cadastrar o conteúdo",
         "error"
       );
     } finally {
@@ -268,14 +163,12 @@ export default function CadastrarConteudo() {
     }
   };
 
-  // ---------- A INTERFACE PERMANECE EXATAMENTE IGUAL ----------
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>
       <Container maxWidth="md">
-        {/* Header com botão voltar */}
         <Stack direction="row" alignItems="center" spacing={2} mb={4}>
           <Button
-            onClick={() => navigate('/cursos')}
+            onClick={() => navigate("/cursos")}
             startIcon={<ArrowBack />}
             variant="outlined"
             sx={{
@@ -286,14 +179,13 @@ export default function CadastrarConteudo() {
               "&:hover": {
                 borderColor: "primary.main",
                 bgcolor: alpha(theme.palette.primary.main, 0.04),
-              }
+              },
             }}
           >
             Voltar aos conteúdos
           </Button>
         </Stack>
 
-        {/* Card principal */}
         <Paper
           elevation={3}
           sx={{
@@ -302,62 +194,32 @@ export default function CadastrarConteudo() {
             border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
           }}
         >
-          {/* Título da página */}
-          <Stack direction="row" alignItems="center" justifyContent="center" spacing={2} mb={4}>
-            <VideoLibrary sx={{ fontSize: 32, color: "primary.main" }} />
-            <Typography variant="h4" fontWeight="700" color="text.primary">
-              Cadastrar Novo Conteúdo
-            </Typography>
-          </Stack>
-
-          {/* Alert */}
-          {alert.show && (
-            <Fade in>
-              <Alert
-                severity={alert.type}
-                sx={{
-                  mb: 4,
-                  borderRadius: 2,
-                  "& .MuiAlert-icon": {
-                    fontSize: 24
-                  }
-                }}
-              >
-                {alert.message}
-              </Alert>
-            </Fade>
-          )}
-
-          {/* Formulário */}
           <Stack spacing={4}>
-            {/* Seção: Informações Básicas */}
+            {alert.show && (
+              <Fade in>
+                <Alert severity={alert.type}>{alert.message}</Alert>
+              </Fade>
+            )}
+
             <Paper
               elevation={1}
               sx={{
                 p: 3,
                 borderRadius: 2,
                 bgcolor: alpha(theme.palette.primary.main, 0.02),
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
               }}
             >
-              <Typography variant="h6" fontWeight="700" sx={{ mb: 3, color: "text.primary" }}>
+              <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
                 📝 Informações Básicas
               </Typography>
               <Grid container spacing={3}>
-
                 <TextField
                   fullWidth
                   name="titulo"
                   label="Título do Conteúdo *"
                   value={form.titulo}
                   onChange={handleChange}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                    }
-                  }}
                 />
-
                 <TextField
                   fullWidth
                   name="descricao"
@@ -366,14 +228,7 @@ export default function CadastrarConteudo() {
                   onChange={handleChange}
                   multiline
                   rows={3}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                    }
-                  }}
                 />
-
-
                 <TextField
                   fullWidth
                   name="aprendizagem"
@@ -382,11 +237,6 @@ export default function CadastrarConteudo() {
                   onChange={handleChange}
                   multiline
                   rows={3}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                    }
-                  }}
                 />
                 <TextField
                   fullWidth
@@ -396,89 +246,87 @@ export default function CadastrarConteudo() {
                   onChange={handleChange}
                   multiline
                   rows={3}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                    }
-                  }}
+                />
+                <TextField
+                  fullWidth
+                  name="videoIntrodutorio"
+                  label="URL do Vídeo Introdutório *"
+                  value={form.videoIntrodutorio}
+                  onChange={handleChange}
+                />
+                <TextField
+                  fullWidth
+                  name="thumbnailDesktop"
+                  label="Thumbnail Desktop URL"
+                  value={form.thumbnailDesktop}
+                  onChange={handleChange}
+                />
+                <TextField
+                  fullWidth
+                  name="thumbnailMobile"
+                  label="Thumbnail Mobile URL"
+                  value={form.thumbnailMobile}
+                  onChange={handleChange}
+                />
+                <TextField
+                  fullWidth
+                  name="thumbnailDestaque"
+                  label="Thumbnail Destaque URL"
+                  value={form.thumbnailDestaque}
+                  onChange={handleChange}
                 />
               </Grid>
             </Paper>
 
-            {/* Seção: Configurações */}
             <Paper
               elevation={1}
               sx={{
                 p: 3,
                 borderRadius: 2,
                 bgcolor: alpha(theme.palette.secondary.main, 0.02),
-                border: `1px solid ${alpha(theme.palette.secondary.main, 0.08)}`,
               }}
             >
-              <Typography variant="h6" fontWeight="700" sx={{ mb: 3, color: "text.primary" }}>
-                🖼️  Imagens do Conteúdo
+              <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+                ⚙️ Configurações
               </Typography>
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                <Box sx={{ width: "70%" }}>
-                  <Typography variant="body2" fontWeight="600" sx={{ mb: 1, color: "text.primary", display: "flex", alignItems: "center", gap: 1 }}>
-                    <Person sx={{ fontSize: 18, color: "primary.main" }} />
-                    Instrutor *
-                  </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
+                    <InputLabel>Tipo de Conteúdo</InputLabel>
                     <Select
-                      name="instrutorId"
-                      value={form.instrutorId}
+                      name="tipo"
+                      value={form.tipo}
                       onChange={handleChange}
-                      displayEmpty
-                      sx={{ borderRadius: 2 }}
                     >
-                      <MenuItem value="">Selecione um instrutor</MenuItem>
-                      {instrutoresLoading ? (
-                        <MenuItem disabled>Carregando...</MenuItem>
-                      ) : (
-                        instrutores.map((inst) => (
-                          <MenuItem key={inst.id} value={inst.id}>
-                            {inst.nome}
-                          </MenuItem>
-                        ))
-                      )}
+                      <MenuItem value="PALESTRA">Palestra</MenuItem>
+                      <MenuItem value="CURSO">Curso</MenuItem>
+                      <MenuItem value="PODCAST">Podcast</MenuItem>
+                      <MenuItem value="WORKSHOP">Workshop</MenuItem>
                     </Select>
                   </FormControl>
-                </Box>
-
-                <Box sx={{ width: "70%" }}>
-                  <Typography variant="body2" fontWeight="600" sx={{ mb: 1, color: "text.primary", display: "flex", alignItems: "center", gap: 1 }}>
-                    <School sx={{ fontSize: 18, color: "primary.main" }} />
-                    Nível de Dificuldade
-                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
+                    <InputLabel>Nível</InputLabel>
                     <Select
                       name="level"
                       value={form.level}
                       onChange={handleChange}
-                      sx={{ borderRadius: 2 }}
                     >
                       <MenuItem value="Iniciante">Iniciante</MenuItem>
                       <MenuItem value="Intermediário">Intermediário</MenuItem>
                       <MenuItem value="Avançado">Avançado</MenuItem>
                     </Select>
                   </FormControl>
-                </Box>
-
-                <Box sx={{ width: "70%" }}>
-                  <Typography variant="body2" fontWeight="600" sx={{ mb: 1, color: "text.primary", display: "flex", alignItems: "center", gap: 1 }}>
-                    <Category sx={{ fontSize: 18, color: "primary.main" }} />
-                    Categoria *
-                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
+                    <InputLabel>Categoria *</InputLabel>
                     <Select
                       name="categoriaId"
                       value={form.categoriaId}
                       onChange={handleChange}
-                      displayEmpty
-                      sx={{ borderRadius: 2 }}
                     >
-                      <MenuItem value="">Selecione uma categoria</MenuItem>
                       {categoriasLoading ? (
                         <MenuItem disabled>Carregando...</MenuItem>
                       ) : (
@@ -490,164 +338,16 @@ export default function CadastrarConteudo() {
                       )}
                     </Select>
                   </FormControl>
-                  <Box sx={{ mt: 2 }}>
-                    <Typography
-                      variant="body2"
-                      fontWeight="600"
-                      sx={{ mb: 1, color: "text.primary", display: "flex", alignItems: "center", gap: 1 }}
-                    >
-                      <VideoLibrary sx={{ fontSize: 18, color: "primary.main" }} />
-                      Tipo de Conteúdo *
-                    </Typography>
-                    <FormControl fullWidth>
-                      <Select
-                        name="tipo"
-                        value={form.tipo}
-                        onChange={handleChange}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        <MenuItem value="CURSO">Curso</MenuItem>
-                        <MenuItem value="PALESTRA">Palestra</MenuItem>
-                        <MenuItem value="PODCAST">Podcast</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Box>
-                </Box>
-              </Box>
-            </Paper>
-
-            {/* Seção: Thumbnails */}
-            <Paper
-              elevation={1}
-              sx={{
-                p: 3,
-                borderRadius: 2,
-                bgcolor: alpha(theme.palette.success.main, 0.02),
-                border: `1px solid ${alpha(theme.palette.success.main, 0.08)}`,
-              }}
-            >
-              <Typography variant="h6" fontWeight="700" sx={{ mb: 3, color: "text.primary" }}>
-                ⚙️ Configurações
-              </Typography>
-              <Grid container spacing={4} justifyContent="center">
-                <Grid item xs={12} sm={4}>
-                  <ImageUploader
-                    label="Thumbnail Desktop"
-                    id="thumbnailDesktop"
-                    value={thumbnailDesktop}
-                    onChange={setThumbnailDesktop}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <ImageUploader
-                    label="Thumbnail Mobile"
-                    id="thumbnailMobile"
-                    value={thumbnailMobile}
-                    onChange={setThumbnailMobile}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <ImageUploader
-                    label="Thumbnail Destaque"
-                    id="thumbnailDestaque"
-                    value={thumbnailDestaque}
-                    onChange={setThumbnailDestaque}
-                  />
                 </Grid>
               </Grid>
             </Paper>
 
-            {/* Seção: Upload do Vídeo */}
-            <Paper
-              elevation={2}
-              sx={{
-                p: 4,
-                textAlign: "center",
-                borderRadius: 3,
-                border: video ? `2px solid ${theme.palette.primary.main}` : `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
-                bgcolor: video ? alpha(theme.palette.primary.main, 0.02) : "transparent",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  borderColor: theme.palette.primary.main,
-                  bgcolor: alpha(theme.palette.primary.main, 0.02),
-                }
-              }}
-            >
-              <input
-                accept="video/*"
-                style={{ display: "none" }}
-                id="video-upload"
-                type="file"
-                onChange={handleVideoChange}
-              />
-              <label htmlFor="video-upload">
-                <Stack alignItems="center" spacing={2} sx={{ cursor: "pointer" }}>
-                  <CloudUploadIcon sx={{ fontSize: 48, color: "primary.main" }} />
-                  <Button
-                    variant="contained"
-                    component="span"
-                    size="large"
-                    sx={{
-                      borderRadius: 2,
-                      px: 4,
-                      py: 1.5,
-                      fontWeight: "600",
-                      textTransform: "none",
-                      fontSize: "1rem",
-                    }}
-                  >
-                    {video ? "Alterar Vídeo Introdutório" : "Selecionar Vídeo Introdutório *"}
-                  </Button>
-                  {video && (
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body1" fontWeight="600" color="text.primary">
-                        {video.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {(video.size / (1024 * 1024)).toFixed(2)} MB
-                      </Typography>
-                    </Box>
-                  )}
-                </Stack>
-              </label>
-              {progress > 0 && (
-                <LinearProgress
-                  variant="determinate"
-                  value={progress}
-                  sx={{
-                    mt: 3,
-                    height: 8,
-                    borderRadius: 4,
-                  }}
-                />
-              )}
-            </Paper>
-
-            {/* Botão de Envio */}
             <Button
               variant="contained"
               size="large"
               onClick={handleSubmit}
-              disabled={loading || !video}
+              disabled={loading}
               startIcon={!loading && <SendIcon />}
-              sx={{
-                py: 2,
-                fontSize: "1.1rem",
-                fontWeight: "700",
-                textTransform: "none",
-                borderRadius: 3,
-                bgcolor: "primary.main",
-                boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.25)}`,
-                "&:hover": {
-                  bgcolor: "primary.dark",
-                  boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.35)}`,
-                  transform: "translateY(-2px)",
-                },
-                "&:disabled": {
-                  bgcolor: alpha(theme.palette.action.disabled, 0.12),
-                },
-                transition: "all 0.3s ease",
-              }}
             >
               {loading ? "Enviando..." : "Cadastrar Conteúdo"}
             </Button>
@@ -657,11 +357,3 @@ export default function CadastrarConteudo() {
     </Box>
   );
 }
-
-
-
-
-
-
-
-
