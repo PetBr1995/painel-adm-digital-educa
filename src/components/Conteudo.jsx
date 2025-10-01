@@ -22,7 +22,7 @@ import theme from "../theme/theme";
 import Swal from "sweetalert2";
 
 const Conteudo = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // 👈 esse é o ID do conteúdo
   const navigate = useNavigate();
 
   const [modulos, setModulos] = useState([]);
@@ -77,7 +77,7 @@ const Conteudo = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
-      if(moduloId) {
+      if (moduloId) {
         setModulos((prevModulos) =>
           prevModulos.map((modulo) =>
             modulo.id === moduloId
@@ -210,6 +210,29 @@ const Conteudo = () => {
             >
               Adicionar Vídeo
             </Button>
+
+            {/* ✅ Corrigido: agora passa o id corretamente */}
+            <Button
+              startIcon={<VideoCall />}
+              variant="contained"
+              size="large"
+              onClick={() =>
+                navigate("/uploadvideointrodutorio", { state: { conteudoId: id, moduloId: null } })
+              }
+              sx={{
+                borderRadius: 3,
+                px: 3,
+                py: 1.5,
+                fontWeight: 600,
+                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                '&:hover': {
+                  background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`
+                }
+              }}
+            >
+              Adicionar Vídeo Introdutório
+            </Button>
+
           </Stack>
         </Box>
 
