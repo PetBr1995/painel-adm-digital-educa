@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
     Box,
     Button,
@@ -8,7 +8,7 @@ import {
     LinearProgress,
     TextField,
     Avatar,
-    Stack
+    Stack,
 } from "@mui/material";
 import { CloudUpload, CheckCircle, Error, VideoFile, ArrowBack } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -19,13 +19,18 @@ import Swal from "sweetalert2";
 const UploadVideoIntrodutorio = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const conteudoId = location.state?.conteudoId || new URLSearchParams(window.location.search).get("conteudoId");
+
+    const conteudoId =
+        location.state?.conteudoId || new URLSearchParams(window.location.search).get("conteudoId");
 
     const [videoFile, setVideoFile] = useState(null);
     const [titulo, setTitulo] = useState("");
     const [progress, setProgress] = useState(0);
     const [status, setStatus] = useState("pending"); // pending | uploading | success | error
     const [videoLink, setVideoLink] = useState("");
+    const [duracao, setDuracao] = useState(0);
+
+    const videoRef = useRef(null);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -33,11 +38,20 @@ const UploadVideoIntrodutorio = () => {
             Swal.fire("Erro", "Selecione um arquivo de vídeo válido", "warning");
             return;
         }
+
         setVideoFile(file);
         setTitulo(file.name.replace(/\.[^/.]+$/, ""));
         setStatus("pending");
         setProgress(0);
         setVideoLink("");
+
+        const videoEl = document.createElement("video");
+        videoEl.preload = "metadata";
+        videoEl.onloadedmetadata = () => {
+            setDuracao(Math.floor(videoEl.duration));
+            URL.revokeObjectURL(videoEl.src);
+        };
+        videoEl.src = URL.createObjectURL(file);
     };
 
     const uploadVideoToVimeo = async () => {
@@ -51,29 +65,31 @@ const UploadVideoIntrodutorio = () => {
         try {
             const token = localStorage.getItem("token");
 
-            // 1️⃣ Criar vídeo no backend
+            // 1️⃣ Criar registro de vídeo no backend e obter link de upload do Vimeo
+            const payload = {
+                titulo: titulo.trim(),
+                duracao,
+                conteudoId,
+                fileSize: videoFile.size,
+            };
+
             const { data } = await axios.post(
                 "https://testeapi.digitaleduca.com.vc/video/create",
-                {
-                    titulo: titulo.trim(),
-                    duracao: 0,
-                    conteudoId,
-                    fileSize: videoFile.size
-                },
+                payload,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            console.log("Resposta criação vídeo:", data);
+            const dbVideoId = data.video?.id ?? data.id ?? data.videoId;
+            const vimeoUploadLink = data.vimeoUploadLink;
 
-            const videoId = data.video?.id ?? data.id ?? data.videoId;
-            const uploadLink = data.vimeoUploadLink;
+            if (!dbVideoId || !vimeoUploadLink) {
+                throw new Error("ID do vídeo ou link de upload não retornados pelo backend");
+            }
 
-            if (!videoId || !uploadLink) throw new Error("ID ou link de upload não retornados");
-
-            // 2️⃣ Upload via Tus JS
+            // 2️⃣ Upload do vídeo para Vimeo via tus-js-client
             await new Promise((resolve, reject) => {
                 const upload = new tus.Upload(videoFile, {
-                    uploadUrl: uploadLink,
+                    uploadUrl: vimeoUploadLink,
                     metadata: { filename: videoFile.name, filetype: videoFile.type },
                     chunkSize: 5 * 1024 * 1024,
                     onError: (err) => {
@@ -86,19 +102,29 @@ const UploadVideoIntrodutorio = () => {
                     },
                     onSuccess: async () => {
                         try {
-                            const videoUrl = `https://vimeo.com/${videoId}`;
-                            const payload = { videoIntrodutorio: videoUrl };
+                            const videoUrl = `https://vimeo.com/${dbVideoId}`;
 
-                            // 🔍 Log detalhado antes do PUT
-                            console.log("Payload que será enviado para vincular vídeo:", payload);
-
-                            const response = await axios.put(
+                            // 🔹 Obter o conteúdo atual para evitar enviar campos inválidos
+                            const { data: conteudoAtual } = await axios.get(
                                 `https://testeapi.digitaleduca.com.vc/conteudos/${conteudoId}`,
-                                payload,
                                 { headers: { Authorization: `Bearer ${token}` } }
                             );
 
-                            console.log("Resposta do PUT /conteudos/{id}:", response.data);
+                            // 🔹 Filtrar somente os campos permitidos para PUT
+                            const updatePayload = {
+                                titulo: conteudoAtual.titulo,
+                                descricao: conteudoAtual.descricao,
+                                categoriaId: conteudoAtual.categoriaId,
+                                level: conteudoAtual.level,
+                                requisitos: conteudoAtual.requisitos,
+                                videoIntrodutorio: videoUrl, // atualizando apenas o vídeo
+                            };
+
+                            await axios.put(
+                                `https://testeapi.digitaleduca.com.vc/conteudos/${conteudoId}`,
+                                updatePayload,
+                                { headers: { Authorization: `Bearer ${token}` } }
+                            );
 
                             setStatus("success");
                             setProgress(100);
@@ -107,17 +133,12 @@ const UploadVideoIntrodutorio = () => {
                             Swal.fire("Sucesso", "Vídeo vinculado ao conteúdo!", "success");
                             resolve();
                         } catch (err) {
-                            console.error("Erro ao vincular vídeo ao conteúdo:", {
-                                status: err.response?.status,
-                                data: err.response?.data,
-                                headers: err.response?.headers,
-                                config: err.config
-                            });
+                            console.error("Erro ao vincular vídeo:", err.response?.data || err);
                             setStatus("error");
                             Swal.fire("Erro", "Falha ao vincular vídeo ao conteúdo", "error");
                             reject(err);
                         }
-                    }
+                    },
                 });
 
                 upload.start();
@@ -129,12 +150,17 @@ const UploadVideoIntrodutorio = () => {
         }
     };
 
+
     const getStatusIcon = () => {
         switch (status) {
-            case "success": return <CheckCircle color="success" />;
-            case "error": return <Error color="error" />;
-            case "uploading": return <VideoFile color="primary" />;
-            default: return <VideoFile />;
+            case "success":
+                return <CheckCircle color="success" />;
+            case "error":
+                return <Error color="error" />;
+            case "uploading":
+                return <VideoFile color="primary" />;
+            default:
+                return <VideoFile />;
         }
     };
 
@@ -185,25 +211,34 @@ const UploadVideoIntrodutorio = () => {
                     </label>
 
                     {videoFile && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                            <Avatar>{getStatusIcon()}</Avatar>
-                            <Box sx={{ flex: 1 }}>
-                                <Typography variant="subtitle1">{videoFile.name}</Typography>
-                                {status === "uploading" && (
-                                    <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 4, mt: 1 }} />
-                                )}
-                                {status === "success" && (
-                                    <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
-                                        Vídeo enviado e vinculado! <br />
-                                        Link: <a href={videoLink} target="_blank" rel="noreferrer">{videoLink}</a>
-                                    </Typography>
-                                )}
-                                {status === "error" && (
-                                    <Typography variant="body2" color="error.main" sx={{ mt: 1 }}>
-                                        Erro ao enviar vídeo
-                                    </Typography>
-                                )}
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                <Avatar>{getStatusIcon()}</Avatar>
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant="subtitle1">{videoFile.name}</Typography>
+                                    {status === "uploading" && (
+                                        <LinearProgress
+                                            variant="determinate"
+                                            value={progress}
+                                            sx={{ height: 8, borderRadius: 4, mt: 1 }}
+                                        />
+                                    )}
+                                    {status === "success" && (
+                                        <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
+                                            Vídeo enviado e vinculado!
+                                        </Typography>
+                                    )}
+                                    {status === "error" && (
+                                        <Typography variant="body2" color="error.main" sx={{ mt: 1 }}>
+                                            Erro ao enviar vídeo
+                                        </Typography>
+                                    )}
+                                </Box>
                             </Box>
+
+                            {status === "success" && (
+                                <video ref={videoRef} src={videoLink} controls style={{ width: "100%", borderRadius: 8 }} />
+                            )}
                         </Box>
                     )}
 

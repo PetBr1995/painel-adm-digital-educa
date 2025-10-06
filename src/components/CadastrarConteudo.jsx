@@ -1,268 +1,400 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import * as tus from "tus-js-client";
 import {
   Box,
   Button,
-  Container,
+  LinearProgress,
   TextField,
   Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Alert,
+  Paper,
   Stack,
-  Fade,
+  MenuItem,
+  Grid,
   alpha,
+  CircularProgress,
 } from "@mui/material";
-import { ArrowBack, Send as SendIcon } from "@mui/icons-material";
+import { ArrowBackIos, CloudUpload as CloudUploadIcon } from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import theme from "../theme/theme";
 
-export default function CadastrarConteudo() {
-  const navigate = useNavigate();
-  const [form, setForm] = useState({
-    titulo: "",
-    descricao: "",
-    categoriaId: "",
-    tipo: "CURSO",
-    level: "Iniciante",
-    aprendizagem: "",
-    requisitos: "",
-    thumbnailDesktop: "",
-    thumbnailMobile: "",
-    thumbnailDestaque: "",
-  });
-
+export default function ConteudoForm() {
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [thumbnailDesktop, setThumbnailDesktop] = useState("");
+  const [thumbnailMobile, setThumbnailMobile] = useState("");
+  const [thumbnailDestaque, setThumbnailDestaque] = useState("");
+  const [aprendizagem, setAprendizagem] = useState("");
+  const [requisitos, setRequisitos] = useState("");
+  const [level, setLevel] = useState("Iniciante");
+  const [tipo, setTipo] = useState("CURSO");
+  const [categoriaId, setCategoriaId] = useState("");
   const [categorias, setCategorias] = useState([]);
-  const [categoriasLoading, setCategoriasLoading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
-  const [alert, setAlert] = useState({ show: false, message: "", type: "info" });
 
-  const showAlert = (message, type = "info") => {
-    setAlert({ show: true, message, type });
-    setTimeout(() => setAlert({ show: false, message: "", type: "info" }), 5000);
-  };
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const fetchCategorias = async () => {
-      try {
-        setCategoriasLoading(true);
-        const res = await axios.get(
-          "https://testeapi.digitaleduca.com.vc/categorias/list",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setCategorias(res.data || []);
-      } catch (err) {
-        console.error("Erro ao carregar categorias:", err);
-        showAlert("Erro ao carregar categorias", "error");
-      } finally {
-        setCategoriasLoading(false);
-      }
-    };
-    fetchCategorias();
+    axios
+      .get("https://testeapi.digitaleduca.com.vc/categorias/list", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+      .then((res) => setCategorias(res.data))
+      .catch((err) => console.error(err));
   }, []);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    if (!form.titulo.trim()) return showAlert("Informe o título do conteúdo", "warning");
-    if (!form.categoriaId) return showAlert("Selecione uma categoria", "warning");
+    if (!file) return alert("Selecione um vídeo introdutório!");
 
     try {
-      const token = localStorage.getItem("token");
+      setLoading(true);
+      setStatus("Criando conteúdo...");
 
-      const payload = {
-        titulo: form.titulo,
-        descricao: form.descricao,
-        categoriaId: form.categoriaId,
-        tipo: form.tipo,
-        level: form.level,
-        aprendizagem: form.aprendizagem,
-        requisitos: form.requisitos,
-        thumbnailDesktop: form.thumbnailDesktop,
-        thumbnailMobile: form.thumbnailMobile,
-        thumbnailDestaque: form.thumbnailDestaque,
-        fileSize: 0, // necessário para o backend
-      };
-
-      const res = await axios.post(
+      const response = await axios.post(
         "https://testeapi.digitaleduca.com.vc/conteudos/create",
-        payload,
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+        {
+          titulo,
+          descricao,
+          categoriaId,
+          tipo,
+          level,
+          thumbnailDesktop,
+          thumbnailMobile,
+          thumbnailDestaque,
+          aprendizagem,
+          requisitos,
+          fileSize: file.size,
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
       );
 
-      console.log("Resposta do backend:", res.data);
+      const { vimeoUploadLink, conteudo } = response.data;
+      if (!vimeoUploadLink)
+        return setStatus("Erro: link de upload do Vimeo não disponível");
 
-      // 🔹 Apenas registra o ID se ele existir, mas não mostra alerta se não vier
-      const conteudoId = res.data.id || res.data.conteudoId || res.data.data?.id;
-      console.log("Conteúdo criado com ID:", conteudoId);
+      setStatus("Enviando vídeo para o Vimeo...");
 
-      showAlert("Conteúdo criado com sucesso!", "success");
+      const upload = new tus.Upload(file, {
+        uploadUrl: vimeoUploadLink,
+        metadata: { filename: file.name, filetype: file.type },
+        onError: () => {
+          setLoading(false);
+          setStatus("Erro ao enviar vídeo.");
+        },
+        onProgress: (bytesUploaded, bytesTotal) => {
+          const percent = Math.round((bytesUploaded / bytesTotal) * 100);
+          setUploadProgress(percent);
+          setStatus(`Enviando vídeo... ${percent}%`);
+        },
+        onSuccess: async () => {
+          try {
+            const token = localStorage.getItem("token");
+            await axios.post(
+              `https://testeapi.digitaleduca.com.vc/vimeo-client/update-metadata/${conteudo.id}`,
+              { name: conteudo.titulo, description: conteudo.descricao || "" },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
 
-      // Reset do formulário
-      setForm({
-        titulo: "",
-        descricao: "",
-        categoriaId: "",
-        tipo: "CURSO",
-        level: "Iniciante",
-        aprendizagem: "",
-        requisitos: "",
-        thumbnailDesktop: "",
-        thumbnailMobile: "",
-        thumbnailDestaque: "",
+            setStatus(`Conteúdo "${conteudo.titulo}" criado com sucesso!`);
+            setTimeout(() => {
+              setLoading(false);
+              navigate("/cursos");
+            }, 1500);
+          } catch {
+            setStatus(
+              `Conteúdo "${conteudo.titulo}" criado, mas falhou ao atualizar título no Vimeo`
+            );
+            setLoading(false);
+          }
+        },
       });
 
-      navigate("/cursos");
+      upload.start();
     } catch (err) {
-      console.error("Erro ao criar conteúdo:", err);
-      const msg =
-        err.response?.data?.message?.[0] || err.response?.data?.error || "Erro ao criar conteúdo";
-      showAlert(msg, "error");
-    } finally {
+      console.error(err);
+      setStatus("Erro ao criar conteúdo.");
       setLoading(false);
     }
   };
 
-
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>
-      <Container maxWidth="md">
-        <Stack spacing={4}>
-          {alert.show && (
-            <Fade in>
-              <Alert severity={alert.type}>{alert.message}</Alert>
-            </Fade>
-          )}
-
-          <Button
-            startIcon={<ArrowBack />}
-            onClick={() => navigate("/cursos")}
-            sx={{
-              borderRadius: 2,
-              fontWeight: 600,
-              textTransform: "none",
-              mb: 3,
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.4)}`,
-            }}
-          >
-            Voltar aos conteúdos
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 5 }}>
+      <Stack spacing={4} maxWidth={720} mx="auto">
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
+          <Button onClick={() => navigate("/cursos")} variant="outlined" sx={{ fontWeight: 600 }} startIcon={<ArrowBackIos />}>
+            Voltar
           </Button>
+          <Typography variant="h4" fontWeight="700" align="center">
+            Criar Novo Conteúdo
+          </Typography>
+        </Box>
 
-          <form onSubmit={handleSubmit}>
-            <Stack spacing={3}>
-              <TextField
-                fullWidth
-                name="titulo"
-                label="Título do Conteúdo *"
-                value={form.titulo}
-                onChange={handleChange}
-              />
-              <TextField
-                fullWidth
-                name="descricao"
-                label="Descrição"
-                multiline
-                rows={3}
-                value={form.descricao}
-                onChange={handleChange}
-              />
-              <TextField
-                fullWidth
-                name="aprendizagem"
-                label="O que você vai aprender"
-                multiline
-                rows={3}
-                value={form.aprendizagem}
-                onChange={handleChange}
-              />
-              <TextField
-                fullWidth
-                name="requisitos"
-                label="Pré-requisitos"
-                multiline
-                rows={3}
-                value={form.requisitos}
-                onChange={handleChange}
-              />
+        {status && (
+          <Typography
+            align="center"
+            color={status.toLowerCase().includes("erro") ? "error" : "success.main"}
+          >
+            {status}
+          </Typography>
+        )}
 
-              <FormControl fullWidth>
-                <InputLabel>Tipo de Conteúdo</InputLabel>
-                <Select name="tipo" value={form.tipo} onChange={handleChange}>
-                  <MenuItem value="PALESTRA">Palestra</MenuItem>
-                  <MenuItem value="CURSO">Curso</MenuItem>
-                  <MenuItem value="PODCAST">Podcast</MenuItem>
-                  <MenuItem value="WORKSHOP">Workshop</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Nível</InputLabel>
-                <Select name="level" value={form.level} onChange={handleChange}>
-                  <MenuItem value="Iniciante">Iniciante</MenuItem>
-                  <MenuItem value="Intermediário">Intermediário</MenuItem>
-                  <MenuItem value="Avançado">Avançado</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Categoria</InputLabel>
-                <Select name="categoriaId" value={form.categoriaId} onChange={handleChange}>
-                  {categoriasLoading ? (
-                    <MenuItem disabled>Carregando...</MenuItem>
-                  ) : (
-                    categorias.map((cat) => (
-                      <MenuItem key={cat.id} value={cat.id}>
-                        {cat.nome}
-                      </MenuItem>
-                    ))
-                  )}
-                </Select>
-              </FormControl>
-
-              <TextField
-                fullWidth
-                name="thumbnailDesktop"
-                label="Thumbnail Desktop (URL)"
-                value={form.thumbnailDesktop}
-                onChange={handleChange}
-              />
-              <TextField
-                fullWidth
-                name="thumbnailMobile"
-                label="Thumbnail Mobile (URL)"
-                value={form.thumbnailMobile}
-                onChange={handleChange}
-              />
-              <TextField
-                fullWidth
-                name="thumbnailDestaque"
-                label="Thumbnail Destaque (URL)"
-                value={form.thumbnailDestaque}
-                onChange={handleChange}
-              />
-
-              <Button
-                type="submit"
-                variant="contained"
-                endIcon={<SendIcon />}
-                disabled={loading}
-                sx={{ py: 1.5, borderRadius: 2 }}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="loader"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 6,
+                  textAlign: "center",
+                  borderRadius: 3,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 3,
+                }}
               >
-                {loading ? "Enviando..." : "Criar Conteúdo"}
-              </Button>
-            </Stack>
-          </form>
-        </Stack>
-      </Container>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  <CircularProgress
+                    size={70}
+                    thickness={4}
+                    sx={{ color: theme.palette.primary.main }}
+                  />
+                </motion.div>
+
+                <Typography variant="h6" fontWeight="600">
+                  {status || "Processando..."}
+                </Typography>
+
+                {uploadProgress > 0 && (
+                  <LinearProgress
+                    variant="determinate"
+                    value={uploadProgress}
+                    sx={{ width: "100%", height: 8, borderRadius: 4 }}
+                  />
+                )}
+              </Paper>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4 }}
+            >
+              <Stack spacing={4}>
+                {/* Informações básicas */}
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                  <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+                    📝 Informações Básicas
+                  </Typography>
+                  <Stack spacing={3}>
+                    <TextField
+                      fullWidth
+                      label="Título *"
+                      value={titulo}
+                      onChange={(e) => setTitulo(e.target.value)}
+                    />
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      label="Descrição *"
+                      value={descricao}
+                      onChange={(e) => setDescricao(e.target.value)}
+                    />
+                  </Stack>
+                </Paper>
+
+                {/* Aprendizagem e Pré-requisitos */}
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                  <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+                    🎯 Aprendizagem e Pré-requisitos
+                  </Typography>
+                  <Stack spacing={3}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      label="O que o aluno vai aprender?"
+                      placeholder="Descreva as principais aprendizagens que o aluno terá..."
+                      value={aprendizagem}
+                      onChange={(e) => setAprendizagem(e.target.value)}
+                    />
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      label="Pré-requisitos"
+                      placeholder="Liste os conhecimentos necessários para aproveitar melhor o conteúdo..."
+                      value={requisitos}
+                      onChange={(e) => setRequisitos(e.target.value)}
+                    />
+                  </Stack>
+                </Paper>
+
+                {/* Configurações */}
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                  <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+                    ⚙️ Configurações
+                  </Typography>
+                  <Grid container sx={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    <Grid>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Tipo de Conteúdo"
+                        value={tipo}
+                        onChange={(e) => setTipo(e.target.value)}
+                      >
+                        <MenuItem value="CURSO">Curso</MenuItem>
+                        <MenuItem value="PALESTRA">Palestra</MenuItem>
+                        <MenuItem value="PODCAST">Podcast</MenuItem>
+                        <MenuItem value="WORKSHOP">Workshop</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Categoria"
+                        value={categoriaId}
+                        onChange={(e) => setCategoriaId(e.target.value)}
+                      >
+                        {categorias.map((cat) => (
+                          <MenuItem key={cat.id} value={cat.id}>
+                            {cat.nome}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Nível"
+                        value={level}
+                        onChange={(e) => setLevel(e.target.value)}
+                      >
+                        <MenuItem value="Iniciante">Iniciante</MenuItem>
+                        <MenuItem value="Intermediário">Intermediário</MenuItem>
+                        <MenuItem value="Avançado">Avançado</MenuItem>
+                      </TextField>
+                    </Grid>
+                  </Grid>
+                </Paper>
+
+                {/* Thumbnails */}
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                  <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+                    🖼️ Thumbnails (links)
+                  </Typography>
+                  <Stack spacing={3}>
+                    <TextField
+                      label="Thumbnail Desktop"
+                      value={thumbnailDesktop}
+                      onChange={(e) => setThumbnailDesktop(e.target.value)}
+                      placeholder="https://cdn.meusite.com/thumbs/desktop.png"
+                      fullWidth
+                    />
+                    <TextField
+                      label="Thumbnail Mobile"
+                      value={thumbnailMobile}
+                      onChange={(e) => setThumbnailMobile(e.target.value)}
+                      placeholder="https://cdn.meusite.com/thumbs/mobile.png"
+                      fullWidth
+                    />
+                    <TextField
+                      label="Thumbnail Destaque"
+                      value={thumbnailDestaque}
+                      onChange={(e) => setThumbnailDestaque(e.target.value)}
+                      placeholder="https://cdn.meusite.com/thumbs/destaque.png"
+                      fullWidth
+                    />
+                  </Stack>
+                </Paper>
+
+                {/* Upload de vídeo */}
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: 4,
+                    textAlign: "center",
+                    border: file
+                      ? `2px solid ${theme.palette.primary.main}`
+                      : `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
+                    borderRadius: 3,
+                    cursor: "pointer",
+                    "&:hover": { borderColor: theme.palette.primary.main },
+                  }}
+                >
+                  <input
+                    accept="video/*"
+                    type="file"
+                    style={{ display: "none" }}
+                    id="video-upload"
+                    onChange={(e) => setFile(e.target.files[0])}
+                  />
+                  <label htmlFor="video-upload">
+                    <Stack spacing={2} alignItems="center">
+                      <CloudUploadIcon sx={{ fontSize: 48, color: "primary.main" }} />
+                      <Button variant="contained" component="span" sx={{ borderRadius: 2 }}>
+                        {file ? "Alterar Vídeo" : "Selecionar Vídeo"}
+                      </Button>
+                      {file && (
+                        <Typography variant="body2" color="text.secondary">
+                          {file.name} - {(file.size / (1024 * 1024)).toFixed(2)} MB
+                        </Typography>
+                      )}
+                    </Stack>
+                  </label>
+                  {uploadProgress > 0 && (
+                    <LinearProgress
+                      variant="determinate"
+                      value={uploadProgress}
+                      sx={{ mt: 3, height: 8, borderRadius: 4 }}
+                    />
+                  )}
+                </Paper>
+
+                {/* Botão final */}
+                <Button
+                  onClick={handleSubmit}
+                  variant="contained"
+                  size="large"
+                  sx={{
+                    py: 2,
+                    fontSize: "1.1rem",
+                    fontWeight: "700",
+                    borderRadius: 3,
+                    textTransform: "none",
+                    bgcolor: "primary.main",
+                    "&:hover": { bgcolor: "primary.dark", transform: "translateY(-2px)" },
+                  }}
+                >
+                  Criar Conteúdo
+                </Button>
+              </Stack>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Stack>
     </Box>
   );
 }

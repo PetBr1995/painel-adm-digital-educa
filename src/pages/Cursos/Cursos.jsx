@@ -332,7 +332,7 @@ const Conteudos = () => {
                         height="200"
                         image={
                           conteudo.thumbnailDesktop
-                            ? "https://testeapi.digitaleduca.com.vc/" + conteudo.thumbnailDesktop
+                            ? conteudo.thumbnailDesktop
                             : "/placeholder-image.jpg"
                         }
                         alt={conteudo.titulo}
