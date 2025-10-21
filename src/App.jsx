@@ -71,6 +71,7 @@ function App() {
           <Route path='/uploadvideomodulo' element={<UploadVideoModulo />} />
           <Route path='/uploadvideointrodutorio' element={<UploadVideoIntrodutorio/>} />
         </Route>
+        <Route path='/testes' element={<ConteudoForm/>}/>
       </Routes>
     </BrowserRouter>
   );

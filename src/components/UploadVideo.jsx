@@ -111,11 +111,11 @@ const UploadVideo = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const droppedFiles = Array.from(e.dataTransfer.files).filter((file) =>
       file.type.startsWith("video/")
     );
-    
+
     if (!droppedFiles.length) {
       showMessage("Nenhum arquivo de vídeo válido foi encontrado", true);
       return;
@@ -175,7 +175,7 @@ const UploadVideo = () => {
       const token = localStorage.getItem("token");
 
       const { data } = await axios.post(
-        "https://testeapi.digitaleduca.com.vc/video/create",
+        "http://10.10.11.174:3000/video/create",
         payload,
         {
           headers: {
@@ -209,7 +209,7 @@ const UploadVideo = () => {
           onSuccess: async () => {
             try {
               await axios.post(
-                `https://testeapi.digitaleduca.com.vc/vimeo-client/video/${dbVideoId}/update-metadata`,
+                `http://10.10.11.174:3000/vimeo-client/video/${dbVideoId}/update-metadata`,
                 { name: currentVideo.titulo, description: "" },
                 { headers: { Authorization: `Bearer ${token}` } }
               );
@@ -248,9 +248,15 @@ const UploadVideo = () => {
 
     try {
       const videosToUpload = videos.filter((v) => v.status === "pending");
-      const uploadPromises = videosToUpload.map((video) => uploadSingleVideo(video.id));
 
-      await Promise.allSettled(uploadPromises);
+      for (const video of videosToUpload) {
+        try {
+          await uploadSingleVideo(video.id); // Aguarda o envio de cada vídeo
+        } catch (err) {
+          console.error(`Erro ao enviar vídeo ${video.titulo}:`, err);
+        }
+      }
+
 
       const successCount = videos.filter((v) => v.status === "success").length;
       const errorCount = videos.filter((v) => v.status === "error").length;
@@ -262,11 +268,11 @@ const UploadVideo = () => {
       setTimeout(() => {
         // Remove apenas os vídeos enviados com sucesso
         setVideos((prev) => prev.filter((v) => v.status !== "success"));
-        
+
         // Navegar de volta se todos foram enviados com sucesso
         if (errorCount === 0) {
-          navigate(moduloId ? "/modulos" : `/conteudos/${conteudoId}`, 
-                  moduloId ? { state: { curso } } : {});
+          navigate(moduloId ? "/modulos" : `/conteudos/${conteudoId}`,
+            moduloId ? { state: { curso } } : {});
         }
       }, 1500);
     } catch (err) {
@@ -322,10 +328,10 @@ const UploadVideo = () => {
   };
 
   return (
-    <Box sx={{ 
-      minHeight: "100vh", 
+    <Box sx={{
+      minHeight: "100vh",
       bgcolor: alpha(theme.palette.primary.main, 0.02),
-      py: 4 
+      py: 4
     }}>
       <Container maxWidth="md">
         <Fade in timeout={300}>
@@ -339,7 +345,7 @@ const UploadVideo = () => {
                     ? navigate("/modulos", { state: { curso } })
                     : navigate(`/conteudos/${conteudoId}`)
                 }
-                sx={{ 
+                sx={{
                   mb: 3,
                   borderRadius: 3,
                   textTransform: 'none',
@@ -353,7 +359,7 @@ const UploadVideo = () => {
               </Button>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                <Avatar sx={{ 
+                <Avatar sx={{
                   bgcolor: theme.palette.primary.main,
                   width: 56,
                   height: 56
@@ -361,9 +367,9 @@ const UploadVideo = () => {
                   <Movie sx={{ fontSize: 28 }} />
                 </Avatar>
                 <Box>
-                  <Typography 
-                    variant="h4" 
-                    sx={{ 
+                  <Typography
+                    variant="h4"
+                    sx={{
                       fontWeight: 700,
                       color: theme.palette.text.primary,
                       mb: 0.5
@@ -381,7 +387,7 @@ const UploadVideo = () => {
               {videos.length > 0 && (
                 <Grid container spacing={3} sx={{ mb: 3 }}>
                   <Grid item xs={12} sm={4}>
-                    <Card sx={{ 
+                    <Card sx={{
                       background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
                       color: 'white'
                     }}>
@@ -402,7 +408,7 @@ const UploadVideo = () => {
                   </Grid>
 
                   <Grid item xs={12} sm={4}>
-                    <Card sx={{ 
+                    <Card sx={{
                       background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
                       color: 'white'
                     }}>
@@ -423,7 +429,7 @@ const UploadVideo = () => {
                   </Grid>
 
                   <Grid item xs={12} sm={4}>
-                    <Card sx={{ 
+                    <Card sx={{
                       background: `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`,
                       color: 'white'
                     }}>
@@ -451,11 +457,11 @@ const UploadVideo = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                     Progresso geral: {getOverallProgress().toFixed(1)}%
                   </Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={getOverallProgress()} 
-                    sx={{ 
-                      height: 8, 
+                  <LinearProgress
+                    variant="determinate"
+                    value={getOverallProgress()}
+                    sx={{
+                      height: 8,
                       borderRadius: 4,
                       bgcolor: alpha(theme.palette.primary.main, 0.1),
                       '& .MuiLinearProgress-bar': {
@@ -469,9 +475,9 @@ const UploadVideo = () => {
             </Box>
 
             {/* Main Upload Card */}
-            <Card 
+            <Card
               elevation={0}
-              sx={{ 
+              sx={{
                 borderRadius: 4,
                 border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
                 overflow: 'hidden'
@@ -482,14 +488,14 @@ const UploadVideo = () => {
                 <Box
                   sx={{
                     border: "2px dashed",
-                    borderColor: isDragging 
-                      ? theme.palette.primary.main 
-                      : videos.length > 0 
-                        ? theme.palette.success.main 
+                    borderColor: isDragging
+                      ? theme.palette.primary.main
+                      : videos.length > 0
+                        ? theme.palette.success.main
                         : alpha(theme.palette.primary.main, 0.3),
-                    bgcolor: isDragging 
+                    bgcolor: isDragging
                       ? alpha(theme.palette.primary.main, 0.08)
-                      : videos.length > 0 
+                      : videos.length > 0
                         ? alpha(theme.palette.success.main, 0.04)
                         : 'transparent',
                     p: 4,
@@ -515,8 +521,8 @@ const UploadVideo = () => {
                     multiple
                     onChange={handleFileChange}
                   />
-                  
-                  <Avatar sx={{ 
+
+                  <Avatar sx={{
                     bgcolor: alpha(theme.palette.primary.main, 0.1),
                     color: theme.palette.primary.main,
                     width: 80,
@@ -528,10 +534,10 @@ const UploadVideo = () => {
                   </Avatar>
 
                   <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-                    {isDragging 
-                      ? "Solte os arquivos aqui" 
-                      : videos.length > 0 
-                        ? "Adicionar mais vídeos" 
+                    {isDragging
+                      ? "Solte os arquivos aqui"
+                      : videos.length > 0
+                        ? "Adicionar mais vídeos"
                         : "Carregar vídeos"
                     }
                   </Typography>
@@ -546,7 +552,7 @@ const UploadVideo = () => {
                       component="span"
                       startIcon={<FileUpload />}
                       size="large"
-                      sx={{ 
+                      sx={{
                         borderRadius: 3,
                         px: 4,
                         py: 1.5,
@@ -569,21 +575,21 @@ const UploadVideo = () => {
                     <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
                       Vídeos Selecionados ({videos.length})
                     </Typography>
-                    
+
                     <List sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), borderRadius: 2 }}>
                       {videos.map((video, index) => (
                         <React.Fragment key={video.id}>
                           <ListItem sx={{ p: 3 }}>
                             <Box sx={{ width: "100%" }}>
                               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                                <Avatar sx={{ 
+                                <Avatar sx={{
                                   bgcolor: alpha(theme.palette.primary.main, 0.1),
                                   color: theme.palette.primary.main,
                                   mr: 2
                                 }}>
                                   {getStatusIcon(video.status)}
                                 </Avatar>
-                                
+
                                 <Box sx={{ flex: 1 }}>
                                   <Typography variant="subtitle1" fontWeight={600}>
                                     {video.file.name}
@@ -596,19 +602,19 @@ const UploadVideo = () => {
                                 <Stack direction="row" spacing={1} alignItems="center">
                                   <Chip
                                     size="small"
-                                    label={video.status === 'pending' ? 'Aguardando' : 
-                                           video.status === 'uploading' ? 'Enviando...' :
-                                           video.status === 'success' ? 'Concluído' : 'Erro'}
+                                    label={video.status === 'pending' ? 'Aguardando' :
+                                      video.status === 'uploading' ? 'Enviando...' :
+                                        video.status === 'success' ? 'Concluído' : 'Erro'}
                                     color={getStatusColor(video.status)}
                                     variant="outlined"
                                   />
-                                  
+
                                   <Tooltip title="Remover vídeo">
                                     <IconButton
                                       onClick={() => handleRemoveVideo(video.id)}
                                       disabled={video.status === "uploading"}
                                       size="small"
-                                      sx={{ 
+                                      sx={{
                                         color: theme.palette.error.main,
                                         '&:hover': {
                                           bgcolor: alpha(theme.palette.error.main, 0.1)
@@ -627,7 +633,7 @@ const UploadVideo = () => {
                                 value={video.titulo}
                                 onChange={(e) => handleVideoTitleChange(video.id, e.target.value)}
                                 disabled={video.status === "uploading" || video.status === "success"}
-                                sx={{ 
+                                sx={{
                                   mb: 2,
                                   '& .MuiOutlinedInput-root': {
                                     borderRadius: 2,
@@ -652,8 +658,8 @@ const UploadVideo = () => {
                                   <LinearProgress
                                     variant="determinate"
                                     value={video.progress}
-                                    sx={{ 
-                                      height: 8, 
+                                    sx={{
+                                      height: 8,
                                       borderRadius: 4,
                                       bgcolor: alpha(theme.palette.primary.main, 0.1),
                                       '& .MuiLinearProgress-bar': {
@@ -680,7 +686,7 @@ const UploadVideo = () => {
                     size="large"
                     fullWidth
                     startIcon={<UploadIcon />}
-                    sx={{ 
+                    sx={{
                       mt: 4,
                       py: 2,
                       borderRadius: 3,
@@ -705,17 +711,17 @@ const UploadVideo = () => {
             </Card>
 
             {/* Notifications */}
-            <Snackbar 
+            <Snackbar
               open={showAlert}
               autoHideDuration={5000}
               onClose={() => setShowAlert(false)}
               anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
             >
-              <Alert 
+              <Alert
                 onClose={() => setShowAlert(false)}
                 severity={alertSeverity}
                 variant="filled"
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   fontWeight: 500
                 }}

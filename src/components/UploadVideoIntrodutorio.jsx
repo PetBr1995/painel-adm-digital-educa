@@ -74,7 +74,7 @@ const UploadVideoIntrodutorio = () => {
             };
 
             const { data } = await axios.post(
-                "https://testeapi.digitaleduca.com.vc/video/create",
+                "http://10.10.11.174:3000/video/create",
                 payload,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -106,7 +106,7 @@ const UploadVideoIntrodutorio = () => {
 
                             // 🔹 Obter o conteúdo atual para evitar enviar campos inválidos
                             const { data: conteudoAtual } = await axios.get(
-                                `https://testeapi.digitaleduca.com.vc/conteudos/${conteudoId}`,
+                                `http://10.10.11.174:3000/conteudos/${conteudoId}`,
                                 { headers: { Authorization: `Bearer ${token}` } }
                             );
 
@@ -121,7 +121,7 @@ const UploadVideoIntrodutorio = () => {
                             };
 
                             await axios.put(
-                                `https://testeapi.digitaleduca.com.vc/conteudos/${conteudoId}`,
+                                `http://10.10.11.174:3000/conteudos/${conteudoId}`,
                                 updatePayload,
                                 { headers: { Authorization: `Bearer ${token}` } }
                             );

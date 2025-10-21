@@ -180,10 +180,10 @@ const Home = () => {
         const headers = { Authorization: `Bearer ${token}` };
 
         const [cursosRes, instrutoresRes, categoriasRes, planosRes] = await Promise.all([
-          axios.get(`https://testeapi.digitaleduca.com.vc/curso/cursos?search=${encodeURIComponent(searchQuery)}`, { headers }),
-          axios.get(`https://testeapi.digitaleduca.com.vc/instrutor?search=${encodeURIComponent(searchQuery)}`, { headers }),
-          axios.get(`https://testeapi.digitaleduca.com.vc/categoria/list?search=${encodeURIComponent(searchQuery)}`),
-          axios.get(`https://testeapi.digitaleduca.com.vc/planos?search=${encodeURIComponent(searchQuery)}`, { headers }),
+          axios.get(`http://10.10.11.174:3000/curso/cursos?search=${encodeURIComponent(searchQuery)}`, { headers }),
+          axios.get(`http://10.10.11.174:3000/instrutor?search=${encodeURIComponent(searchQuery)}`, { headers }),
+          axios.get(`http://10.10.11.174:3000/categoria/list?search=${encodeURIComponent(searchQuery)}`),
+          axios.get(`http://10.10.11.174:3000/planos?search=${encodeURIComponent(searchQuery)}`, { headers }),
         ]);
 
         const results = {

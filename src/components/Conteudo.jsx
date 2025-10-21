@@ -41,7 +41,7 @@ const Conteudo = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://testeapi.digitaleduca.com.vc/conteudos/${id}/admin`,
+        `http://10.10.11.174:3000/conteudos/${id}/admin`,
         { headers: { Authorization: "Bearer " + localStorage.getItem("token") } }
       );
 
@@ -75,7 +75,7 @@ const Conteudo = () => {
     if (!result.isConfirmed) return;
 
     try {
-      await axios.delete(`https://testeapi.digitaleduca.com.vc/video/${videoId}`, {
+      await axios.delete(`http://10.10.11.174:3000/video/${videoId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 

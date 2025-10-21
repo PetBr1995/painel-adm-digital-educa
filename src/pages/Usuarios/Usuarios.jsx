@@ -35,8 +35,24 @@ const Usuarios = () => {
     const [filtroStatus, setFiltroStatus] = useState("todos");
     const navigate = useNavigate();
 
+
+    const [usuariosAdm, setUsuariosAdm] = useState([])
+
+    const listarUsuariosAdmin = () => {
+        axios.get('http://10.10.11.174:3000/usuario/admin/usuarios', {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+        }).then(function (response) {
+            setUsuariosAdm(response.data)
+            console.log(response)
+        }).catch(function (error) {
+            console.log(error)
+        })
+    }
+
     const listarUsuarios = () => {
-        axios.get("https://testeapi.digitaleduca.com.vc/usuario/admin/usuarios", {
+        axios.get("http://10.10.11.174:3000/usuario/admin/usuarios", {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`
             }
@@ -63,7 +79,7 @@ const Usuarios = () => {
             cancelButtonText: "Cancelar"
         }).then((result) => {
             if (result.isConfirmed) {
-                axios.delete(`https://testeapi.digitaleduca.com.vc/usuario/admin/usuarios/${id}`, {
+                axios.delete(`http://10.10.11.174:3000/usuario/admin/usuarios/${id}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`
                     }
@@ -81,11 +97,16 @@ const Usuarios = () => {
     };
 
     const temAssinaturaAtiva = (usuario) => {
-        return usuario.assinaturas?.some(assinatura => assinatura.status === "ATIVA");
+        return usuario.assinaturas?.some(assinatura =>
+            assinatura.status === "ATIVA" &&
+            assinatura.stripeSubscriptionId != null && // cobre null e undefined
+            assinatura.stripeSubscriptionId !== ""    // evita string vazia
+        );
     };
 
     useEffect(() => {
         listarUsuarios();
+        listarUsuariosAdmin();
     }, []);
 
     const usuariosFiltrados = usuarios.filter((usuario) => {
@@ -323,6 +344,7 @@ const Usuarios = () => {
                             <TableBody>
                                 {usuariosFiltrados.map((usuario, index) => {
                                     const assinaturaAtiva = temAssinaturaAtiva(usuario);
+                                    const ehSuperAdmin = usuario.role === "SUPERADMIN";
                                     return (
                                         <TableRow
                                             key={usuario.id}
@@ -366,30 +388,46 @@ const Usuarios = () => {
                                                 />
                                             </TableCell>
                                             <TableCell align="center">
-                                                <Tooltip
-                                                    title={assinaturaAtiva ? "Não é possível excluir usuário com matrícula ativa" : "Excluir usuário"}
-                                                    arrow
-                                                >
-                                                    <span>
-                                                        <IconButton
-                                                            color="error"
-                                                            disabled={assinaturaAtiva}
-                                                            onClick={() => {
-                                                                if (!assinaturaAtiva) {
-                                                                    excluirUsuario(usuario.id);
-                                                                }
-                                                            }}
-                                                            sx={{
-                                                                opacity: assinaturaAtiva ? 0.4 : 1,
-                                                                "&:hover": {
-                                                                    backgroundColor: assinaturaAtiva ? 'transparent' : alpha('#f44336', 0.1)
-                                                                }
-                                                            }}
-                                                        >
-                                                            <Delete />
-                                                        </IconButton>
-                                                    </span>
-                                                </Tooltip>
+
+                                                {!ehSuperAdmin && (
+                                                    <Tooltip
+                                                        title={assinaturaAtiva ? "Não é possível excluir usuário com matrícula ativa" : "Excluir usuário"}
+                                                        arrow
+                                                    >
+                                                        <span>
+                                                            <IconButton
+                                                                color="error"
+                                                                disabled={assinaturaAtiva}
+                                                                onClick={() => {
+                                                                    if (!assinaturaAtiva) {
+                                                                        excluirUsuario(usuario.id);
+                                                                    }
+                                                                }}
+                                                                sx={{
+                                                                    opacity: assinaturaAtiva ? 0.4 : 1,
+                                                                    "&:hover": {
+                                                                        backgroundColor: assinaturaAtiva ? 'transparent' : alpha('#f44336', 0.1)
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Delete />
+                                                            </IconButton>
+                                                        </span>
+                                                    </Tooltip>
+                                                )}
+
+                                                {ehSuperAdmin && (
+                                                    <Tooltip title="Não é possível excluir um SUPERADMIN">
+                                                        <span>
+                                                            <Chip
+                                                                label="SUPERADMIN"
+                                                                color="warning"
+                                                                size="small"
+                                                            />
+                                                        </span>
+                                                    </Tooltip>
+                                                )}
+
                                             </TableCell>
                                         </TableRow>
                                     );

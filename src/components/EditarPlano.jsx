@@ -63,7 +63,7 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
 
     try {
       await axios.put(
-        `https://testeapi.digitaleduca.com.vc/planos/update/${id}`,
+        `http://10.10.11.174:3000/planos/update/${id}`,
         payload,
         {
           headers: {

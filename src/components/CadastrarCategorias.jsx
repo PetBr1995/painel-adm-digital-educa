@@ -53,7 +53,7 @@ const CadastrarCategorias = ({ setForm, onCategoriaCadastrada }) => {
       }
 
       const response = await axios.post(
-        "https://testeapi.digitaleduca.com.vc/categorias/create",
+        "http://10.10.11.174:3000/categorias/create",
         { nome: nome.trim() },
         {
           headers: {
@@ -61,7 +61,7 @@ const CadastrarCategorias = ({ setForm, onCategoriaCadastrada }) => {
           },
         }
       );
-
+    
       showAlert("Categoria cadastrada com sucesso!", "success");
       setNome("");
 
@@ -76,6 +76,7 @@ const CadastrarCategorias = ({ setForm, onCategoriaCadastrada }) => {
       }, 1500);
 
     } catch (error) {
+      
       console.error("Erro ao cadastrar categoria:", error);
       const errorMessage = error.response?.data?.message || "Erro ao cadastrar categoria";
       showAlert(errorMessage, "error");

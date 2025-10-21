@@ -29,7 +29,7 @@ export default function ConteudoUploader() {
       };
 
       // cria conteúdo no backend
-      const { data } = await axios.post("https://testeapi.digitaleduca.com.vc/conteudos/create", payload,{
+      const { data } = await axios.post("http://10.10.11.174:3000/conteudos/create", payload,{
         headers:{
             Authorization: "Bearer "+ localStorage.getItem('token')
         }

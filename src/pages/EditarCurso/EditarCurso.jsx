@@ -1,295 +1,242 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  Box, Button, LinearProgress, TextField, Typography, Paper, Stack, MenuItem,
-  Grid, CircularProgress, Fade, alpha
+  Box,
+  Button,
+  CircularProgress,
+  TextField,
+  Typography,
+  Paper,
+  Stack,
+  Grid,
+  MenuItem,
 } from "@mui/material";
-import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
-import theme from "../../theme/theme";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 export default function EditarConteudo() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const conteudoData = location.state?.conteudo; // 🔹 recebe o conteúdo do useLocation
 
-  const [loading, setLoading] = useState(true);
-  const [titulo, setTitulo] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [thumbnailDesktop, setThumbnailDesktop] = useState("");
-  const [thumbnailMobile, setThumbnailMobile] = useState("");
-  const [thumbnailDestaque, setThumbnailDestaque] = useState("");
-  const [aprendizagem, setAprendizagem] = useState("");
-  const [requisitos, setRequisitos] = useState("");
-  const [level, setLevel] = useState("Iniciante");
-  const [tipo, setTipo] = useState("CURSO");
-  const [categoriaId, setCategoriaId] = useState("");
-  const [categorias, setCategorias] = useState([]);
-  const [file, setFile] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [conteudo, setConteudo] = useState({});
   const [status, setStatus] = useState("");
 
-  // 🔹 Buscar categorias
-  const getCategorias = async () => {
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [level, setLevel] = useState("Iniciante");
+  const [aprendizagem, setAprendizagem] = useState("");
+  const [requisitos, setRequisitos] = useState("");
+
+  const tipos = [
+    { value: "PALESTRA", label: "PALESTRA" },
+    { value: "CURSO", label: "CURSO" },
+    { value: "PODCAST", label: "PODCAST" },
+    { value: "WORKSHOP", label: "WORKSHOP" },
+  ];
+
+  const niveis = ["Iniciante", "Intermediário", "Avançado"];
+
+  // 🔹 Buscar dados do conteúdo
+  const getConteudoById = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get("https://testeapi.digitaleduca.com.vc/categorias/list", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      setCategorias(res.data || []);
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `http://10.10.11.174:3000/conteudos/${id}/admin`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setConteudo(res.data);
+
+      // Preencher estados dos inputs
+      setTitulo(res.data.titulo || "");
+      setDescricao(res.data.descricao || "");
+      setTipo(res.data.tipo || "");
+      setLevel(res.data.level || "Iniciante");
+      setAprendizagem(res.data.aprendizagem || "");
+      setRequisitos(res.data.requisitos || "");
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  // 🔹 Buscar dados do conteúdo (fallback)
-  const getConteudo = async () => {
-    if (conteudoData) {
-      preencherCampos(conteudoData);
+    } finally {
       setLoading(false);
-    } else {
-      try {
-        const res = await axios.get(`https://testeapi.digitaleduca.com.vc/conteudos/${id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        preencherCampos(res.data);
-      } catch (err) {
-        console.error("Erro ao carregar conteúdo:", err);
-        setStatus("Erro ao carregar o conteúdo.");
-      } finally {
-        setLoading(false);
-      }
     }
-  };
-
-  const preencherCampos = (data) => {
-    setTitulo(data.titulo || "");
-    setDescricao(data.descricao || "");
-    setThumbnailDesktop(data.thumbnailDesktop || "");
-    setThumbnailMobile(data.thumbnailMobile || "");
-    setThumbnailDestaque(data.thumbnailDestaque || "");
-    setAprendizagem(data.aprendizagem || "");
-    setRequisitos(data.requisitos || "");
-    setLevel(data.level || "Iniciante");
-    setTipo(data.tipo || "CURSO");
-    setCategoriaId(data.categoriaId || "");
   };
 
   useEffect(() => {
-    getCategorias();
-    getConteudo();
+    getConteudoById();
   }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      titulo, descricao, categoriaId, tipo, level,
-      aprendizagem, requisitos,
-      thumbnailDesktop, thumbnailMobile, thumbnailDestaque,
-    };
+    setLoading(true);
+    setStatus("");
 
     try {
-      setStatus("Atualizando conteúdo...");
-      await axios.put(`https://testeapi.digitaleduca.com.vc/conteudos/${id}`, payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+
+      const body = {
+        titulo,
+        descricao,
+        tipo,
+        level,
+        aprendizagem,
+        requisitos,
+      };
+
+      const res = await axios.put(
+        `http://10.10.11.174:3000/conteudos/${id}`,
+        body,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      console.log("Conteúdo atualizado:", res.data);
       setStatus("Conteúdo atualizado com sucesso!");
-      setTimeout(() => navigate("/conteudos"), 1200);
-    } catch (error) {
-      console.error("Erro ao atualizar:", error);
-      setStatus("Erro ao atualizar o conteúdo.");
+    } catch (err) {
+      console.error(err);
+      setStatus("Erro ao atualizar conteúdo. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <Fade in>
-        <Box
-          sx={{
-            minHeight: "80vh",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Stack alignItems="center" spacing={3}>
-            <CircularProgress size={50} />
-            <Typography variant="h6" color="text.secondary">
-              Carregando conteúdo...
-            </Typography>
-          </Stack>
-        </Box>
-      </Fade>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 
   return (
-    <Fade in={!loading} timeout={500}>
-      <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 5 }}>
-        <Stack spacing={4} maxWidth={720} mx="auto">
-          <Typography variant="h4" fontWeight="700" align="center">
-            Editar Conteúdo
+    <Box sx={{ minHeight: "100vh", py: 5, px: 2 }}>
+      <Stack spacing={4} maxWidth={720} mx="auto">
+        <Typography variant="h4" fontWeight="700" align="center">
+          Editar Conteúdo
+        </Typography>
+
+        {status && (
+          <Typography
+            align="center"
+            color={status.toLowerCase().includes("erro") ? "error" : "success.main"}
+          >
+            {status}
           </Typography>
+        )}
 
-          {status && (
-            <Typography
-              align="center"
-              color={status.includes("erro") ? "error" : "success.main"}
-            >
-              {status}
-            </Typography>
-          )}
+        <form onSubmit={handleSubmit}>
+          <Stack spacing={4}>
+            {/* 📝 Informações Básicas */}
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+                📝 Informações Básicas
+              </Typography>
+              <Stack spacing={3}>
+                <TextField
+                  fullWidth
+                  label="Título *"
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                />
+                <TextField
+                  fullWidth
+                  label="Descrição *"
+                  multiline
+                  rows={3}
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                />
+              </Stack>
+            </Paper>
 
-          {/* Campos */}
-          <form onSubmit={handleSubmit}>
-            <Stack spacing={4}>
-              {/* 📝 Informações Básicas */}
-              <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-                <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
-                  📝 Informações Básicas
-                </Typography>
-                <Stack spacing={3}>
+            {/* ⚙️ Configurações */}
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+                ⚙️ Configurações
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
                   <TextField
+                    select
                     fullWidth
-                    label="Título *"
-                    value={titulo}
-                    onChange={(e) => setTitulo(e.target.value)}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Descrição *"
-                    multiline
-                    rows={3}
-                    value={descricao}
-                    onChange={(e) => setDescricao(e.target.value)}
-                  />
-                </Stack>
-              </Paper>
-
-              {/* ⚙️ Configurações */}
-              <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-                <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
-                  ⚙️ Configurações
-                </Typography>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Tipo"
-                      value={tipo}
-                      onChange={(e) => setTipo(e.target.value)}
-                    >
-                      <MenuItem value="CURSO">Curso</MenuItem>
-                      <MenuItem value="AULA">Aula</MenuItem>
-                      <MenuItem value="MODULO">Módulo</MenuItem>
-                    </TextField>
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Categoria"
-                      value={categoriaId}
-                      onChange={(e) => setCategoriaId(e.target.value)}
-                    >
-                      {categorias.map((cat) => (
-                        <MenuItem key={cat.id} value={cat.id}>
-                          {cat.nome}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Nível"
-                      value={level}
-                      onChange={(e) => setLevel(e.target.value)}
-                    >
-                      <MenuItem value="Iniciante">Iniciante</MenuItem>
-                      <MenuItem value="Intermediário">Intermediário</MenuItem>
-                      <MenuItem value="Avançado">Avançado</MenuItem>
-                    </TextField>
-                  </Grid>
+                    label="Tipo"
+                    value={tipo}
+                    onChange={(e) => setTipo(e.target.value)}
+                  >
+                    {tipos.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </Grid>
-              </Paper>
 
-              {/* 🖼️ Thumbnails */}
-              <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-                <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
-                  🖼️ Thumbnails (URLs)
-                </Typography>
-                <Stack spacing={3}>
+                <Grid item xs={12} sm={6}>
                   <TextField
+                    select
                     fullWidth
-                    label="Thumbnail Desktop (URL)"
-                    value={thumbnailDesktop}
-                    onChange={(e) => setThumbnailDesktop(e.target.value)}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Thumbnail Mobile (URL)"
-                    value={thumbnailMobile}
-                    onChange={(e) => setThumbnailMobile(e.target.value)}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Thumbnail Destaque (URL)"
-                    value={thumbnailDestaque}
-                    onChange={(e) => setThumbnailDestaque(e.target.value)}
-                  />
-                </Stack>
-              </Paper>
+                    label="Nível"
+                    value={level}
+                    onChange={(e) => setLevel(e.target.value)}
+                  >
+                    {niveis.map((n) => (
+                      <MenuItem key={n} value={n}>
+                        {n}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              </Grid>
+            </Paper>
 
-              {/* 📘 Detalhes */}
-              <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-                <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
-                  📘 Detalhes do Curso
-                </Typography>
-                <Stack spacing={3}>
-                  <TextField
-                    fullWidth
-                    label="Aprendizagem"
-                    multiline
-                    rows={2}
-                    value={aprendizagem}
-                    onChange={(e) => setAprendizagem(e.target.value)}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Requisitos"
-                    multiline
-                    rows={2}
-                    value={requisitos}
-                    onChange={(e) => setRequisitos(e.target.value)}
-                  />
-                </Stack>
-              </Paper>
+            {/* 📘 Detalhes */}
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+                📘 Detalhes do Conteúdo
+              </Typography>
+              <Stack spacing={3}>
+                <TextField
+                  fullWidth
+                  label="Aprendizagem"
+                  multiline
+                  rows={2}
+                  value={aprendizagem}
+                  onChange={(e) => setAprendizagem(e.target.value)}
+                />
+                <TextField
+                  fullWidth
+                  label="Requisitos"
+                  multiline
+                  rows={2}
+                  value={requisitos}
+                  onChange={(e) => setRequisitos(e.target.value)}
+                />
+              </Stack>
+            </Paper>
 
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                sx={{
-                  py: 2,
-                  fontSize: "1.1rem",
-                  fontWeight: "700",
-                  borderRadius: 3,
-                  textTransform: "none",
-                  bgcolor: "primary.main",
-                  "&:hover": { bgcolor: "primary.dark", transform: "translateY(-2px)" },
-                }}
-              >
-                Atualizar Conteúdo
-              </Button>
-            </Stack>
-          </form>
-        </Stack>
-      </Box>
-    </Fade>
+            <Button
+              type="submit"
+              variant="contained"
+              size="large"
+              sx={{
+                py: 2,
+                fontSize: "1.1rem",
+                fontWeight: "700",
+                borderRadius: 3,
+                textTransform: "none",
+              }}
+            >
+              Atualizar Conteúdo
+            </Button>
+          </Stack>
+        </form>
+      </Stack>
+    </Box>
   );
 }

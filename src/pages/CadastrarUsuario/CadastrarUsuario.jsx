@@ -58,7 +58,7 @@ const CadastrarUsuario = () => {
 
         axios
             .post(
-                "https://testeapi.digitaleduca.com.vc/usuario/admin/create",
+                "http://10.10.11.174:3000/usuario/admin/create",
                 {
                     nome,
                     email,
@@ -295,6 +295,64 @@ const CadastrarUsuario = () => {
                             }}
                         />
 
+
+                        {/* Periodo de acesso */}
+                        <Box sx={{ display: "flex", justifyContent: "center" }}>
+
+                            <TextField
+                                label="Data Inicio"
+                                type="date"
+                                fullWidth
+                                value={celular}
+                                onChange={handleCelularChange}
+                                inputProps={{ maxLength: 15 }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <PhoneOutlined sx={{ color: '#FDBB30' }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 3,
+                                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        }
+                                    }
+                                }}
+                            />
+
+                            <TextField
+                                label="Data Fim"
+                                type="date"
+                                fullWidth
+                                value={celular}
+                                onChange={handleCelularChange}
+                                inputProps={{ maxLength: 15 }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <PhoneOutlined sx={{ color: '#FDBB30' }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 3,
+                                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                            borderColor: '#FDBB30',
+                                        }
+                                    }
+                                }}
+                            />
+                        </Box>
 
                         {/* Senha */}
 

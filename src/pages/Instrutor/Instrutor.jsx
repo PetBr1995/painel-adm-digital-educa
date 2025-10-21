@@ -26,10 +26,11 @@ const Instrutor = () => {
   const [busca, setBusca] = useState("");
 
   const getInstructor = () => {
-    axios.get('https://testeapi.digitaleduca.com.vc/instrutor', {
+    axios.get('http://10.10.11.174:3000/instrutor', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
       .then((response) => setInstrutor(response.data))
+      
       .catch((error) => console.error('Erro ao buscar instrutores:', error));
   };
 

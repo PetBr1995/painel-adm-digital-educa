@@ -75,7 +75,7 @@ const Login = () => {
 
         setLoading(true);
         try {
-            const response = await axios.post("https://testeapi.digitaleduca.com.vc/auth/login", {
+            const response = await axios.post("http://10.10.11.174:3000/auth/login", {
                 email,
                 senha,
             });

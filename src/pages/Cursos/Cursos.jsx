@@ -28,6 +28,9 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import theme from "../../theme/theme";
 import CadastrarCategorias from "../../components/CadastrarCategorias";
+import CadastrarSubcategoria from "../../components/CadastrarSubcategoria";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Swal from "sweetalert2";
 
 const Conteudos = () => {
   const navigate = useNavigate();
@@ -35,11 +38,12 @@ const Conteudos = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [showFormSubcategoria, setShowFormSubcategoria] = useState(false)
   const [conteudos, setConteudos] = useState([]);
 
   const getConteudos = async () => {
     try {
-      const response = await axios.get("https://testeapi.digitaleduca.com.vc/conteudos", {
+      const response = await axios.get("http://10.10.11.174:3000/conteudos", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -54,7 +58,7 @@ const Conteudos = () => {
 
   const getCategorias = async () => {
     try {
-      const response = await axios.get("https://testeapi.digitaleduca.com.vc/categorias/list", {
+      const response = await axios.get("http://10.10.11.174:3000/categorias/list", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -68,6 +72,10 @@ const Conteudos = () => {
   const handleCategoriaCadastrada = (novaCategoria) => {
     setCategorias((prev) => [...prev, novaCategoria]);
     setShowForm(false);
+  };
+  const handleSubCategoriaCadastrada = (novaSubCategoria) => {
+    setShowFormSubcategoria((prev) => [...prev, novaSubCategoria]);
+    setShowFormSubcategoria(false);
   };
 
   useEffect(() => {
@@ -173,7 +181,7 @@ const Conteudos = () => {
             <Stack direction="row" alignItems="center" gap={2}>
               <CategoryIcon sx={{ color: "primary.main", fontSize: 24 }} />
               <Typography variant="h6" fontWeight="600" color="text.primary">
-                Gerenciar Categorias
+                Categorias
               </Typography>
             </Stack>
             <Button
@@ -195,6 +203,46 @@ const Conteudos = () => {
               onClick={() => setShowForm(true)}
             >
               Nova Categoria
+            </Button>
+          </Stack>
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 2,
+            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.08)},${alpha(theme.palette.primary.light, 0.02)})`,
+            border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
+          }}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" alignItems="center" gap={2}>
+              <CategoryIcon sx={{ color: "primary.main", fontSize: 24 }} />
+              <Typography variant="h6" fontWeight="600" color="text.primary">
+                Subcategorias
+              </Typography>
+            </Stack>
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              sx={{
+                borderRadius: "10px",
+                fontWeight: "600",
+                textTransform: "none",
+                borderColor: alpha(theme.palette.primary.main, 0.4),
+                color: "primary.main",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  transform: "translateY(-1px)",
+                },
+                transition: "all 0.2s ease",
+              }}
+              onClick={() => setShowFormSubcategoria(true)}
+            >
+              Nova Subcategoria
             </Button>
           </Stack>
         </Paper>
@@ -331,9 +379,7 @@ const Conteudos = () => {
                         component="img"
                         height="200"
                         image={
-                          conteudo.thumbnailDesktop
-                            ? conteudo.thumbnailDesktop
-                            : "/placeholder-image.jpg"
+                          "http://10.10.11.174:3000/public/" + conteudo.thumbnailDesktop
                         }
                         alt={conteudo.titulo}
                         className="card-media"
@@ -435,29 +481,13 @@ const Conteudos = () => {
                             variant="outlined"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/editarconteudo/${conteudo.id}`);
-                            }}
-                            fullWidth
-                            startIcon={<EditIcon />}
-                            sx={{
-                              textTransform: "none",
-                              borderRadius: "10px",
-                              borderColor: alpha(theme.palette.primary.main, 0.3),
-                              color: "primary.main",
-                              fontWeight: "600",
-                              py: 1,
-                              fontSize: "0.875rem",
-                              "&:hover": {
-                                borderColor: "primary.main",
-                                bgcolor: alpha(theme.palette.primary.main, 0.04),
-                                transform: "translateY(-1px)",
-                              },
-                              transition: "all 0.2s ease",
+                              navigate(`/editarconteudo/${conteudo.id}`, { state: { conteudo } });
                             }}
                           >
                             Editar
                           </Button>
                         </Tooltip>
+
                         <Tooltip title="Gerenciar conteúdo" arrow>
                           <Button
                             variant="contained"
@@ -484,7 +514,60 @@ const Conteudos = () => {
                             Gerenciar
                           </Button>
                         </Tooltip>
+
+                        {/* 🔹 Botão de Deletar com confirmação */}
+                        <Tooltip title="Deletar conteúdo" arrow>
+                          <Button
+                            variant="contained"
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+
+                              const confirm = await Swal.fire({
+                                title: "Tem certeza?",
+                                text: "Essa ação excluirá o conteúdo permanentemente.",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#d33",
+                                cancelButtonColor: "#3085d6",
+                                confirmButtonText: "Sim, deletar",
+                                cancelButtonText: "Cancelar",
+                              });
+
+                              if (confirm.isConfirmed) {
+                                try {
+                                  const token = localStorage.getItem("token");
+                                  await axios.delete(`http://10.10.11.174:3000/conteudos/${conteudo.id}`, {
+                                    headers: { Authorization: `Bearer ${token}` },
+                                  });
+
+                                  Swal.fire("Deletado!", "O conteúdo foi removido com sucesso.", "success");
+                                  // se quiser atualizar a lista após deletar:
+                                  // fetchConteudos();
+                                } catch (err) {
+                                  console.error(err);
+                                  Swal.fire("Erro!", "Não foi possível deletar o conteúdo.", "error");
+                                }
+                              }
+                            }}
+                            sx={{
+                              borderRadius: "10px",
+                              fontWeight: "600",
+                              py: 1,
+                              fontSize: "0.875rem",
+                              textTransform: "none",
+                              transition: "all 0.2s ease",
+                              "&:hover": {
+                                bgcolor: "#c62828",
+                                transform: "translateY(-1px)",
+                              },
+                            }}
+                          >
+                          </Button>
+                        </Tooltip>
                       </Stack>
+
                     </CardContent>
                   </Card>
                 </Fade>
@@ -526,8 +609,47 @@ const Conteudos = () => {
                 setForm={setShowForm}
                 onCategoriaCadastrada={handleCategoriaCadastrada}
               />
+
             </Box>
           </Fade>
+
+        </Modal>
+        {/*Subcategoria Modal */}
+        <Modal
+          open={showFormSubcategoria}
+          onClose={() => setShowFormSubcategoria(false)}
+          closeAfterTransition
+          BackdropComponent={Backdrop}
+          BackdropProps={{
+            timeout: 500,
+            sx: {
+              backdropFilter: "blur(4px)",
+              bgcolor: alpha(theme.palette.common.black, 0.6),
+            }
+          }}
+        >
+          <Fade in={showFormSubcategoria}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                bgcolor: "background.paper",
+                boxShadow: `0 12px 40px ${alpha(theme.palette.common.black, 0.2)}`,
+                p: 4,
+                borderRadius: 3,
+                width: { xs: "90%", sm: 450 },
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              }}
+            >
+              <CadastrarSubcategoria
+                setFormSubcategoria={setShowFormSubcategoria}
+                onCategoriaCadastrada={handleSubCategoriaCadastrada}
+              />
+            </Box>
+          </Fade>
+
         </Modal>
       </Container>
     </Box>
