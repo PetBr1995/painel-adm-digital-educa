@@ -17,26 +17,37 @@ export default function EditarConteudo() {
   const { id } = useParams();
 
   const [loading, setLoading] = useState(false);
-  const [conteudo, setConteudo] = useState({});
   const [status, setStatus] = useState("");
 
+  // Campos principais
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [tipo, setTipo] = useState("");
   const [level, setLevel] = useState("Iniciante");
   const [aprendizagem, setAprendizagem] = useState("");
   const [requisitos, setRequisitos] = useState("");
+  const [instrutores, setInstrutores] = useState([]);
+  const [instrutorIds, setInstrutorIds] = useState([]);
+
+  // Thumbnails (urls existentes)
+  const [thumbnailDesktop, setThumbnailDesktop] = useState("");
+  const [thumbnailMobile, setThumbnailMobile] = useState("");
+  const [thumbnailDestaque, setThumbnailDestaque] = useState("");
+
+  // Arquivos novos
+  const [fileDesktop, setFileDesktop] = useState(null);
+  const [fileMobile, setFileMobile] = useState(null);
+  const [fileDestaque, setFileDestaque] = useState(null);
 
   const tipos = [
+    { value: "AULA", label: "AULA" },
     { value: "PALESTRA", label: "PALESTRA" },
-    { value: "CURSO", label: "CURSO" },
     { value: "PODCAST", label: "PODCAST" },
-    { value: "WORKSHOP", label: "WORKSHOP" },
   ];
 
   const niveis = ["Iniciante", "Intermediário", "Avançado"];
 
-  // 🔹 Buscar dados do conteúdo
+  // 🔹 Buscar conteúdo por ID
   const getConteudoById = async () => {
     setLoading(true);
     try {
@@ -45,15 +56,21 @@ export default function EditarConteudo() {
         `http://10.10.11.174:3000/conteudos/${id}/admin`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setConteudo(res.data);
 
-      // Preencher estados dos inputs
-      setTitulo(res.data.titulo || "");
-      setDescricao(res.data.descricao || "");
-      setTipo(res.data.tipo || "");
-      setLevel(res.data.level || "Iniciante");
-      setAprendizagem(res.data.aprendizagem || "");
-      setRequisitos(res.data.requisitos || "");
+      const data = res.data;
+      setTitulo(data.titulo || "");
+      setDescricao(data.descricao || "");
+      setTipo(data.tipo || "");
+      setLevel(data.level || "Iniciante");
+      setAprendizagem(data.aprendizagem || "");
+      setRequisitos(data.requisitos || "");
+      setThumbnailDesktop(data.thumbnailDesktop || "");
+      setThumbnailMobile(data.thumbnailMobile || "");
+      setThumbnailDestaque(data.thumbnailDestaque || "");
+
+      const instrutoresIdsExtraidos =
+        data.instrutores?.map((i) => i.instrutor?.id) || [];
+      setInstrutorIds(instrutoresIdsExtraidos);
     } catch (err) {
       console.error(err);
     } finally {
@@ -61,10 +78,24 @@ export default function EditarConteudo() {
     }
   };
 
+  // 🔹 Buscar instrutores
+  const getInstrutores = async () => {
+    try {
+      const res = await axios.get("http://10.10.11.174:3000/instrutor", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setInstrutores(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     getConteudoById();
+    getInstrutores();
   }, [id]);
 
+  // 🧩 Atualizar conteúdo (com thumbnails)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -74,19 +105,33 @@ export default function EditarConteudo() {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token não encontrado. Faça login novamente.");
 
-      const body = {
-        titulo,
-        descricao,
-        tipo,
-        level,
-        aprendizagem,
-        requisitos,
-      };
+      const formData = new FormData();
+      formData.append("titulo", titulo);
+      formData.append("descricao", descricao);
+      formData.append("tipo", tipo);
+      formData.append("level", level);
+      formData.append("aprendizagem", aprendizagem);
+      formData.append("requisitos", requisitos);
+
+      // Adiciona thumbnails novas, se existirem
+      if (fileDesktop) formData.append("thumbnailDesktop", fileDesktop);
+      if (fileMobile) formData.append("thumbnailMobile", fileMobile);
+      if (fileDestaque) formData.append("thumbnailDestaque", fileDestaque);
+
+      // Adiciona IDs dos instrutores
+      instrutorIds.forEach((id) => formData.append("instrutorIds[]", id));
+
+     
 
       const res = await axios.put(
         `http://10.10.11.174:3000/conteudos/${id}`,
-        body,
-        { headers: { Authorization: `Bearer ${token}` } }
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
 
       console.log("Conteúdo atualizado:", res.data);
@@ -99,7 +144,7 @@ export default function EditarConteudo() {
     }
   };
 
-  if (loading) {
+  if (loading)
     return (
       <Box
         sx={{
@@ -112,12 +157,11 @@ export default function EditarConteudo() {
         <CircularProgress />
       </Box>
     );
-  }
 
   return (
     <Box sx={{ minHeight: "100vh", py: 5, px: 2 }}>
       <Stack spacing={4} maxWidth={720} mx="auto">
-        <Typography variant="h4" fontWeight="700" align="center">
+        <Typography variant="h4" fontWeight={700} align="center">
           Editar Conteúdo
         </Typography>
 
@@ -134,7 +178,7 @@ export default function EditarConteudo() {
           <Stack spacing={4}>
             {/* 📝 Informações Básicas */}
             <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 3 }}>
                 📝 Informações Básicas
               </Typography>
               <Stack spacing={3}>
@@ -157,47 +201,124 @@ export default function EditarConteudo() {
 
             {/* ⚙️ Configurações */}
             <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 3 }}>
                 ⚙️ Configurações
               </Typography>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    select
-                    fullWidth
-                    label="Tipo"
-                    value={tipo}
-                    onChange={(e) => setTipo(e.target.value)}
-                  >
-                    {tipos.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
+              <Grid sx={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Tipo"
+                  value={tipo}
+                  onChange={(e) => setTipo(e.target.value)}
+                >
+                  {tipos.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    select
-                    fullWidth
-                    label="Nível"
-                    value={level}
-                    onChange={(e) => setLevel(e.target.value)}
-                  >
-                    {niveis.map((n) => (
-                      <MenuItem key={n} value={n}>
-                        {n}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
+                <TextField
+                  select
+                  fullWidth
+                  label="Nível"
+                  value={level}
+                  onChange={(e) => setLevel(e.target.value)}
+                >
+                  {niveis.map((n) => (
+                    <MenuItem key={n} value={n}>
+                      {n}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  fullWidth
+                  label="Instrutores"
+                  value={instrutorIds}
+                  onChange={(e) => setInstrutorIds(e.target.value)}
+                  SelectProps={{ multiple: true }}
+                >
+                  {instrutores.map((inst) => (
+                    <MenuItem key={inst.id} value={inst.id}>
+                      {inst.nome}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            </Paper>
+
+            {/* 🖼️ Thumbnails */}
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 3 }}>
+                🖼️ Thumbnails
+              </Typography>
+              <Grid container spacing={3}>
+                {[
+                  {
+                    label: "Desktop",
+                    thumb: thumbnailDesktop,
+                    file: fileDesktop,
+                    setFile: setFileDesktop,
+                  },
+                  {
+                    label: "Mobile",
+                    thumb: thumbnailMobile,
+                    file: fileMobile,
+                    setFile: setFileMobile,
+                  },
+                  {
+                    label: "Destaque",
+                    thumb: thumbnailDestaque,
+                    file: fileDestaque,
+                    setFile: setFileDestaque,
+                  },
+                ].map(({ label, thumb, file, setFile }) => (
+                  <Grid item xs={12} md={4} key={label}>
+                    <Typography variant="subtitle1" fontWeight={600} mb={1}>
+                      {label}
+                    </Typography>
+                    {thumb && !file && (
+                      <img
+                        src={`http://10.10.11.174:3000/${thumb}`}
+                        alt={label}
+                        style={{
+                          width: "100%",
+                          borderRadius: 8,
+                          marginBottom: 8,
+                        }}
+                      />
+                    )}
+                    <Button variant="contained" component="label" fullWidth>
+                      Alterar imagem
+                      <input
+                        hidden
+                        accept="image/*"
+                        type="file"
+                        onChange={(e) => setFile(e.target.files[0])}
+                      />
+                    </Button>
+                    {file && (
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Prévia ${label}`}
+                        style={{
+                          width: "100%",
+                          borderRadius: 8,
+                          marginTop: 8,
+                        }}
+                      />
+                    )}
+                  </Grid>
+                ))}
               </Grid>
             </Paper>
 
             {/* 📘 Detalhes */}
             <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 3 }}>
                 📘 Detalhes do Conteúdo
               </Typography>
               <Stack spacing={3}>

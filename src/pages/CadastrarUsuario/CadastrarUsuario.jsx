@@ -35,8 +35,10 @@ const CadastrarUsuario = () => {
     const [senha, setSenha] = useState("");
     const [celular, setCelular] = useState("");
     const [mostrarSenha, setMostrarSenha] = useState(false);
+    const [dataInicio, setDataInicio] = useState("");
+    const [dataFim, setDataFim] = useState("");
 
-    // Função para aplicar máscara simples de celular
+    // Função para aplicar máscara de celular
     const formatarCelular = (valor) => {
         return valor
             .replace(/\D/g, "") // Remove tudo que não for número
@@ -56,16 +58,28 @@ const CadastrarUsuario = () => {
             return;
         }
 
+        // Converte dataInicio e dataFim para ISO string
+        const dataInicioISO = dataInicio ? new Date(dataInicio).toISOString() : null;
+        const dataFimISO = dataFim ? new Date(dataFim).toISOString() : null;
+
+        // Objeto que será enviado
+        const payload = {
+            nome,
+            email,
+            senha,
+            celular,
+            role: "USER",
+            dataInicio: dataInicioISO,
+            dataFim: dataFimISO
+        };
+
+        // 🔹 Console de debug
+        console.log("📤 Dados que serão enviados para o backend:", payload);
+
         axios
             .post(
                 "http://10.10.11.174:3000/usuario/admin/create",
-                {
-                    nome,
-                    email,
-                    senha,
-                    celular,
-                    role: "USER"
-                },
+                payload,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -74,7 +88,7 @@ const CadastrarUsuario = () => {
                 }
             )
             .then((response) => {
-                console.log("✅ Usuário cadastrado com sucesso:", response.data);
+                console.log("✅ Resposta do backend:", response.data);
 
                 Swal.fire({
                     title: "Sucesso!",
@@ -90,6 +104,8 @@ const CadastrarUsuario = () => {
                 setEmail("");
                 setSenha("");
                 setCelular("");
+                setDataInicio("");
+                setDataFim("");
             })
             .catch((error) => {
                 if (error.response) {
@@ -111,7 +127,7 @@ const CadastrarUsuario = () => {
 
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>
-            {/* Header melhorado */}
+            {/* Header */}
             <Paper
                 elevation={0}
                 sx={{
@@ -140,18 +156,10 @@ const CadastrarUsuario = () => {
                             }}
                         />
                         <Box>
-                            <Typography variant="h4" sx={{
-                                fontWeight: 700,
-                                color: '#ffffff',
-                                mb: 0.5
-                            }}>
+                            <Typography variant="h4" sx={{ fontWeight: 700, color: '#ffffff', mb: 0.5 }}>
                                 Cadastrar Usuário
                             </Typography>
-                            <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                sx={{ fontSize: '1.1rem' }}
-                            >
+                            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
                                 Preencha as informações para criar um novo usuário
                             </Typography>
                         </Box>
@@ -180,7 +188,7 @@ const CadastrarUsuario = () => {
                 </Box>
             </Paper>
 
-            {/* Formulário melhorado */}
+            {/* Formulário */}
             <Paper
                 elevation={0}
                 sx={{
@@ -209,7 +217,6 @@ const CadastrarUsuario = () => {
                 <Box sx={{ p: 4 }}>
                     <Grid container spacing={3}>
                         {/* Nome */}
-
                         <TextField
                             label="Nome completo"
                             fullWidth
@@ -225,19 +232,13 @@ const CadastrarUsuario = () => {
                             sx={{
                                 "& .MuiOutlinedInput-root": {
                                     borderRadius: 3,
-                                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: '#FDBB30',
-                                    },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: '#FDBB30',
-                                    }
+                                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' }
                                 }
                             }}
                         />
 
-
                         {/* Email */}
-
                         <TextField
                             label="Email"
                             type="email"
@@ -255,19 +256,13 @@ const CadastrarUsuario = () => {
                             sx={{
                                 "& .MuiOutlinedInput-root": {
                                     borderRadius: 3,
-                                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: '#FDBB30',
-                                    },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: '#FDBB30',
-                                    }
+                                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' }
                                 }
                             }}
                         />
 
-
                         {/* Celular */}
-
                         <TextField
                             label="Celular"
                             type="tel"
@@ -285,77 +280,49 @@ const CadastrarUsuario = () => {
                             sx={{
                                 "& .MuiOutlinedInput-root": {
                                     borderRadius: 3,
-                                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: '#FDBB30',
-                                    },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: '#FDBB30',
-                                    }
+                                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' }
                                 }
                             }}
                         />
 
-
-                        {/* Periodo de acesso */}
-                        <Box sx={{ display: "flex", justifyContent: "center" }}>
+                        {/* Data Inicio e Fim */}
+                        <Box sx={{display:"flex", gap:"1rem"}}>
 
                             <TextField
-                                label="Data Inicio"
-                                type="date"
+                                label="Data Início"
+                                type="datetime-local"
                                 fullWidth
-                                value={celular}
-                                onChange={handleCelularChange}
-                                inputProps={{ maxLength: 15 }}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <PhoneOutlined sx={{ color: '#FDBB30' }} />
-                                        </InputAdornment>
-                                    ),
-                                }}
+                                value={dataInicio}
+                                onChange={(e) => setDataInicio(e.target.value)}
                                 sx={{
+
                                     "& .MuiOutlinedInput-root": {
                                         borderRadius: 3,
-                                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        },
-                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        }
+                                        "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' }
                                     }
                                 }}
-                            />
 
+                            />
                             <TextField
                                 label="Data Fim"
-                                type="date"
+                                type="datetime-local"
                                 fullWidth
-                                value={celular}
-                                onChange={handleCelularChange}
-                                inputProps={{ maxLength: 15 }}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <PhoneOutlined sx={{ color: '#FDBB30' }} />
-                                        </InputAdornment>
-                                    ),
-                                }}
+                                value={dataFim}
+                                onChange={(e) => setDataFim(e.target.value)}
                                 sx={{
+
                                     "& .MuiOutlinedInput-root": {
                                         borderRadius: 3,
-                                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        },
-                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: '#FDBB30',
-                                        }
+                                        "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' }
                                     }
                                 }}
                             />
                         </Box>
 
                         {/* Senha */}
-
                         <TextField
                             label="Senha"
                             type={mostrarSenha ? "text" : "password"}
@@ -376,9 +343,7 @@ const CadastrarUsuario = () => {
                                             edge="end"
                                             sx={{
                                                 color: '#FDBB30',
-                                                "&:hover": {
-                                                    backgroundColor: alpha('#FDBB30', 0.1)
-                                                }
+                                                "&:hover": { backgroundColor: alpha('#FDBB30', 0.1) }
                                             }}
                                         >
                                             {mostrarSenha ? <VisibilityOff /> : <Visibility />}
@@ -389,27 +354,17 @@ const CadastrarUsuario = () => {
                             sx={{
                                 "& .MuiOutlinedInput-root": {
                                     borderRadius: 3,
-                                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: '#FDBB30',
-                                    },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: '#FDBB30',
-                                    }
+                                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' }
                                 }
                             }}
                         />
                     </Grid>
 
-
                     <Divider sx={{ my: 4, borderColor: alpha('#FDBB30', 0.2) }} />
 
                     {/* Botões */}
-                    <Box sx={{
-                        display: "flex",
-                        gap: 2,
-                        justifyContent: "center",
-                        flexWrap: "wrap"
-                    }}>
+                    <Box sx={{ display: "flex", gap: 2, justifyContent: "center", flexWrap: "wrap" }}>
                         <Button
                             variant="outlined"
                             onClick={() => navigate("/usuarios")}
@@ -422,10 +377,7 @@ const CadastrarUsuario = () => {
                                 py: 1.2,
                                 textTransform: 'none',
                                 minWidth: 140,
-                                "&:hover": {
-                                    borderColor: '#999',
-                                    backgroundColor: alpha('#000', 0.04)
-                                }
+                                "&:hover": { borderColor: '#999', backgroundColor: alpha('#000', 0.04) }
                             }}
                         >
                             Cancelar

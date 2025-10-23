@@ -74,29 +74,60 @@ const UploadVideo = () => {
     setShowAlert(true);
   };
 
-  const handleFileChange = (e) => {
+  const getVideoDuration = (file) => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        // arredonda para inteiro (segundos). Use Math.floor se preferir truncar.
+        const durationSeconds = Math.round(video.duration);
+        resolve(Number.isFinite(durationSeconds) ? durationSeconds : 0);
+      };
+
+      video.onerror = () => {
+        reject(new Error("Erro ao ler duração do vídeo"));
+      };
+
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleFileChange = async (e) => {
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;
 
-    // Filtrar apenas arquivos de vídeo
-    const videoFiles = selectedFiles.filter(file => file.type.startsWith("video/"));
+    const videoFiles = selectedFiles.filter((file) => file.type.startsWith("video/"));
     if (videoFiles.length !== selectedFiles.length) {
       showMessage(`${selectedFiles.length - videoFiles.length} arquivo(s) não são vídeos e foram ignorados`, true);
     }
-
     if (videoFiles.length === 0) return;
 
-    const newVideos = videoFiles.map((file, index) => ({
-      id: Date.now() + index,
-      file,
-      titulo: file.name.replace(/\.[^/.]+$/, ""),
-      progress: 0,
-      status: "pending",
-    }));
+    try {
+      const newVideos = await Promise.all(
+        videoFiles.map(async (file, index) => {
+          // pega duração como inteiro (segundos)
+          const duracao = await getVideoDuration(file);
+          return {
+            id: Date.now() + index,
+            file,
+            titulo: file.name.replace(/\.[^/.]+$/, ""),
+            duracao, // inteiro em segundos
+            progress: 0,
+            status: "pending",
+          };
+        })
+      );
 
-    setVideos((prev) => [...prev, ...newVideos]);
-    showMessage(`${videoFiles.length} vídeo(s) adicionado(s) com sucesso`);
+      setVideos((prev) => [...prev, ...newVideos]);
+      showMessage(`${videoFiles.length} vídeo(s) adicionado(s) com sucesso`);
+    } catch (error) {
+      console.error("Erro ao processar vídeos:", error);
+      showMessage("Erro ao processar a duração dos vídeos.", true);
+    }
   };
+
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -108,11 +139,11 @@ const UploadVideo = () => {
     setIsDragging(false);
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     setIsDragging(false);
 
-    const droppedFiles = Array.from(e.dataTransfer.files).filter((file) =>
+    const droppedFiles = Array.from(e.dataTransfer.files || []).filter((file) =>
       file.type.startsWith("video/")
     );
 
@@ -121,17 +152,29 @@ const UploadVideo = () => {
       return;
     }
 
-    const newVideos = droppedFiles.map((file, index) => ({
-      id: Date.now() + index,
-      file,
-      titulo: file.name.replace(/\.[^/.]+$/, ""),
-      progress: 0,
-      status: "pending",
-    }));
+    try {
+      const newVideos = await Promise.all(
+        droppedFiles.map(async (file, index) => {
+          const duracao = await getVideoDuration(file);
+          return {
+            id: Date.now() + index,
+            file,
+            titulo: file.name.replace(/\.[^/.]+$/, ""),
+            duracao, // inteiro em segundos
+            progress: 0,
+            status: "pending",
+          };
+        })
+      );
 
-    setVideos((prev) => [...prev, ...newVideos]);
-    showMessage(`${droppedFiles.length} vídeo(s) adicionado(s) via drag & drop`);
+      setVideos((prev) => [...prev, ...newVideos]);
+      showMessage(`${droppedFiles.length} vídeo(s) adicionado(s) via drag & drop`);
+    } catch (error) {
+      console.error("Erro ao processar vídeos:", error);
+      showMessage("Erro ao processar a duração dos vídeos.", true);
+    }
   };
+
 
   const handleRemoveVideo = (videoId) => {
     setVideos((prev) => prev.filter((video) => video.id !== videoId));
@@ -166,7 +209,7 @@ const UploadVideo = () => {
 
       const payload = {
         titulo: currentVideo.titulo.trim(),
-        duracao: 0,
+        duracao: currentVideo.duracao,
         moduloId: moduloId || null,
         conteudoId,
         fileSize: currentVideo.file.size,

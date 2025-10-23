@@ -58,7 +58,7 @@ const Conteudos = () => {
 
   const getCategorias = async () => {
     try {
-      const response = await axios.get("http://10.10.11.174:3000/categorias/list", {
+      const response = await axios.get("https://testeapi.digitaleduca.com.vc/categorias/list", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -545,6 +545,7 @@ const Conteudos = () => {
                                   Swal.fire("Deletado!", "O conteúdo foi removido com sucesso.", "success");
                                   // se quiser atualizar a lista após deletar:
                                   // fetchConteudos();
+                                  getConteudos();
                                 } catch (err) {
                                   console.error(err);
                                   Swal.fire("Erro!", "Não foi possível deletar o conteúdo.", "error");

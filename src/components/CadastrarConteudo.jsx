@@ -21,6 +21,7 @@ import { ArrowBackIos, CloudUpload as CloudUploadIcon } from "@mui/icons-materia
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import theme from "../theme/theme";
+import Instrutor from "../pages/Instrutor/Instrutor";
 
 export default function ConteudoForm() {
   const [titulo, setTitulo] = useState("");
@@ -38,6 +39,7 @@ export default function ConteudoForm() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [gratuito, setGratuito] = useState(false);
+  const [dataCriacao, setDataCriacao] = useState("")
 
   const [gratuitoTipo, setGratuitoTipo] = useState("nenhum"); // "nenhum" | "permanente" | "temporario"
   const [gratuitoDataInicio, setGratuitoDataInicio] = useState(""); // yyyy-mm-dd
@@ -50,31 +52,8 @@ export default function ConteudoForm() {
 
   const navigate = useNavigate();
 
-  const getInstrutores = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const response = await axios.get("https://testeapi.digitaleduca.com.vc/instrutor", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // Ajuste aqui conforme a estrutura real da resposta da sua API
-      const data = response.data?.instrutores ?? response.data ?? [];
-
-      const normalized = data.map((i) => ({
-        id: i._id ?? i.id,
-        nome: i.nome ?? i.title ?? "Sem nome",
-      }));
-
-      setInstrutores(normalized);
-      console.log("Instrutores carregados:", normalized);
-    } catch (error) {
-      console.error("Erro ao buscar instrutores:", error);
-      setInstrutores([]);
-    }
-  };
-
+  const [instrutores, setInstrutores] = useState([]);
+  const [instrutoresSelecionados, setInstrutoresSelecionados] = useState([]); // novo
 
   // Carrega categorias e subcategorias e normaliza para usar sempre `id` e `categoriaId`
   useEffect(() => {
@@ -117,9 +96,35 @@ export default function ConteudoForm() {
       }
     };
 
+    // dentro do useEffect (ou fora, chamada pelo useEffect)
+    const getInstrutores = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return console.error("token não encontrado");
+
+        const res = await axios.get("http://10.10.11.174:3000/instrutor", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // adapta diferentes formatos de response
+        const data = res.data?.instrutores ?? res.data ?? [];
+        const normalized = (Array.isArray(data) ? data : []).map(i => ({
+          id: i._id ?? i.id ?? i._idstr ?? "",   // garantir id
+          nome: i.nome ?? i.name ?? i.nomeCompleto ?? "Sem nome",
+        }));
+
+        setInstrutores(normalized);
+        console.log("instrutores carregados:", normalized);
+      } catch (err) {
+        console.error("Erro ao carregar instrutores:", err);
+        setInstrutores([]);
+      }
+    };
+
     loadCategorias();
     loadSubcategorias();
     getInstrutores();
+
   }, []);
 
 
@@ -156,6 +161,7 @@ export default function ConteudoForm() {
         aprendizagem,
         requisitos,
         subcategoriaId,
+        dataCriacao:dataCriacao,
         gratuitoTipo: tipoGratuito,
         ...(dataGratuita && { gratuitoAte: dataGratuita }), // só envia se tiver valor
         fileSize: file?.size,
@@ -168,10 +174,19 @@ export default function ConteudoForm() {
           formData.append(key, value);
       }
 
+      // 🔹 Adiciona múltiplos instrutores (array de IDs)
+      if (instrutoresSelecionados && instrutoresSelecionados.length > 0) {
+        instrutoresSelecionados.forEach((id) => {
+          formData.append("instrutorIds[]", id);
+        });
+      }
+
       // 🔹 thumbnails
-      if (thumbnailDesktop) formData.append("thumbnailDesktop", thumbnailDesktop);
+      if (thumbnailDesktop)
+        formData.append("thumbnailDesktop", thumbnailDesktop);
       if (thumbnailMobile) formData.append("thumbnailMobile", thumbnailMobile);
-      if (thumbnailDestaque) formData.append("thumbnailDestaque", thumbnailDestaque);
+      if (thumbnailDestaque)
+        formData.append("thumbnailDestaque", thumbnailDestaque);
 
       // 🔹 Requisição principal
       const response = await axios.post(
@@ -213,7 +228,10 @@ export default function ConteudoForm() {
           try {
             await axios.post(
               `http://10.10.11.174:3000/vimeo-client/update-metadata/${conteudo.id}`,
-              { name: conteudo.titulo, description: conteudo.descricao || "" },
+              {
+                name: conteudo.titulo,
+                description: conteudo.descricao || "",
+              },
               { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -237,9 +255,6 @@ export default function ConteudoForm() {
       setLoading(false);
     }
   };
-
-  const [instrutores, setInstrutores] = useState([]);
-  const [instrutoresId, setInstrutoresId] = useState([]);
 
 
   return (
@@ -275,6 +290,14 @@ export default function ConteudoForm() {
             <motion.div key="form" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.4 }}>
               <Stack spacing={4} component="form" onSubmit={handleSubmit}>
                 {/* Informações básicas */}
+
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                  <Typography variant="h6" fontWeight="700" sx={{  mb: 3 }}>📅 Data de Criação do conteúdo</Typography>
+                  <Stack spacing={3}>
+                    <TextField type="datetime-local" defaultValue="Teste" value={dataCriacao} onChange={(e) => setDataCriacao(e.target.value)} />
+                  </Stack>
+                </Paper>
+
                 <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
                   <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>📝 Informações Básicas</Typography>
                   <Stack spacing={3}>
@@ -299,10 +322,9 @@ export default function ConteudoForm() {
                   <Grid container sx={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                     <Grid>
                       <TextField select fullWidth label="Tipo de Conteúdo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-                        <MenuItem value="CURSO">Curso</MenuItem>
+                        <MenuItem value="AULA">Aula</MenuItem>
                         <MenuItem value="PALESTRA">Palestra</MenuItem>
                         <MenuItem value="PODCAST">Podcast</MenuItem>
-                        <MenuItem value="WORKSHOP">Workshop</MenuItem>
                       </TextField>
                     </Grid>
 
@@ -357,23 +379,35 @@ export default function ConteudoForm() {
                         <MenuItem value="Avançado">Avançado</MenuItem>
                       </TextField>
                     </Grid>
-                    <Grid>
-                      <TextField
-                        select
-                        fullWidth
-                        label="Instrutor"
-                        value={instrutoresId} // você pode usar um estado separado para seleção
-                        onChange={(e) => setInstrutoresId(e.target.value)}
-                      >
-                        {instrutores.map((instrutor) => (
-                          <MenuItem key={instrutor.id} value={instrutor.id}>
-                            {instrutor.nome}
-                          </MenuItem>
-                        ))}
-                      </TextField>
 
-                    </Grid>
                   </Grid>
+                </Paper>
+
+                {/* bloco de instrutores - coloque onde quiser no form */}
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                  <Typography variant="h6" fontWeight="700" sx={{ mb: 2 }}>
+                    Instrutores
+                  </Typography>
+
+                  <Select
+                    multiple
+                    fullWidth
+                    value={instrutoresSelecionados}
+                    onChange={(e) => setInstrutoresSelecionados(e.target.value)}
+                    renderValue={(selected) =>
+                      instrutores
+                        .filter(i => selected.includes(i.id))
+                        .map(i => i.nome)
+                        .join(", ")
+                    }
+                  >
+                    {instrutores.map(instrutor => (
+                      <MenuItem key={instrutor.id} value={instrutor.id}>
+                        <Checkbox checked={instrutoresSelecionados.includes(instrutor.id)} />
+                        <ListItemText primary={instrutor.nome} />
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </Paper>
 
                 {/* Thumbnails */}
