@@ -354,6 +354,7 @@ const Conteudos = () => {
                     sx={{
                       borderRadius: 3,
                       height: "100%",
+                      width: "350px",
                       display: "flex",
                       flexDirection: "column",
                       background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.08)},${alpha(theme.palette.primary.light, 0.02)})`,
@@ -417,22 +418,28 @@ const Conteudos = () => {
                         fontWeight="700"
                         sx={{
                           mb: 2,
+                          display: "-webkit-box",
+                          WebkitBoxOrient: "vertical",
+                          WebkitLineClamp: 2, // ✅ Mostra no máximo 2 linhas
                           overflow: "hidden",
-                          whiteSpace: "nowrap",
                           textOverflow: "ellipsis",
                           color: "text.primary",
+                          lineHeight: 1.4,
+                          minHeight: "3.2em", // mantém altura consistente
                         }}
                       >
                         {conteudo.titulo}
                       </Typography>
+
                       <Typography
                         variant="body2"
                         color="text.secondary"
                         sx={{
                           display: "-webkit-box",
-                          WebkitLineClamp: 2,
+                          WebkitLineClamp: 2, // ✅ Limita a 2 linhas
                           WebkitBoxOrient: "vertical",
                           overflow: "hidden",
+                          textOverflow: "ellipsis",
                           mb: 2,
                           minHeight: "3em",
                           lineHeight: 1.5,
@@ -440,6 +447,7 @@ const Conteudos = () => {
                       >
                         {conteudo.descricao}
                       </Typography>
+
                       <Typography
                         variant="body2"
                         sx={{

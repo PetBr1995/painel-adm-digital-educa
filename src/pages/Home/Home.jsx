@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
+import { motion, AnimatePresence } from "framer-motion";
+
 import {
   Box,
   Drawer,
@@ -115,11 +117,20 @@ const StyledDrawer = styled(Drawer)(({ theme, open }) => ({
     background: `linear-gradient(180deg, ${theme.palette.secondary.dark} 0%, ${alpha(theme.palette.secondary.dark, 0.95)} 100%)`,
     backdropFilter: "blur(20px)",
     borderRight: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+    overflowX: "hidden",
+
+    // ✅ Transição suave
+    transition: theme.transitions.create(["width", "box-shadow"], {
+      easing: theme.transitions.easing.easeInOut,
+      duration: 400,
+    }),
+
     boxShadow: open
       ? `4px 0 20px ${alpha(theme.palette.common.black, 0.1)}`
       : `2px 0 10px ${alpha(theme.palette.common.black, 0.05)}`,
   },
 }));
+
 
 const StyledListItem = styled(ListItem)(({ theme }) => ({
   margin: "4px 8px",
@@ -178,6 +189,8 @@ const Home = () => {
       try {
         const token = localStorage.getItem("token");
         const headers = { Authorization: `Bearer ${token}` };
+       
+     
 
         const [cursosRes, instrutoresRes, categoriasRes, planosRes] = await Promise.all([
           axios.get(`http://10.10.11.174:3000/curso/cursos?search=${encodeURIComponent(searchQuery)}`, { headers }),
@@ -403,7 +416,7 @@ const Home = () => {
                 },
               }}
             >
-              {drawerOpen ? <MenuOpenIcon sx={{transform:"rotate(180deg)"}} /> : <MenuIcon />}
+              {drawerOpen ? <MenuOpenIcon sx={{ transform: "rotate(180deg)" }} /> : <MenuIcon />}
             </IconButton>
 
             <CardMedia
@@ -419,6 +432,7 @@ const Home = () => {
               }}
             />
           </Stack>
+          {/* 
           <Search>
             <SearchIconWrapper>
               <SearchIcon />
@@ -431,6 +445,7 @@ const Home = () => {
               onKeyDown={handleSearchSubmit}
             />
           </Search>
+          */}
           <Stack direction="row" alignItems="center" spacing={1}>
             <Tooltip title="Notificações">
               <IconButton
@@ -495,7 +510,12 @@ const Home = () => {
           flexGrow: 1,
           p: 3,
           background: "radial-gradient(circle at top left, #1E2A46, #0A1128)",
-          minHeight: "100vh"
+          minHeight: "100vh",
+          width: {
+            sm: `calc(100% - ${drawerOpen ? drawerWidth : miniDrawerWidth}px)`,
+          },
+          transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          overflowX: "hidden"
         }}
       >
         <Toolbar sx={{ minHeight: 70 }} />

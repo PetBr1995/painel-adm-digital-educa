@@ -287,7 +287,7 @@ const CadastrarUsuario = () => {
                         />
 
                         {/* Data Inicio e Fim */}
-                        <Box sx={{display:"flex", gap:"1rem"}}>
+                        <Box sx={{display:"flex", gap:"1rem", width:"100%"}}>
 
                             <TextField
                                 label="Data Início"
@@ -302,7 +302,7 @@ const CadastrarUsuario = () => {
                                         "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' },
                                         "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: '#FDBB30' }
                                     }
-                                }}
+                                }} 
 
                             />
                             <TextField
