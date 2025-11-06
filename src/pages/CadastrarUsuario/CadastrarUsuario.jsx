@@ -78,7 +78,7 @@ const CadastrarUsuario = () => {
 
         axios
             .post(
-                "http://10.10.11.174:3000/usuario/admin/create",
+                "http://10.10.11.180:3000/usuario/admin/create",
                 payload,
                 {
                     headers: {

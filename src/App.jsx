@@ -28,6 +28,8 @@ import Conteudo from './components/Conteudo';
 import UploadVideoModulo from './components/UploadVideoModulo';
 import EditarConteudo from './pages/EditarCurso/EditarCurso';
 import UploadVideoIntrodutorio from './components/UploadVideoIntrodutorio';
+import PublicDashboard from './pages/Dashboard/PublicDashboard';
+import PublicLayout from './pages/PublicLayout/PublicLayout';
 
 
 function App() {
@@ -69,9 +71,10 @@ function App() {
           <Route path='/cadastrarconteudo' element={<ConteudoForm />} />
           <Route path='/conteudos/:id' element={<Conteudo />} />
           <Route path='/uploadvideomodulo' element={<UploadVideoModulo />} />
-          <Route path='/uploadvideointrodutorio' element={<UploadVideoIntrodutorio/>} />
+          <Route path='/uploadvideointrodutorio' element={<UploadVideoIntrodutorio />} />
+          <Route path='/public-dashboard' element={<PublicDashboard />} />
         </Route>
-        <Route path='/testes' element={<ConteudoForm/>}/>
+        <Route path='/testes' element={<ConteudoForm />} />
       </Routes>
     </BrowserRouter>
   );

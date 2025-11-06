@@ -42,7 +42,7 @@ const CadastraPlano = ({ setFormPlanos }) => {
 
         axios
             .post(
-                "http://10.10.11.174:3000/planos/create",
+                "http://10.10.11.180:3000/planos/create",
                 {
                     nome,
                     preco: parseFloat(preco) || 0,

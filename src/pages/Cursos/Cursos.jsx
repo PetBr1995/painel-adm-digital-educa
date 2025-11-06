@@ -31,6 +31,8 @@ import CadastrarCategorias from "../../components/CadastrarCategorias";
 import CadastrarSubcategoria from "../../components/CadastrarSubcategoria";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Swal from "sweetalert2";
+import MoverCategoria from "../../components/MoverCategoria";
+import CadastrarTag from "../../components/CadastrarTag";
 
 const Conteudos = () => {
   const navigate = useNavigate();
@@ -40,25 +42,41 @@ const Conteudos = () => {
   const [showForm, setShowForm] = useState(false);
   const [showFormSubcategoria, setShowFormSubcategoria] = useState(false)
   const [conteudos, setConteudos] = useState([]);
+  const [showFormMoverCategoria, setShowFormMoverCategoria] = useState(false);
+  const [showFormTag, setShowFormTag] = useState(false)
+  const [tags, setTags] = useState([]);
+
 
   const getConteudos = async () => {
     try {
-      const response = await axios.get("http://10.10.11.174:3000/conteudos", {
+      const response = await axios.get("http://10.10.11.180:3000/conteudos", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
       console.log(response.data)
-      setConteudos(response.data);
+      setConteudos(response.data.data);
     } catch (err) {
       console.error("Erro ao carregar conteúdos:", err);
       setError("Erro ao carregar os conteúdos. Tente novamente mais tarde.");
     }
   };
 
+  // Função para buscar tags
+  const getTags = async () => {
+    try {
+      const response = await axios.get("http://10.10.11.180:3000/tags", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setTags(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar tags:", error);
+    }
+  };
+
   const getCategorias = async () => {
     try {
-      const response = await axios.get("https://testeapi.digitaleduca.com.vc/categorias/list", {
+      const response = await axios.get("http://10.10.11.180:3000/categorias/list", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -78,11 +96,11 @@ const Conteudos = () => {
     setShowFormSubcategoria(false);
   };
 
+  // Atualize useEffect
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      await getCategorias();
-      await getConteudos();
+      await Promise.all([getCategorias(), getConteudos(), getTags()]);
       setLoading(false);
     };
     fetchData();
@@ -247,6 +265,86 @@ const Conteudos = () => {
           </Stack>
         </Paper>
 
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 2,
+            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.08)},${alpha(theme.palette.primary.light, 0.02)})`,
+            border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
+          }}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" alignItems="center" gap={2}>
+              <CategoryIcon sx={{ color: "primary.main", fontSize: 24 }} />
+              <Typography variant="h6" fontWeight="600" color="text.primary">
+                Mover categoria
+              </Typography>
+            </Stack>
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              sx={{
+                borderRadius: "10px",
+                fontWeight: "600",
+                textTransform: "none",
+                borderColor: alpha(theme.palette.primary.main, 0.4),
+                color: "primary.main",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  transform: "translateY(-1px)",
+                },
+                transition: "all 0.2s ease",
+              }}
+              onClick={() => setShowFormMoverCategoria(true)}
+            >
+              Mover
+            </Button>
+          </Stack>
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 2,
+            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.08)},${alpha(theme.palette.primary.light, 0.02)})`,
+            border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
+          }}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" alignItems="center" gap={2}>
+              <CategoryIcon sx={{ color: "primary.main", fontSize: 24 }} />
+              <Typography variant="h6" fontWeight="600" color="text.primary">
+                Cadastrar Tags
+              </Typography>
+            </Stack>
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              sx={{
+                borderRadius: "10px",
+                fontWeight: "600",
+                textTransform: "none",
+                borderColor: alpha(theme.palette.primary.main, 0.4),
+                color: "primary.main",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  transform: "translateY(-1px)",
+                },
+                transition: "all 0.2s ease",
+              }}
+              onClick={() => setShowFormTag(true)}
+            >
+              Nova Tag
+            </Button>
+          </Stack>
+        </Paper>
+
         {/* Content Area */}
         {loading ? (
           <Paper
@@ -380,7 +478,7 @@ const Conteudos = () => {
                         component="img"
                         height="200"
                         image={
-                          "http://10.10.11.174:3000/public/" + conteudo.thumbnailDesktop
+                          "http://10.10.11.180:3000/public/" + conteudo.thumbnailDesktop
                         }
                         alt={conteudo.titulo}
                         className="card-media"
@@ -458,6 +556,9 @@ const Conteudos = () => {
                         }}
                       >
                         {conteudo.categoria?.nome || "Sem categoria"}
+                      </Typography>
+                      <Typography>
+                        {conteudo.tags?.nome || "Sem tag cadastrada"}
                       </Typography>
                       <Stack direction="row" spacing={1} mb={3} flexWrap="wrap" gap={1}>
                         <Chip
@@ -546,7 +647,7 @@ const Conteudos = () => {
                               if (confirm.isConfirmed) {
                                 try {
                                   const token = localStorage.getItem("token");
-                                  await axios.delete(`http://10.10.11.174:3000/conteudos/${conteudo.id}`, {
+                                  await axios.delete(`http://10.10.11.180:3000/conteudos/${conteudo.id}`, {
                                     headers: { Authorization: `Bearer ${token}` },
                                   });
 
@@ -623,6 +724,45 @@ const Conteudos = () => {
           </Fade>
 
         </Modal>
+        {/*Cadastrar Tag */}
+        {/* Modal de Tag - CORRIGIDO */}
+        <Modal
+          open={showFormTag}
+          onClose={() => setShowFormTag(false)}
+          closeAfterTransition
+          BackdropComponent={Backdrop}
+          BackdropProps={{
+            timeout: 500,
+            sx: { backdropFilter: "blur(4px)", bgcolor: alpha(theme.palette.common.black, 0.6) },
+          }}
+        >
+          <Fade in={showFormTag}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                bgcolor: "background.paper",
+                boxShadow: `0 12px 40px ${alpha(theme.palette.common.black, 0.2)}`,
+                p: 4,
+                borderRadius: 3,
+                width: { xs: "90%", sm: 450 },
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              }}
+            >
+              <CadastrarTag
+                showFormTag={showFormTag}
+                setShowFormTag={setShowFormTag}
+                onTagCadastrada={(nova) => {
+                  setTags(prev => [...prev, nova]);
+                }}
+              />
+            </Box>
+          </Fade>
+        </Modal>
+
+
         {/*Subcategoria Modal */}
         <Modal
           open={showFormSubcategoria}
@@ -660,6 +800,43 @@ const Conteudos = () => {
           </Fade>
 
         </Modal>
+
+        <Modal
+          open={showFormMoverCategoria}
+          onClose={() => setShowFormMoverCategoria(false)}
+          closeAfterTransition
+          BackdropComponent={Backdrop}
+          BackdropProps={{
+            timeout: 500,
+            sx: {
+              backdropFilter: "blur(4px)",
+              bgcolor: alpha(theme.palette.common.black, 0.6),
+            }
+          }}
+        >
+          <Fade in={showFormMoverCategoria}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                bgcolor: "background.paper",
+                boxShadow: `0 12px 40px ${alpha(theme.palette.common.black, 0.2)}`,
+                p: 4,
+                borderRadius: 3,
+                width: { xs: "90%", sm: 450 },
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              }}
+            >
+              <MoverCategoria
+                showFormMoverCategoria={showFormMoverCategoria}
+                setShowFormMoverCategoria={setShowFormMoverCategoria}
+              />
+            </Box>
+          </Fade>
+        </Modal>
+
       </Container>
     </Box>
   );

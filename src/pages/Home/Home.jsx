@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import MenuOpenIcon from '@mui/icons-material/MenuOpen';
-import { motion, AnimatePresence } from "framer-motion";
-
 import {
   Box,
   Drawer,
@@ -14,238 +11,139 @@ import {
   Typography,
   Divider,
   CssBaseline,
-  AppBar,
-  Toolbar,
-  InputBase,
-  CardMedia,
-  useTheme,
-  useMediaQuery,
-  Avatar,
-  Chip,
-  Badge,
   Stack,
-  alpha,
-  Paper,
+  Avatar,
   Tooltip,
+  Paper,
+  alpha,
 } from "@mui/material";
-import SchoolIcon from "@mui/icons-material/School";
-import { styled } from "@mui/material/styles";
-import MenuIcon from "@mui/icons-material/Menu";
-import SearchIcon from "@mui/icons-material/Search";
 import {
-  AirplaneTicket,
-  Category,
+  Menu as MenuIcon,
+  MenuOpen as MenuOpenIcon,
   Dashboard,
-  Notifications,
-  Person,
-  Person3,
+  School,
   PersonAdd,
+  AirplaneTicket,
+  Person3,
+  Category,
   LogoutRounded,
 } from "@mui/icons-material";
-import theme from "../../theme/theme";
+import { styled } from "@mui/material/styles";
 import Swal from "sweetalert2";
-import axios from "axios";
+import theme from "../../theme/theme";
 
 const drawerWidth = 260;
 const miniDrawerWidth = 70;
 
-const Search = styled("div")(({ theme }) => ({
-  position: "relative",
-  borderRadius: 12,
-  backgroundColor: alpha(theme.palette.common.white, 0.08),
-  backdropFilter: "blur(8px)",
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-  marginLeft: theme.spacing(2),
-  width: "100%",
-  maxWidth: "320px",
-  display: "flex",
-  alignItems: "center",
-  "&:hover": {
-    backgroundColor: alpha(theme.palette.common.white, 0.12),
-    borderColor: alpha(theme.palette.primary.main, 0.4),
-    transform: "translateY(-1px)",
-    boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.15)}`,
-  },
-  "&:focus-within": {
-    backgroundColor: alpha(theme.palette.common.white, 0.15),
-    borderColor: theme.palette.primary.main,
-    boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.2)}, 0 4px 20px ${alpha(theme.palette.primary.main, 0.25)}`,
-    maxWidth: "400px",
-  },
-  [theme.breakpoints.down("sm")]: {
-    maxWidth: "100%",
-    marginLeft: theme.spacing(1),
-  },
-}));
-
-const SearchIconWrapper = styled("div")(({ theme }) => ({
-  padding: theme.spacing(0, 2),
-  height: "100%",
-  position: "absolute",
-  pointerEvents: "none",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  color: alpha(theme.palette.common.white, 0.7),
-}));
-
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: "inherit",
-  width: "100%",
-  "& .MuiInputBase-input": {
-    padding: theme.spacing(1.2, 1.2, 1.2, 0),
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create(["width"], {
-      duration: theme.transitions.duration.standard,
-    }),
-    width: "22ch",
-    fontSize: "0.95rem",
-    fontWeight: 500,
-    "&:focus": {
-      width: "30ch",
-    },
-    "&::placeholder": {
-      color: alpha(theme.palette.common.white, 0.6),
-      opacity: 1,
-    },
-  },
-}));
-
-const StyledDrawer = styled(Drawer)(({ theme, open }) => ({
+// DRAWER OTIMIZADO (SEM BLUR PESADO = SEM TRAVAR)
+const StyledDrawer = styled(Drawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
-    background: `linear-gradient(180deg, ${theme.palette.secondary.dark} 0%, ${alpha(theme.palette.secondary.dark, 0.95)} 100%)`,
-    backdropFilter: "blur(20px)",
-    borderRight: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+    borderRight: `1px solid ${alpha(theme.palette.primary.dark, 0.2)}`,
     overflowX: "hidden",
-
-    // ✅ Transição suave
-    transition: theme.transitions.create(["width", "box-shadow"], {
-      easing: theme.transitions.easing.easeInOut,
+    boxShadow: "8px 0 30px rgba(0,0,0,0.3)",
+    // OTIMIZAÇÃO GPU
+    transform: "translateZ(0)",
+    backfaceVisibility: "hidden",
+    willChange: "width",
+    transition: theme.transitions.create("width", {
+      easing: "cubic-bezier(0.4, 0, 0.2, 1)",
       duration: 400,
     }),
-
-    boxShadow: open
-      ? `4px 0 20px ${alpha(theme.palette.common.black, 0.1)}`
-      : `2px 0 10px ${alpha(theme.palette.common.black, 0.05)}`,
   },
 }));
 
-
+// ITEM DO MENU COM HOVER FLUIDO
 const StyledListItem = styled(ListItem)(({ theme }) => ({
-  margin: "4px 8px",
-  borderRadius: 12,
-  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+  margin: "6px 10px",
+  borderRadius: 14,
   cursor: "pointer",
+  transition: "all 0.25s ease",
   "&:hover": {
-    backgroundColor: alpha(theme.palette.primary.main, 0.08),
-    transform: "translateX(4px)",
-    boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.15)}`,
-    "& .MuiListItemIcon-root": {
-      transform: "scale(1.1)",
-    },
+    backgroundColor: alpha(theme.palette.primary.light, 0.15),
+    transform: "translateX(6px)",
+    boxShadow: `0 0 8px ${alpha(theme.palette.primary.light, 0.4)}`,
   },
   "&.active": {
-    backgroundColor: alpha(theme.palette.primary.main, 0.12),
-    borderLeft: `3px solid ${theme.palette.primary.main}`,
+    backgroundColor: alpha(theme.palette.primary.light, 0.25),
+    borderLeft: `4px solid ${theme.palette.primary.light}`,
     "& .MuiListItemText-primary": {
-      fontWeight: 600,
-      color: theme.palette.primary.main,
+      fontWeight: 700,
+      color: "#ffffff",
     },
   },
 }));
 
 const Home = () => {
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const location = useLocation(); // ✅ CORREÇÃO AQUI
-  const muiTheme = useTheme();
-  const isMobile = useMediaQuery(muiTheme.breakpoints.down("sm"));
-
-  const handleDrawerToggle = () => {
-    if (isMobile) {
-      setMobileOpen(!mobileOpen);
-    } else {
-      setDrawerOpen((prev) => !prev);
-    }
-  };
+  const location = useLocation();
 
   const menuItems = [
     { text: "Dashboard", icon: <Dashboard />, path: "/dashboard" },
-    { text: "Conteúdos", icon: <SchoolIcon />, path: "/cursos" },
+    { text: "Conteúdos", icon: <School />, path: "/cursos" },
     { text: "Instrutores", icon: <PersonAdd />, path: "/instrutores" },
     { text: "Planos", icon: <AirplaneTicket />, path: "/planos" },
     { text: "Usuários", icon: <Person3 />, path: "/usuarios" },
+    { text: "Categorias", icon: <Category />, path: "/categorias" },
   ];
 
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const handleSearchSubmit = async (event) => {
-    if (event.key === "Enter" && searchQuery.trim()) {
-      try {
-        const token = localStorage.getItem("token");
-        const headers = { Authorization: `Bearer ${token}` };
-       
-     
-
-        const [cursosRes, instrutoresRes, categoriasRes, planosRes] = await Promise.all([
-          axios.get(`http://10.10.11.174:3000/curso/cursos?search=${encodeURIComponent(searchQuery)}`, { headers }),
-          axios.get(`http://10.10.11.174:3000/instrutor?search=${encodeURIComponent(searchQuery)}`, { headers }),
-          axios.get(`http://10.10.11.174:3000/categoria/list?search=${encodeURIComponent(searchQuery)}`),
-          axios.get(`http://10.10.11.174:3000/planos?search=${encodeURIComponent(searchQuery)}`, { headers }),
-        ]);
-
-        const results = {
-          cursos: cursosRes.data || [],
-          instrutores: instrutoresRes.data || [],
-          categorias: categoriasRes.data || [],
-          planos: planosRes.data || [],
-        };
-
-        navigate(`/search?query=${encodeURIComponent(searchQuery)}`, { state: { results } });
-        setSearchQuery("");
-      } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Erro na busca",
-          text: "Não foi possível realizar a busca. Tente novamente.",
-        });
-        console.error("Search error:", error);
-      }
-    }
-  };
+  const toggleDrawer = () => setDrawerOpen(prev => !prev);
 
   const drawer = (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column", py: 1 }}>
-      <Toolbar />
-      {/*
+    <Box sx={{ position: "relative", height: "100%", display: "flex", flexDirection: "column" }}>
+      {/* EFEITO DE GLASS LEVE (SEM TRAVAR) */}
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: -1,
+          opacity: drawerOpen ? 1 : 0,
+          transition: "opacity 0.4s ease",
+        }}
+      />
 
-      {(drawerOpen || isMobile) && (
-
-
-        <Box sx={{ p: 2, textAlign: "center" }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: "primary.main", mb: 0.5 }}>
-            Admin Panel
-          </Typography>
-          <Chip
-            label="v2.0"
-            size="small"
+      {/* HEADER COM LOGO */}
+      <Box
+        sx={{
+          p: 3,
+          display: "flex",
+          justifyContent: drawerOpen ? "space-between" : "center",
+          alignItems: "center",
+          bgcolor: "transparent",
+        }}
+      >
+        {drawerOpen && (
+          <Box
+            component="img"
+            src="https://i.imgur.com/fumQcmz.png"
+            alt="Logo"
             sx={{
-              backgroundColor: alpha(theme.palette.primary.main, 0.1),
-              color: "primary.main",
-              fontWeight: 600,
-              fontSize: "0.7rem"
+              height: 48,
+              filter: "brightness(1.3) drop-shadow(0 2px 8px rgba(99,102,241,0.4))",
+              transition: "all 0.3s ease",
+              "&:hover": { filter: "brightness(1.5)" },
             }}
           />
-        </Box>
+        )}
+        <IconButton
+          onClick={toggleDrawer}
+          sx={{
+            color: "white",
+            bgcolor: alpha(theme.palette.secondary.light, 0.5),
+            "&:hover": { bgcolor: alpha(theme.palette.secondary.light, 0.8), transform: "scale(1.1)" },
+            borderRadius: 2,
+            p: 1.3,
+            transition: "all 0.3s ease",
+          }}
+        >
+          {drawerOpen ? <MenuOpenIcon /> : <MenuIcon />}
+        </IconButton>
+      </Box>
 
-      )}
-              */}
-      <Divider sx={{ mx: 1, borderColor: alpha(theme.palette.primary.main, 0.1) }} />
+      <Divider sx={{ borderColor: alpha(theme.palette.primary.dark, 0.2) }} />
+
+      {/* MENU */}
       <List sx={{ flex: 1, pt: 2 }}>
         {menuItems.map((item) => (
           <StyledListItem
@@ -255,84 +153,80 @@ const Home = () => {
           >
             <ListItemIcon
               sx={{
-                minWidth: drawerOpen ? 40 : "auto",
+                color: location.pathname === item.path ? theme.palette.primary.light : "#ffffff",
+                minWidth: drawerOpen ? 48 : "auto",
                 justifyContent: "center",
-                color: "primary.light",
-                transition: "transform 0.2s ease"
               }}
             >
               {item.icon}
             </ListItemIcon>
-            {(drawerOpen || isMobile) && (
+            {drawerOpen && (
               <ListItemText
                 primary={item.text}
                 primaryTypographyProps={{
                   fontSize: "0.95rem",
                   fontWeight: 500,
+                  color: location.pathname === item.path ? "#6366f1" : "#e0e7ff",
                 }}
               />
             )}
           </StyledListItem>
         ))}
       </List>
-      <Divider sx={{ mx: 1, borderColor: alpha(theme.palette.primary.main, 0.1) }} />
-      <Box sx={{ p: 1 }}>
-        {(drawerOpen || isMobile) && (
+
+      <Divider sx={{ borderColor: alpha(theme.palette.primary.dark, 0.2) }} />
+
+      {/* RODAPÉ */}
+      <Box sx={{ p: 2 }}>
+        {drawerOpen && (
           <Paper
             elevation={0}
             sx={{
-              p: 2,
-              mb: 1,
-              backgroundColor: alpha(theme.palette.primary.main, 0.05),
-              borderRadius: 2,
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+              p: 2.5,
+              mb: 2,
+              border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
+              borderRadius: 3,
+              backdropFilter: "blur(12px)",
             }}
           >
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" spacing={2} alignItems="center">
               <Avatar
                 sx={{
-                  bgcolor: "primary.main",
-                  width: 36,
-                  height: 36,
-                  fontSize: "0.9rem",
-                  fontWeight: 600
+                  bgcolor: theme.palette.primary.light,
+                  width: 44,
+                  height: 44,
+                  fontWeight: 700,
+                  color:theme.palette.secondary.dark
                 }}
               >
                 A
               </Avatar>
-
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="body2" fontWeight={600} noWrap>
+              <Box>
+                <Typography variant="body2" fontWeight={700} color="#e0e7ff">
                   Admin User
                 </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  admin@sistema.com
+                <Typography variant="caption" sx={{color:theme.palette.primary.light}}>
+                  admin@educa.com
                 </Typography>
               </Box>
             </Stack>
           </Paper>
         )}
-        <Tooltip title="Sair do sistema" placement="right">
+
+        <Tooltip title={drawerOpen ? "Sair do sistema" : ""} placement="right">
           <StyledListItem
             onClick={() => {
               Swal.fire({
-                title: "Tem certeza que deseja sair?",
-                text: "Você será deslogado do sistema.",
+                title: "Sair do sistema?",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                confirmButtonText: "Sim, sair",
+                confirmButtonColor: "#ef4444",
+                cancelButtonColor: "#6366f1",
+                confirmButtonText: "Sair",
                 cancelButtonText: "Cancelar",
-                background: theme.palette.background.paper,
-                color: theme.palette.text.primary,
-                customClass: {
-                  popup: "swal-thema-popup"
-                },
-                didOpen: () => {
-                  const container = document.querySelector(".swal2-container");
-                  if (container) container.style.zIndex = 20000;
-                }
+                background: "#1E2A46",
+                color: "#e0e7ff",
+                customClass: { popup: "animate__animated animate__fadeIn" },
               }).then((result) => {
                 if (result.isConfirmed) {
                   localStorage.removeItem("token");
@@ -340,32 +234,14 @@ const Home = () => {
                 }
               });
             }}
-            sx={{
-              "&:hover": {
-                backgroundColor: alpha(theme.palette.error.main, 0.08),
-                "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
-                  color: "error.main",
-                }
-              }
-            }}
           >
-            <ListItemIcon
-              sx={{
-                minWidth: drawerOpen ? 40 : "auto",
-                justifyContent: "center",
-                color: "error.main"
-              }}
-            >
+            <ListItemIcon sx={{ color: "#ef4444", minWidth: drawerOpen ? 48 : "auto", justifyContent: "center" }}>
               <LogoutRounded />
             </ListItemIcon>
-            {(drawerOpen || isMobile) && (
+            {drawerOpen && (
               <ListItemText
                 primary="Sair"
-                primaryTypographyProps={{
-                  color: "error.main",
-                  fontWeight: 500,
-                  fontSize: "0.95rem"
-                }}
+                primaryTypographyProps={{ color: "#ef4444", fontWeight: 600 }}
               />
             )}
           </StyledListItem>
@@ -377,148 +253,32 @@ const Home = () => {
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar
-        position="fixed"
-        elevation={0}
+
+      {/* DRAWER PERFEITO */}
+      <StyledDrawer
+        variant="permanent"
+        open={drawerOpen}
         sx={{
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          background: `linear-gradient(135deg, ${theme.palette.secondary.dark} 0%, ${alpha(theme.palette.secondary.dark, 0.9)} 100%)`,
-          backdropFilter: "blur(20px)",
-          borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-          boxShadow: `0 2px 20px ${alpha(theme.palette.common.black, 0.1)}`,
+          width: drawerOpen ? drawerWidth : miniDrawerWidth,
+          "& .MuiDrawer-paper": {
+            width: drawerOpen ? drawerWidth : miniDrawerWidth,
+          },
         }}
       >
-        <Toolbar
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            width: "100%",
-            gap: 2,
-            minHeight: 70,
-          }}
-        >
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <IconButton
-              color="inherit"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{
-                p: 1.5,
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                transform: drawerOpen && !isMobile ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                "&:hover": {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                  transform: `${drawerOpen && !isMobile ? "rotate(180deg)" : "rotate(0deg)"} scale(1.05)`,
-                },
-              }}
-            >
-              {drawerOpen ? <MenuOpenIcon sx={{ transform: "rotate(180deg)" }} /> : <MenuIcon />}
-            </IconButton>
+        {drawer}
+      </StyledDrawer>
 
-            <CardMedia
-              component="img"
-              height="45"
-              image="https://i.imgur.com/fumQcmz.png"
-              alt="Logo"
-              sx={{
-                maxWidth: "160px",
-                filter: "brightness(1.1)",
-                transition: "filter 0.3s ease",
-                "&:hover": { filter: "brightness(1.2)" },
-              }}
-            />
-          </Stack>
-          {/* 
-          <Search>
-            <SearchIconWrapper>
-              <SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Buscar conteúdos, instrutores..."
-              inputProps={{ "aria-label": "search" }}
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onKeyDown={handleSearchSubmit}
-            />
-          </Search>
-          */}
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Tooltip title="Notificações">
-              <IconButton
-                color="inherit"
-                sx={{
-                  p: 1.2,
-                  borderRadius: 2,
-                  "&:hover": { backgroundColor: alpha(theme.palette.primary.main, 0.1) }
-                }}
-              >
-                <Badge badgeContent={3} color="error">
-                  <Notifications />
-                </Badge>
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Perfil">
-              <IconButton
-                color="inherit"
-                sx={{
-                  p: 1.2,
-                  borderRadius: 2,
-                  "&:hover": { backgroundColor: alpha(theme.palette.primary.main, 0.1) }
-                }}
-              >
-                <Person />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        </Toolbar>
-      </AppBar>
-      {isMobile ? (
-        <StyledDrawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{ "& .MuiDrawer-paper": { width: drawerWidth } }}
-        >
-          {drawer}
-        </StyledDrawer>
-      ) : (
-        <StyledDrawer
-          variant="permanent"
-          open={drawerOpen}
-          sx={{
-            width: drawerOpen ? drawerWidth : miniDrawerWidth,
-            flexShrink: 0,
-            whiteSpace: "nowrap",
-            "& .MuiDrawer-paper": {
-              width: drawerOpen ? drawerWidth : miniDrawerWidth,
-              transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              overflowX: "hidden",
-            },
-          }}
-        >
-          {drawer}
-        </StyledDrawer>
-      )}
+      {/* CONTEÚDO PRINCIPAL */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          background: "radial-gradient(circle at top left, #1E2A46, #0A1128)",
+          bgcolor: "radial-gradient(circle at top left, #0f172a, #020617)",
           minHeight: "100vh",
-          width: {
-            sm: `calc(100% - ${drawerOpen ? drawerWidth : miniDrawerWidth}px)`,
-          },
-          transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          overflowX: "hidden"
+          p: { xs: 2, sm: 3 },
+          transition: "margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
-        <Toolbar sx={{ minHeight: 70 }} />
         <Outlet />
       </Box>
     </Box>

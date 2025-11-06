@@ -26,7 +26,7 @@ const Instrutor = () => {
   const [busca, setBusca] = useState("");
 
   const getInstructor = () => {
-    axios.get('http://10.10.11.174:3000/instrutor', {
+    axios.get('http://10.10.11.180:3000/instrutor', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
       .then((response) => setInstrutor(response.data))

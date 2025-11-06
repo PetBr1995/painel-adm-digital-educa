@@ -7,6 +7,8 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.1",
     "@mui/material": "^7.3.1",
+    "@nivo/calendar": "^0.99.0",
+    "@nivo/heatmap": "^0.99.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -19,7 +21,7 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.3",
     "react-scripts": "5.0.1",
-    "recharts": "^3.2.0",
+    "recharts": "^3.3.0",
     "sweetalert2": "^11.22.2",
     "tus-js-client": "^4.3.1",
     "web-vitals": "^2.1.4"

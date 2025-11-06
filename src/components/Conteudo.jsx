@@ -37,11 +37,120 @@ const Conteudo = () => {
   const [videosSoltos, setVideosSoltos] = useState([]);
   const [loading, setLoading] = useState(true);
 
+
+  const isValidUrl = (string) => {
+    try {
+      new URL(string);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const editVideoTitle = async (videoId, moduloId) => {
+    const { value: newTitle } = await Swal.fire({
+      title: "Editar título do vídeo",
+      input: "text",
+      inputLabel: "Novo título",
+      inputPlaceholder: "Digite o novo título",
+      showCancelButton: true,
+      confirmButtonText: "Salvar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: theme.palette.primary.main,
+      inputValidator: (value) => {
+        if (!value || value.trim() === "") return "O título não pode estar vazio";
+      },
+    });
+
+    if (!newTitle) return;
+
+    try {
+      // 1. Busca o vídeo atual
+      const { data: videoAtual } = await axios.get(
+        `http://10.10.11.180:3000/video/${videoId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      // 2. Valida e corrige a URL
+      let urlValida = videoAtual.url?.trim();
+
+      // Se não tiver URL válida, força uma URL temporária válida (ex: YouTube)
+      if (!urlValida || !isValidUrl(urlValida)) {
+        urlValida = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; // Vídeo temporário válido
+        // Ou use: "https://example.com/video-placeholder"
+      }
+
+      // 3. Payload com URL válida
+      const payload = {
+        titulo: newTitle.trim(),
+        duracao: videoAtual.duracao || 0,
+        url: urlValida,
+        moduloId: videoAtual.moduloId || null,
+        conteudoId: videoAtual.conteudoId || parseInt(id),
+      };
+
+      // 4. Envia PATCH
+      await axios.patch(
+        `http://10.10.11.180:3000/video/${videoId}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      // 5. Atualiza estado local
+      const updateVideo = (videos) =>
+        videos.map((v) => (v.id === videoId ? { ...v, titulo: newTitle.trim() } : v));
+
+      if (moduloId) {
+        setModulos((prev) =>
+          prev.map((mod) =>
+            mod.id === moduloId
+              ? { ...mod, videos: updateVideo(mod.videos) }
+              : mod
+          )
+        );
+      } else {
+        setVideosSoltos(updateVideo);
+      }
+
+      Swal.fire({
+        title: "Sucesso!",
+        text: "Título atualizado com sucesso.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Erro ao editar título:", error);
+
+      const message =
+        error.response?.data?.message?.[0] ||
+        error.response?.data?.message ||
+        "Erro ao atualizar. Verifique a URL do vídeo.";
+
+      Swal.fire({
+        title: "Erro",
+        text: message,
+        icon: "error",
+        confirmButtonColor: theme.palette.primary.main,
+      });
+    }
+  };
+
+
+
   const fetchConteudo = async () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `http://10.10.11.174:3000/conteudos/${id}/admin`,
+        `http://10.10.11.180:3000/conteudos/${id}/admin`,
         { headers: { Authorization: "Bearer " + localStorage.getItem("token") } }
       );
 
@@ -75,7 +184,7 @@ const Conteudo = () => {
     if (!result.isConfirmed) return;
 
     try {
-      await axios.delete(`http://10.10.11.174:3000/video/${videoId}`, {
+      await axios.delete(`http://10.10.11.180:3000/video/${videoId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
@@ -549,6 +658,15 @@ const Conteudo = () => {
                           Assistir
                         </Button>
                       )}
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => editVideoTitle(video.id, null)}
+                      >
+                        Editar Título
+                      </Button>
+
                       <Button
                         size="small"
                         variant="outlined"

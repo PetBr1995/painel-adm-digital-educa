@@ -39,6 +39,36 @@ export default function EditarConteudo() {
   const [fileMobile, setFileMobile] = useState(null);
   const [fileDestaque, setFileDestaque] = useState(null);
 
+  const [categorias, setCategorias] = useState([]);
+
+  const [categoriaId, setCategoriaId] = useState([]);
+  const getCategoriaBtId = (id) => {
+    axios.get(`http://10.10.11.180:3000/categorias/${id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    }).then(function (response) {
+      setCategoriaId(response.data)
+      console.log(response)
+    }).catch(function (error) {
+      console.log(error)
+    })
+  }
+
+
+  const listarCategorias = () => {
+    axios.get('http://10.10.11.180:3000/categorias/list', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    }).then(function (response) {
+      setCategorias(response.data)
+      console.log(response)
+    }).catch(function (err) {
+      console.log(err)
+    })
+  }
+
   const tipos = [
     { value: "AULA", label: "AULA" },
     { value: "PALESTRA", label: "PALESTRA" },
@@ -53,11 +83,13 @@ export default function EditarConteudo() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `http://10.10.11.174:3000/conteudos/${id}/admin`,
+        `http://10.10.11.180:3000/conteudos/${id}/admin`,
         { headers: { Authorization: `Bearer ${token}` } }
+
       );
 
       const data = res.data;
+      console.log(data)
       setTitulo(data.titulo || "");
       setDescricao(data.descricao || "");
       setTipo(data.tipo || "");
@@ -81,7 +113,7 @@ export default function EditarConteudo() {
   // 🔹 Buscar instrutores
   const getInstrutores = async () => {
     try {
-      const res = await axios.get("http://10.10.11.174:3000/instrutor", {
+      const res = await axios.get("http://10.10.11.180:3000/instrutor", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setInstrutores(res.data);
@@ -93,6 +125,8 @@ export default function EditarConteudo() {
   useEffect(() => {
     getConteudoById();
     getInstrutores();
+    listarCategorias();
+    getCategoriaBtId();
   }, [id]);
 
   // 🧩 Atualizar conteúdo (com thumbnails)
@@ -121,10 +155,10 @@ export default function EditarConteudo() {
       // Adiciona IDs dos instrutores
       instrutorIds.forEach((id) => formData.append("instrutorIds[]", id));
 
-     
+
 
       const res = await axios.put(
-        `http://10.10.11.174:3000/conteudos/${id}`,
+        `http://10.10.11.180:3000/conteudos/${id}`,
         formData,
         {
           headers: {
@@ -282,7 +316,7 @@ export default function EditarConteudo() {
                     </Typography>
                     {thumb && !file && (
                       <img
-                        src={`http://10.10.11.174:3000/${thumb}`}
+                        src={`http://10.10.11.180:3000/${thumb}`}
                         alt={label}
                         style={{
                           width: "100%",

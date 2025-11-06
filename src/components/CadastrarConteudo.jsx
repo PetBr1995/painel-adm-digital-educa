@@ -21,7 +21,6 @@ import { ArrowBackIos, CloudUpload as CloudUploadIcon } from "@mui/icons-materia
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import theme from "../theme/theme";
-import Instrutor from "../pages/Instrutor/Instrutor";
 
 export default function ConteudoForm() {
   const [titulo, setTitulo] = useState("");
@@ -30,8 +29,8 @@ export default function ConteudoForm() {
   const [requisitos, setRequisitos] = useState("");
   const [level, setLevel] = useState("Iniciante");
   const [tipo, setTipo] = useState("CURSO");
-  const [categoriaId, setCategoriaId] = useState(""); // guarda ID da categoria
-  const [subcategoriaId, setSubcategoriaId] = useState(""); // guarda ID da subcategoria
+  const [categoriaId, setCategoriaId] = useState("");
+  const [subcategoriaId, setSubcategoriaId] = useState("");
   const [categorias, setCategorias] = useState([]);
   const [subcategorias, setSubcategorias] = useState([]);
   const [file, setFile] = useState(null);
@@ -39,10 +38,10 @@ export default function ConteudoForm() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [gratuito, setGratuito] = useState(false);
-  const [dataCriacao, setDataCriacao] = useState("")
+  const [dataCriacao, setDataCriacao] = useState("");
 
-  const [gratuitoTipo, setGratuitoTipo] = useState("nenhum"); // "nenhum" | "permanente" | "temporario"
-  const [gratuitoDataInicio, setGratuitoDataInicio] = useState(""); // yyyy-mm-dd
+  const [gratuitoTipo, setGratuitoTipo] = useState("nenhum");
+  const [gratuitoDataInicio, setGratuitoDataInicio] = useState("");
   const [gratuitoDataFim, setGratuitoDataFim] = useState("");
 
   // thumbnails (files)
@@ -53,19 +52,22 @@ export default function ConteudoForm() {
   const navigate = useNavigate();
 
   const [instrutores, setInstrutores] = useState([]);
-  const [instrutoresSelecionados, setInstrutoresSelecionados] = useState([]); // novo
+  const [instrutoresSelecionados, setInstrutoresSelecionados] = useState([]);
 
-  // Carrega categorias e subcategorias e normaliza para usar sempre `id` e `categoriaId`
+  // ⭐ NOVO: Estado para tags
+  const [tags, setTags] = useState([]);
+  const [tagsSelecionadas, setTagsSelecionadas] = useState([]);
+
+  // Carrega categorias, subcategorias, instrutores e tags
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     const loadCategorias = async () => {
       try {
-        const res = await axios.get("http://10.10.11.174:3000/categorias/list", {
+        const res = await axios.get("http://10.10.11.180:3000/categorias/list", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // normaliza categorias
         const normalizedCats = (res.data || []).map((c) => ({
           id: c._id ?? c.id ?? "",
           nome: c.nome ?? c.title ?? "",
@@ -79,11 +81,10 @@ export default function ConteudoForm() {
 
     const loadSubcategorias = async () => {
       try {
-        const res = await axios.get("http://10.10.11.174:3000/subcategorias/list", {
+        const res = await axios.get("http://10.10.11.180:3000/subcategorias/list", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // normaliza subcategorias garantindo categoriaId string
         const normalizedSubs = (res.data || []).map((s) => ({
           id: s._id ?? s.id ?? "",
           nome: s.nome ?? "",
@@ -96,20 +97,18 @@ export default function ConteudoForm() {
       }
     };
 
-    // dentro do useEffect (ou fora, chamada pelo useEffect)
     const getInstrutores = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return console.error("token não encontrado");
 
-        const res = await axios.get("http://10.10.11.174:3000/instrutor", {
+        const res = await axios.get("http://10.10.11.180:3000/instrutor", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // adapta diferentes formatos de response
         const data = res.data?.instrutores ?? res.data ?? [];
         const normalized = (Array.isArray(data) ? data : []).map(i => ({
-          id: i._id ?? i.id ?? i._idstr ?? "",   // garantir id
+          id: i._id ?? i.id ?? i._idstr ?? "",
           nome: i.nome ?? i.name ?? i.nomeCompleto ?? "Sem nome",
         }));
 
@@ -121,14 +120,31 @@ export default function ConteudoForm() {
       }
     };
 
+    // ⭐ NOVO: Carrega tags
+    const loadTags = async () => {
+      try {
+        const res = await axios.get("http://10.10.11.180:3000/tags", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const normalizedTags = (res.data || []).map((t) => ({
+          id: t._id ?? t.id ?? "",
+          nome: t.nome ?? t.name ?? "",
+        }));
+        setTags(normalizedTags);
+        console.log("tags carregadas:", normalizedTags);
+      } catch (err) {
+        console.error("Erro ao carregar tags:", err);
+        setTags([]);
+      }
+    };
+
     loadCategorias();
     loadSubcategorias();
     getInstrutores();
-
+    loadTags(); // ⭐ chama a função
   }, []);
 
-
-  // Subcategorias filtradas dinamicamente pela categoria selecionada
   const subcategoriasFiltradas = subcategorias.filter((s) => s.categoriaId === (categoriaId || ""));
 
   const handleSubmit = async (e) => {
@@ -143,16 +159,9 @@ export default function ConteudoForm() {
       setStatus("Criando conteúdo...");
       const token = localStorage.getItem("token");
 
-      // 🔹 Normaliza tipo gratuito
       const tipoGratuito = gratuitoTipo?.toUpperCase() || "NENHUM";
+      const dataGratuita = tipoGratuito === "TEMPORARIO" && gratuitoDataFim ? gratuitoDataFim : null;
 
-      // 🔹 Define gratuitoAte apenas se for TEMPORARIO
-      const dataGratuita =
-        tipoGratuito === "TEMPORARIO" && gratuitoDataFim
-          ? gratuitoDataFim
-          : null;
-
-      // 🔹 Monta dados compatíveis com backend
       const conteudoData = {
         titulo,
         descricao,
@@ -161,36 +170,40 @@ export default function ConteudoForm() {
         aprendizagem,
         requisitos,
         subcategoriaId,
-        dataCriacao:dataCriacao,
+        dataCriacao: dataCriacao,
         gratuitoTipo: tipoGratuito,
-        ...(dataGratuita && { gratuitoAte: dataGratuita }), // só envia se tiver valor
+        ...(dataGratuita && { gratuitoAte: dataGratuita }),
         fileSize: file?.size,
       };
 
-      // 🔹 Cria FormData
       const formData = new FormData();
       for (const [key, value] of Object.entries(conteudoData)) {
         if (value !== undefined && value !== null && value !== "")
           formData.append(key, value);
       }
 
-      // 🔹 Adiciona múltiplos instrutores (array de IDs)
+      // Adiciona múltiplos instrutores
       if (instrutoresSelecionados && instrutoresSelecionados.length > 0) {
         instrutoresSelecionados.forEach((id) => {
           formData.append("instrutorIds[]", id);
         });
       }
 
-      // 🔹 thumbnails
-      if (thumbnailDesktop)
-        formData.append("thumbnailDesktop", thumbnailDesktop);
-      if (thumbnailMobile) formData.append("thumbnailMobile", thumbnailMobile);
-      if (thumbnailDestaque)
-        formData.append("thumbnailDestaque", thumbnailDestaque);
+      // ✅ Envia as tags no formato que o backend espera
+      if (tagsSelecionadas && tagsSelecionadas.length > 0) {
+        tagsSelecionadas.forEach((tag) => {
+          formData.append("tags[]", tag);
+        });
+      }
 
-      // 🔹 Requisição principal
+
+      // thumbnails
+      if (thumbnailDesktop) formData.append("thumbnailDesktop", thumbnailDesktop);
+      if (thumbnailMobile) formData.append("thumbnailMobile", thumbnailMobile);
+      if (thumbnailDestaque) formData.append("thumbnailDestaque", thumbnailDestaque);
+
       const response = await axios.post(
-        "http://10.10.11.174:3000/conteudos/create",
+        "http://10.10.11.180:3000/conteudos/create",
         formData,
         {
           headers: {
@@ -227,7 +240,7 @@ export default function ConteudoForm() {
         onSuccess: async () => {
           try {
             await axios.post(
-              `http://10.10.11.174:3000/vimeo-client/update-metadata/${conteudo.id}`,
+              `http://10.10.11.180:3000/vimeo-client/update-metadata/${conteudo.id}`,
               {
                 name: conteudo.titulo,
                 description: conteudo.descricao || "",
@@ -256,12 +269,25 @@ export default function ConteudoForm() {
     }
   };
 
-
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 5 }}>
       <Stack spacing={4} maxWidth={920} mx="auto">
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
-          <Button onClick={() => navigate("/cursos")} variant="outlined" sx={{ fontWeight: 600 }} startIcon={<ArrowBackIos />}>
+        <Box sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "1rem",
+
+        }}>
+          <Button onClick={() => navigate("/cursos")} variant="outlined"
+            sx={{
+              borderRadius: 10,
+              ontWeight: 600,
+              border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
+              '&:hover': {
+                border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`
+              }
+            }} startIcon={<ArrowBackIos />}>
             Voltar
           </Button>
           <Typography variant="h4" fontWeight="700" align="center">
@@ -289,16 +315,16 @@ export default function ConteudoForm() {
           ) : (
             <motion.div key="form" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.4 }}>
               <Stack spacing={4} component="form" onSubmit={handleSubmit}>
-                {/* Informações básicas */}
-
-                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-                  <Typography variant="h6" fontWeight="700" sx={{  mb: 3 }}>📅 Data de Criação do conteúdo</Typography>
+                {/* Data de Criação */}
+                <Paper sx={{ p: 4, borderRadius: 5, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }}>
+                  <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>📅 Data de Criação do conteúdo</Typography>
                   <Stack spacing={3}>
-                    <TextField type="datetime-local" defaultValue="Teste" value={dataCriacao} onChange={(e) => setDataCriacao(e.target.value)} />
+                    <TextField type="datetime-local" value={dataCriacao} onChange={(e) => setDataCriacao(e.target.value)} />
                   </Stack>
                 </Paper>
 
-                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                {/* Informações básicas */}
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }}>
                   <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>📝 Informações Básicas</Typography>
                   <Stack spacing={3}>
                     <TextField fullWidth label="Título *" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
@@ -307,7 +333,11 @@ export default function ConteudoForm() {
                 </Paper>
 
                 {/* Aprendizagem e pré-requisitos */}
-                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                <Paper elevation={3} sx={{
+                  p: 4,
+                  borderRadius: 3,
+                  border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`
+                }}>
                   <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>🎯 Aprendizagem e Pré-requisitos</Typography>
                   <Stack spacing={3}>
                     <TextField fullWidth multiline rows={3} label="O que o aluno vai aprender?" value={aprendizagem} onChange={(e) => setAprendizagem(e.target.value)} />
@@ -316,7 +346,11 @@ export default function ConteudoForm() {
                 </Paper>
 
                 {/* Configurações */}
-                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                <Paper elevation={3} sx={{
+                  p: 4,
+                  borderRadius: 3,
+                  border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`
+                }}>
                   <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>⚙️ Configurações</Typography>
 
                   <Grid container sx={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -330,6 +364,7 @@ export default function ConteudoForm() {
 
                     <Grid item xs={12}>
                       {/* Categoria */}
+
                       <TextField
                         select
                         fullWidth
@@ -339,7 +374,7 @@ export default function ConteudoForm() {
                         onChange={(e) => {
                           const newCat = e.target.value ?? "";
                           setCategoriaId(newCat);
-                          setSubcategoriaId(""); // limpa a subcategoria ao trocar categoria
+                          setSubcategoriaId("");
                         }}
                       >
                         <MenuItem value="">Selecione uma categoria...</MenuItem>
@@ -362,14 +397,13 @@ export default function ConteudoForm() {
                       >
                         <MenuItem value="">Selecione uma subcategoria...</MenuItem>
                         {subcategorias
-                          .filter((s) => s.categoriaId === categoriaId) // filtra pelo id da categoria selecionada
+                          .filter((s) => s.categoriaId === categoriaId)
                           .map((sub) => (
                             <MenuItem key={sub.id} value={sub.id}>
                               {sub.nome}
                             </MenuItem>
                           ))}
                       </TextField>
-
                     </Grid>
 
                     <Grid item xs={12}>
@@ -379,54 +413,92 @@ export default function ConteudoForm() {
                         <MenuItem value="Avançado">Avançado</MenuItem>
                       </TextField>
                     </Grid>
-
                   </Grid>
                 </Paper>
 
-                {/* bloco de instrutores - coloque onde quiser no form */}
-                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                {/* INSTRUTORES – AGORA IGUAL AOS OUTROS */}
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }}>
                   <Typography variant="h6" fontWeight="700" sx={{ mb: 2 }}>
                     Instrutores
                   </Typography>
 
-                  <Select
-                    multiple
+                  <TextField
+                    select
                     fullWidth
+                    label="Selecione os instrutores"
                     value={instrutoresSelecionados}
                     onChange={(e) => setInstrutoresSelecionados(e.target.value)}
-                    renderValue={(selected) =>
-                      instrutores
-                        .filter(i => selected.includes(i.id))
-                        .map(i => i.nome)
-                        .join(", ")
-                    }
+                    SelectProps={{
+                      multiple: true,
+                      displayEmpty: false,
+                      renderValue: (selected) =>
+                        selected?.length > 0
+                          ? instrutores
+                            .filter(i => selected.includes(i.id))
+                            .map(i => i.nome)
+                            .join(", ")
+                          : ""
+                    }}
                   >
-                    {instrutores.map(instrutor => (
-                      <MenuItem key={instrutor.id} value={instrutor.id}>
-                        <Checkbox checked={instrutoresSelecionados.includes(instrutor.id)} />
-                        <ListItemText primary={instrutor.nome} />
+                    {instrutores.map((i) => (
+                      <MenuItem key={i.id} value={i.id}>
+                        <Checkbox checked={instrutoresSelecionados.includes(i.id)} />
+                        <ListItemText primary={i.nome} />
                       </MenuItem>
                     ))}
-                  </Select>
+                  </TextField>
+                </Paper>
+
+                {/* TAGS – AGORA IGUAL TAMBÉM */}
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }}>
+                  <Typography variant="h6" fontWeight="700" sx={{ mb: 2 }}>
+                    Tags
+                  </Typography>
+
+                  <TextField
+                    select
+                    fullWidth
+                    label="Selecione as tags"
+                    value={tagsSelecionadas}
+                    onChange={(e) => setTagsSelecionadas(e.target.value)}
+                    SelectProps={{
+                      multiple: true,
+                      displayEmpty: false,
+                      renderValue: (selected) =>
+                        selected?.length > 0
+                          ? tags
+                            .filter(t => selected.includes(t.id))
+                            .map(t => `#${t.nome}`)
+                            .join(", ")
+                          : ""
+                    }}
+                  >
+                    {tags.map((tag) => (
+                      <MenuItem key={tag.id} value={tag.id}>
+                        <Checkbox checked={tagsSelecionadas.includes(tag.id)} />
+                        <ListItemText primary={`#${tag.nome}`} />
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </Paper>
 
                 {/* Thumbnails */}
-                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }}>
                   <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>🖼️ Thumbnails</Typography>
                   <Stack spacing={3}>
-                    <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
+                    <Button variant="outlined" sx={{ borderRadius: 3, '&:hover': { border: `1px solid ${alpha(theme.palette.primary.light, 0.3)}` }, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }} component="label" startIcon={<CloudUploadIcon />}>
                       Upload Thumbnail Desktop
                       <input type="file" accept="image/*" hidden onChange={(e) => setThumbnailDesktop(e.target.files?.[0] ?? null)} />
                     </Button>
                     {thumbnailDesktop && <Typography variant="body2">{thumbnailDesktop.name}</Typography>}
 
-                    <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
+                    <Button sx={{ borderRadius: 3, '&:hover': { border: `1px solid ${alpha(theme.palette.primary.light, 0.3)}` }, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }} variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
                       Upload Thumbnail Mobile
                       <input type="file" accept="image/*" hidden onChange={(e) => setThumbnailMobile(e.target.files?.[0] ?? null)} />
                     </Button>
                     {thumbnailMobile && <Typography variant="body2">{thumbnailMobile.name}</Typography>}
 
-                    <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
+                    <Button sx={{ borderRadius: 3, '&:hover': { border: `1px solid ${alpha(theme.palette.primary.light, 0.3)}` }, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }} variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
                       Upload Thumbnail Destaque
                       <input type="file" accept="image/*" hidden onChange={(e) => setThumbnailDestaque(e.target.files?.[0] ?? null)} />
                     </Button>
@@ -434,8 +506,8 @@ export default function ConteudoForm() {
                   </Stack>
                 </Paper>
 
-                {/* Conteúdo gratuito (select estilizado) */}
-                <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                {/* Conteúdo gratuito */}
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 3, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }}>
                   <Stack direction="column" alignItems="flex-start" spacing={2}>
                     <Typography variant="h6" fontWeight="700">💰 Conteúdo Gratuito</Typography>
 
@@ -472,10 +544,8 @@ export default function ConteudoForm() {
                         </Grid>
                       </motion.div>
                     )}
-
                   </Stack>
                 </Paper>
-
 
                 {/* Upload de vídeo */}
                 <Paper

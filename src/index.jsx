@@ -5,12 +5,13 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { CssBaseline, GlobalStyles, ThemeProvider } from '@mui/material';
 import theme from './theme/theme';
+import { AuthProvider } from './components/AuthContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-      <CssBaseline/>
+      <CssBaseline />
       <GlobalStyles
         styles={{
           body: {
@@ -23,7 +24,9 @@ root.render(
           },
         }}
       />
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

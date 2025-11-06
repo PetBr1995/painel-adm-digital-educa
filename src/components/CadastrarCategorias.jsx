@@ -53,7 +53,7 @@ const CadastrarCategorias = ({ setForm, onCategoriaCadastrada }) => {
       }
 
       const response = await axios.post(
-        "http://10.10.11.174:3000/categorias/create",
+        "http://10.10.11.180:3000/categorias/create",
         { nome: nome.trim() },
         {
           headers: {
