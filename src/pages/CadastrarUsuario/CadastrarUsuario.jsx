@@ -78,7 +78,7 @@ const CadastrarUsuario = () => {
 
         axios
             .post(
-                "http://10.10.11.180:3000/usuario/admin/create",
+                "https://api.digitaleduca.com.vc/usuario/admin/create",
                 payload,
                 {
                     headers: {

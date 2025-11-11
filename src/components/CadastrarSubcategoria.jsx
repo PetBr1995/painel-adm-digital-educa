@@ -21,7 +21,7 @@ const CadastrarSubcategoria = ({ setFormSubcategoria }) => {
     const cadastrarSubcategoria = async () => {
         try {
             const response = await axios.post(
-                "http://10.10.11.180:3000/subcategorias/create",
+                "https://api.digitaleduca.com.vc/subcategorias/create",
                 {
                     nome,
                     categoriaId, // 👈 envia o ID no corpo da requisição
@@ -42,7 +42,7 @@ const CadastrarSubcategoria = ({ setFormSubcategoria }) => {
 
     const getCategoria = async () => {
         try {
-            const response = await axios.get("http://10.10.11.180:3000/categorias/list", {
+            const response = await axios.get("https://api.digitaleduca.com.vc/categorias/list", {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },

@@ -67,7 +67,7 @@ const Conteudo = () => {
     try {
       // 1. Busca o vídeo atual
       const { data: videoAtual } = await axios.get(
-        `http://10.10.11.180:3000/video/${videoId}`,
+        `https://api.digitaleduca.com.vc/video/${videoId}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -95,7 +95,7 @@ const Conteudo = () => {
 
       // 4. Envia PATCH
       await axios.patch(
-        `http://10.10.11.180:3000/video/${videoId}`,
+        `https://api.digitaleduca.com.vc/video/${videoId}`,
         payload,
         {
           headers: {
@@ -150,7 +150,7 @@ const Conteudo = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `http://10.10.11.180:3000/conteudos/${id}/admin`,
+        `https://api.digitaleduca.com.vc/conteudos/${id}/admin`,
         { headers: { Authorization: "Bearer " + localStorage.getItem("token") } }
       );
 
@@ -184,7 +184,7 @@ const Conteudo = () => {
     if (!result.isConfirmed) return;
 
     try {
-      await axios.delete(`http://10.10.11.180:3000/video/${videoId}`, {
+      await axios.delete(`https://api.digitaleduca.com.vc/video/${videoId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 

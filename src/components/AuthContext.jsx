@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
 
   const verifyToken = async (token) => {
     try {
-      const response = await axios.get('http://10.10.11.180:3000/auth/check', {
+      const response = await axios.get('https://api.digitaleduca.com.vc/auth/check', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(response.data.user || { token });
@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (credentials) => {
-    const res = await axios.post('http://10.10.11.180:3000/auth/login', credentials);
+    const res = await axios.post('https://api.digitaleduca.com.vc/auth/login', credentials);
     const token = res.data.token;
     localStorage.setItem('token', token);
     await verifyToken(token);

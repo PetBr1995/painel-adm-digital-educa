@@ -1,4 +1,11 @@
-import { Add, Delete, SearchOutlined, FilterList, PeopleOutlined, PersonOutlined } from "@mui/icons-material";
+import {
+    Add,
+    Delete,
+    SearchOutlined,
+    FilterList,
+    PeopleOutlined,
+    PersonOutlined
+} from "@mui/icons-material";
 import {
     Box,
     Table,
@@ -21,44 +28,33 @@ import {
     Container,
     alpha,
     Avatar,
-    IconButton
+    IconButton,
+    Pagination,
+    Divider
 } from "@mui/material";
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
-import theme from '../../theme/theme'
+import theme from "../../theme/theme";
 
 const Usuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
     const [busca, setBusca] = useState("");
     const [filtroStatus, setFiltroStatus] = useState("todos");
+    const [pagina, setPagina] = useState(1);
+    const porPagina = 10;
     const navigate = useNavigate();
-
-
-    const [usuariosAdm, setUsuariosAdm] = useState([])
-
-    const listarUsuariosAdmin = () => {
-        axios.get('http://10.10.11.180:3000/usuario/admin/usuarios', {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-        }).then(function (response) {
-            setUsuariosAdm(response.data)
-            console.log(response)
-        }).catch(function (error) {
-            console.log(error)
-        })
-    }
+    const location = useLocation();
 
     const listarUsuarios = () => {
-        axios.get("http://10.10.11.180:3000/usuario/admin/usuarios", {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
-        })
+        axios
+            .get("https://api.digitaleduca.com.vc/usuario/admin/usuarios", {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            })
             .then((response) => {
-                console.log("📌 Resposta da API:", response.data);
                 setUsuarios(response.data);
             })
             .catch((error) => {
@@ -76,16 +72,24 @@ const Usuarios = () => {
             confirmButtonColor: "#d33",
             cancelButtonColor: "#3085d6",
             confirmButtonText: "Sim, excluir!",
-            cancelButtonText: "Cancelar"
+            cancelButtonText: "Cancelar",
         }).then((result) => {
             if (result.isConfirmed) {
-                axios.delete(`http://10.10.11.180:3000/usuario/admin/usuarios/${id}`, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`
-                    }
-                })
+                axios
+                    .delete(
+                        `https://api.digitaleduca.com.vc/usuario/admin/usuarios/${id}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                            },
+                        }
+                    )
                     .then(() => {
-                        Swal.fire("Excluído!", "O usuário foi excluído com sucesso.", "success");
+                        Swal.fire(
+                            "Excluído!",
+                            "O usuário foi excluído com sucesso.",
+                            "success"
+                        );
                         listarUsuarios();
                     })
                     .catch((error) => {
@@ -97,79 +101,100 @@ const Usuarios = () => {
     };
 
     const temAssinaturaAtiva = (usuario) => {
-        return usuario.assinaturas?.some(assinatura =>
-            assinatura.status === "ATIVA" &&
-            assinatura.stripeSubscriptionId != null && // cobre null e undefined
-            assinatura.stripeSubscriptionId !== ""    // evita string vazia
+        return usuario.assinaturas?.some(
+            (assinatura) =>
+                assinatura.status === "ATIVA" &&
+                assinatura.stripeSubscriptionId &&
+                assinatura.stripeSubscriptionId.trim() !== ""
         );
     };
 
     useEffect(() => {
         listarUsuarios();
-        listarUsuariosAdmin();
     }, []);
 
-    const usuariosFiltrados = usuarios.filter((usuario) => {
-        const matchBusca = usuario.nome.toLowerCase().includes(busca.toLowerCase()) ||
-            usuario.email.toLowerCase().includes(busca.toLowerCase());
+    // 🔹 Filtra e remove SUPERADMIN
+    const usuariosFiltrados = useMemo(() => {
+        return usuarios
+            .filter((usuario) => usuario.role !== "SUPERADMIN")
+            .filter((usuario) => {
+                const matchBusca =
+                    usuario.nome.toLowerCase().includes(busca.toLowerCase()) ||
+                    usuario.email.toLowerCase().includes(busca.toLowerCase());
 
-        const assinaturaAtiva = temAssinaturaAtiva(usuario);
+                const assinaturaAtiva = temAssinaturaAtiva(usuario);
 
-        let matchStatus = true;
-        if (filtroStatus === "ativa") {
-            matchStatus = assinaturaAtiva;
-        } else if (filtroStatus === "inativa") {
-            matchStatus = !assinaturaAtiva;
-        }
+                let matchStatus = true;
+                if (filtroStatus === "ativa") {
+                    matchStatus = assinaturaAtiva;
+                } else if (filtroStatus === "inativa") {
+                    matchStatus = !assinaturaAtiva;
+                }
 
-        return matchBusca && matchStatus;
-    });
+                return matchBusca && matchStatus;
+            });
+    }, [usuarios, busca, filtroStatus]);
 
-    const usuariosAtivos = usuarios.filter(user => temAssinaturaAtiva(user)).length;
-    const usuariosInativos = usuarios.length - usuariosAtivos;
+    // 🔢 Paginação
+    const inicio = (pagina - 1) * porPagina;
+    const fim = inicio + porPagina;
+    const exibidos = usuariosFiltrados.slice(inicio, fim);
+    const totalPaginas = Math.ceil(usuariosFiltrados.length / porPagina);
+
+    const handleChangePage = (_, novaPagina) => setPagina(novaPagina);
+
+    const usuariosAtivos = usuariosFiltrados.filter((u) =>
+        temAssinaturaAtiva(u)
+    ).length;
+    const usuariosInativos = usuariosFiltrados.length - usuariosAtivos;
 
     return (
         <Container sx={{ py: 4, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
-            {/* Header melhorado */}
+            {/* Header */}
             <Paper
                 elevation={0}
                 sx={{
-                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.primary.main, 0.03)})`,
+                    background: `linear-gradient(135deg, ${alpha(
+                        theme.palette.primary.main,
+                        0.08
+                    )}, ${alpha(theme.palette.primary.main, 0.03)})`,
                     borderRadius: 3,
                     p: 4,
                     mb: 4,
-                    border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`
+                    border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
                 }}
             >
-                <Box sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    flexWrap: "wrap",
-                    gap: 2
-                }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: 2,
+                    }}
+                >
                     <Box>
                         <Typography
-                            variant='h4'
+                            variant="h4"
                             sx={{
                                 fontWeight: 700,
-                                color: '#ffffff',
-                                mb: 1
+                                color: "#ffffff",
+                                mb: 1,
                             }}
                         >
                             Gerenciar Usuários
                         </Typography>
-                        <Typography variant='body1' color="text.secondary" sx={{ mb: 2 }}>
+                        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                             Visualize e gerencie todos os usuários cadastrados
                         </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                             <Chip
-                                label={`${usuarios.length} usuários totais`}
+                                label={`${usuariosFiltrados.length} usuários`}
                                 size="small"
                                 sx={{
                                     backgroundColor: theme.palette.primary.light,
-                                    color: '#000',
-                                    fontWeight: 600
+                                    color: "#000",
+                                    fontWeight: 600,
                                 }}
                             />
                             <Chip
@@ -190,7 +215,7 @@ const Usuarios = () => {
                     </Box>
 
                     <Button
-                        onClick={() => navigate('/cadastrarusuario')}
+                        onClick={() => navigate("/cadastrarusuario")}
                         variant="contained"
                         startIcon={<Add />}
                         size="large"
@@ -200,14 +225,20 @@ const Usuarios = () => {
                             fontWeight: 700,
                             px: 4,
                             py: 1.5,
-                            textTransform: 'none',
-                            boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.3)}`,
-                            transition: 'all 0.3s ease',
+                            textTransform: "none",
+                            boxShadow: `0 4px 15px ${alpha(
+                                theme.palette.primary.main,
+                                0.3
+                            )}`,
+                            transition: "all 0.3s ease",
                             "&:hover": {
                                 background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                                boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
-                                transform: 'translateY(-2px)'
-                            }
+                                boxShadow: `0 6px 20px ${alpha(
+                                    theme.palette.primary.main,
+                                    0.4
+                                )}`,
+                                transform: "translateY(-2px)",
+                            },
                         }}
                     >
                         Novo Usuário
@@ -215,7 +246,7 @@ const Usuarios = () => {
                 </Box>
             </Paper>
 
-            {/* Área de filtros melhorada */}
+            {/* Filtros */}
             <Paper
                 elevation={0}
                 sx={{
@@ -223,24 +254,32 @@ const Usuarios = () => {
                     mb: 3,
                     borderRadius: 3,
                     border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
-                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.primary.main, 0.03)})`,
+                    background: `linear-gradient(135deg, ${alpha(
+                        theme.palette.primary.main,
+                        0.08
+                    )}, ${alpha(theme.palette.primary.main, 0.03)})`,
                 }}
             >
-                <Box sx={{
-                    display: "flex",
-                    gap: 3,
-                    flexWrap: "wrap",
-                    alignItems: "center"
-                }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        gap: 3,
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                    }}
+                >
                     <TextField
                         placeholder="Buscar por nome ou email..."
                         variant="outlined"
                         value={busca}
-                        onChange={(e) => setBusca(e.target.value)}
+                        onChange={(e) => {
+                            setBusca(e.target.value);
+                            setPagina(1);
+                        }}
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <SearchOutlined sx={{ color: '#666' }} />
+                                    <SearchOutlined sx={{ color: "#666" }} />
                                 </InputAdornment>
                             ),
                         }}
@@ -251,12 +290,12 @@ const Usuarios = () => {
                                 borderRadius: 3,
                                 backgroundColor: theme.palette.secondary.dark,
                                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: '#FDBB30',
+                                    borderColor: "#FDBB30",
                                 },
                                 "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: '#FDBB30',
-                                }
-                            }
+                                    borderColor: "#FDBB30",
+                                },
+                            },
                         }}
                     />
 
@@ -265,12 +304,15 @@ const Usuarios = () => {
                         <Select
                             value={filtroStatus}
                             label="Status da Matrícula"
-                            onChange={(e) => setFiltroStatus(e.target.value)}
+                            onChange={(e) => {
+                                setFiltroStatus(e.target.value);
+                                setPagina(1);
+                            }}
                             sx={{
                                 borderRadius: 2,
                                 "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: '#FDBB30',
-                                }
+                                    borderColor: "#FDBB30",
+                                },
                             }}
                         >
                             <MenuItem value="todos">Todos os usuários</MenuItem>
@@ -280,7 +322,6 @@ const Usuarios = () => {
                     </FormControl>
                 </Box>
 
-                {/* Indicador de resultados */}
                 <Box sx={{ mt: 2 }}>
                     <Chip
                         icon={<FilterList />}
@@ -291,80 +332,105 @@ const Usuarios = () => {
                 </Box>
             </Paper>
 
-            {/* Tabela melhorada */}
-            {usuariosFiltrados.length === 0 ? (
+            {/* Tabela */}
+            {exibidos.length === 0 ? (
                 <Paper
                     elevation={0}
                     sx={{
-                        textAlign: 'center',
+                        textAlign: "center",
                         py: 8,
                         borderRadius: 3,
-                        border: '2px dashed #e0e0e0',
-
+                        border: "2px dashed #e0e0e0",
                     }}
                 >
-                    <PersonOutlined sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-                    <Typography variant="h6" color="text.secondary" fontWeight={600} sx={{ mb: 1 }}>
-                        {busca || filtroStatus !== 'todos' ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+                    <PersonOutlined
+                        sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
+                    />
+                    <Typography
+                        variant="h6"
+                        color="text.secondary"
+                        fontWeight={600}
+                        sx={{ mb: 1 }}
+                    >
+                        Nenhum usuário encontrado
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        {busca || filtroStatus !== 'todos'
-                            ? 'Tente ajustar os filtros de busca'
-                            : 'Comece cadastrando seu primeiro usuário'
-                        }
+                        Tente ajustar os filtros de busca
                     </Typography>
                 </Paper>
             ) : (
                 <Paper
                     elevation={0}
                     sx={{
-
                         borderRadius: 3,
                         border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
-                        overflow: 'hidden'
+                        overflow: "hidden",
                     }}
                 >
                     <TableContainer>
                         <Table>
-                            <TableHead sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.primary.main, 0.03)})` }}>
-                                <TableRow sx={{
-
-                                    "& th": {
-                                        fontWeight: 700,
-                                        color: '#ffffff',
-                                        borderBottom: '2px solid #e0e0e0'
-                                    }
-                                }}>
+                            <TableHead
+                                sx={{
+                                    background: `linear-gradient(135deg, ${alpha(
+                                        theme.palette.primary.main,
+                                        0.08
+                                    )}, ${alpha(theme.palette.primary.main, 0.03)})`,
+                                }}
+                            >
+                                <TableRow
+                                    sx={{
+                                        "& th": {
+                                            fontWeight: 700,
+                                            color: "#ffffff",
+                                            borderBottom: "2px solid #e0e0e0",
+                                        },
+                                    }}
+                                >
                                     <TableCell>Usuário</TableCell>
                                     <TableCell>Email</TableCell>
-                                    <TableCell align="center">Status da Matrícula</TableCell>
+                                    <TableCell align="center">
+                                        Status da Matrícula
+                                    </TableCell>
                                     <TableCell align="center">Ações</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {usuariosFiltrados.map((usuario, index) => {
+                                {exibidos.map((usuario, index) => {
                                     const assinaturaAtiva = temAssinaturaAtiva(usuario);
-                                    const ehSuperAdmin = usuario.role === "SUPERADMIN";
                                     return (
                                         <TableRow
                                             key={usuario.id}
                                             sx={{
-                                                backgroundColor: index % 2 === 0 ? alpha(theme.palette.primary.dark, 0.2) : alpha(theme.palette.secondary.light, 0.08),
+                                                backgroundColor:
+                                                    index % 2 === 0
+                                                        ? alpha(theme.palette.primary.dark, 0.2)
+                                                        : alpha(theme.palette.secondary.light, 0.08),
                                                 "&:hover": {
-                                                    backgroundColor: index % 2 === 0 ? alpha(theme.palette.primary.light, 0.08) : alpha(theme.palette.secondary.dark, 0.08)
+                                                    backgroundColor:
+                                                        index % 2 === 0
+                                                            ? alpha(theme.palette.primary.light, 0.08)
+                                                            : alpha(theme.palette.secondary.dark, 0.08),
                                                 },
-                                                transition: 'background-color 0.2s ease'
+                                                transition: "background-color 0.2s ease",
                                             }}
                                         >
                                             <TableCell>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 2,
+                                                    }}
+                                                >
                                                     <Avatar
                                                         sx={{
                                                             width: 40,
                                                             height: 40,
-                                                            backgroundColor: assinaturaAtiva ? '#4caf50' : '#9e9e9e',
-                                                            fontSize: '0.9rem',
-                                                            fontWeight: 600
+                                                            backgroundColor: assinaturaAtiva
+                                                                ? "#4caf50"
+                                                                : "#9e9e9e",
+                                                            fontSize: "0.9rem",
+                                                            fontWeight: 600,
                                                         }}
                                                     >
                                                         {usuario.nome.charAt(0).toUpperCase()}
@@ -375,59 +441,59 @@ const Usuarios = () => {
                                                 </Box>
                                             </TableCell>
                                             <TableCell>
-                                                <Typography variant="body2" color="#ffffff">
+                                                <Typography
+                                                    variant="body2"
+                                                    color="#ffffff"
+                                                >
                                                     {usuario.email}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell align="center">
                                                 <Chip
-                                                    label={assinaturaAtiva ? "Matrícula Ativa" : "Matrícula Inativa"}
-                                                    color={assinaturaAtiva ? "success" : "default"}
+                                                    label={
+                                                        assinaturaAtiva
+                                                            ? "Matrícula Ativa"
+                                                            : "Matrícula Inativa"
+                                                    }
+                                                    color={
+                                                        assinaturaAtiva
+                                                            ? "success"
+                                                            : "default"
+                                                    }
                                                     size="small"
                                                     sx={{ fontWeight: 600 }}
                                                 />
                                             </TableCell>
                                             <TableCell align="center">
-
-                                                {!ehSuperAdmin && (
-                                                    <Tooltip
-                                                        title={assinaturaAtiva ? "Não é possível excluir usuário com matrícula ativa" : "Excluir usuário"}
-                                                        arrow
-                                                    >
-                                                        <span>
-                                                            <IconButton
-                                                                color="error"
-                                                                disabled={assinaturaAtiva}
-                                                                onClick={() => {
-                                                                    if (!assinaturaAtiva) {
-                                                                        excluirUsuario(usuario.id);
-                                                                    }
-                                                                }}
-                                                                sx={{
-                                                                    opacity: assinaturaAtiva ? 0.4 : 1,
-                                                                    "&:hover": {
-                                                                        backgroundColor: assinaturaAtiva ? 'transparent' : alpha('#f44336', 0.1)
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <Delete />
-                                                            </IconButton>
-                                                        </span>
-                                                    </Tooltip>
-                                                )}
-
-                                                {ehSuperAdmin && (
-                                                    <Tooltip title="Não é possível excluir um SUPERADMIN">
-                                                        <span>
-                                                            <Chip
-                                                                label="SUPERADMIN"
-                                                                color="warning"
-                                                                size="small"
-                                                            />
-                                                        </span>
-                                                    </Tooltip>
-                                                )}
-
+                                                <Tooltip
+                                                    title={
+                                                        assinaturaAtiva
+                                                            ? "Não é possível excluir usuário com matrícula ativa"
+                                                            : "Excluir usuário"
+                                                    }
+                                                    arrow
+                                                >
+                                                    <span>
+                                                        <IconButton
+                                                            color="error"
+                                                            disabled={assinaturaAtiva}
+                                                            onClick={() =>
+                                                                !assinaturaAtiva &&
+                                                                excluirUsuario(usuario.id)
+                                                            }
+                                                            sx={{
+                                                                opacity: assinaturaAtiva ? 0.4 : 1,
+                                                                "&:hover": {
+                                                                    backgroundColor: assinaturaAtiva
+                                                                        ? "transparent"
+                                                                        : alpha("#f44336", 0.1),
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Delete />
+                                                        </IconButton>
+                                                    </span>
+                                                </Tooltip>
                                             </TableCell>
                                         </TableRow>
                                     );
@@ -435,6 +501,22 @@ const Usuarios = () => {
                             </TableBody>
                         </Table>
                     </TableContainer>
+
+                    {/* Paginação */}
+                    {totalPaginas > 1 && (
+                        <>
+                            <Divider sx={{ my: 2 }} />
+                            <Box display="flex" justifyContent="center" pb={2}>
+                                <Pagination
+                                    count={totalPaginas}
+                                    page={pagina}
+                                    onChange={handleChangePage}
+                                    color="primary"
+                                    shape="rounded"
+                                />
+                            </Box>
+                        </>
+                    )}
                 </Paper>
             )}
         </Container>

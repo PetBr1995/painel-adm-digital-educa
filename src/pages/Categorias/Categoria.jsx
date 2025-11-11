@@ -39,13 +39,13 @@ const Categorias = () => {
     setLoading(true);
     try {
       const [catRes, subRes, tagRes] = await Promise.all([
-        axios.get("http://10.10.11.180:3000/categorias/list", {
+        axios.get("https://api.digitaleduca.com.vc/categorias/list", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }),
-        axios.get("http://10.10.11.180:3000/subcategorias/list", {
+        axios.get("https://api.digitaleduca.com.vc/subcategorias/list", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }),
-        axios.get("http://10.10.11.180:3000/tags", {
+        axios.get("https://api.digitaleduca.com.vc/tags", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }),
       ]);
@@ -79,8 +79,8 @@ const Categorias = () => {
     try {
       const endpoint =
         type === "categoria"
-          ? `http://10.10.11.180:3000/categorias/${id}`
-          : `http://10.10.11.180:3000/${type}s/${id}`;
+          ? `https://api.digitaleduca.com.vc/categorias/${id}`
+          : `https://api.digitaleduca.com.vc/${type}s/${id}`;
 
       await axios.delete(endpoint, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

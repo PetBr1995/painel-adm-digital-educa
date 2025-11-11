@@ -33,7 +33,7 @@ const EditarModulo = () => {
 
   const handleAtualizar = async () => {
     try {
-      await axios.put(`http://10.10.11.180:3000/modulo-curso/${modulo.id}`, {
+      await axios.put(`https://api.digitaleduca.com.vc/modulo-curso/${modulo.id}`, {
         titulo,
         subtitulo,
         descricao,

@@ -93,7 +93,7 @@ const CadastroModulo = ({ setForm, onModuleCreated, getCurso }) => {
 
     try {
       const response = await axios.post(
-        'http://10.10.11.180:3000/modulo-conteudo/create',
+        'https://api.digitaleduca.com.vc/modulo-conteudo/create',
         {
           titulo: titulo.trim(),
           subtitulo: subtitulo.trim(),

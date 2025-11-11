@@ -64,7 +64,7 @@ export default function ConteudoForm() {
 
     const loadCategorias = async () => {
       try {
-        const res = await axios.get("http://10.10.11.180:3000/categorias/list", {
+        const res = await axios.get("https://api.digitaleduca.com.vc/categorias/list", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -81,7 +81,7 @@ export default function ConteudoForm() {
 
     const loadSubcategorias = async () => {
       try {
-        const res = await axios.get("http://10.10.11.180:3000/subcategorias/list", {
+        const res = await axios.get("https://api.digitaleduca.com.vc/subcategorias/list", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -102,7 +102,7 @@ export default function ConteudoForm() {
         const token = localStorage.getItem("token");
         if (!token) return console.error("token não encontrado");
 
-        const res = await axios.get("http://10.10.11.180:3000/instrutor", {
+        const res = await axios.get("https://api.digitaleduca.com.vc/instrutor", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -123,7 +123,7 @@ export default function ConteudoForm() {
     // ⭐ NOVO: Carrega tags
     const loadTags = async () => {
       try {
-        const res = await axios.get("http://10.10.11.180:3000/tags", {
+        const res = await axios.get("https://api.digitaleduca.com.vc/tags", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -203,7 +203,7 @@ export default function ConteudoForm() {
       if (thumbnailDestaque) formData.append("thumbnailDestaque", thumbnailDestaque);
 
       const response = await axios.post(
-        "http://10.10.11.180:3000/conteudos/create",
+        "https://api.digitaleduca.com.vc/conteudos/create",
         formData,
         {
           headers: {
@@ -240,7 +240,7 @@ export default function ConteudoForm() {
         onSuccess: async () => {
           try {
             await axios.post(
-              `http://10.10.11.180:3000/vimeo-client/update-metadata/${conteudo.id}`,
+              `https://api.digitaleduca.com.vc/vimeo-client/update-metadata/${conteudo.id}`,
               {
                 name: conteudo.titulo,
                 description: conteudo.descricao || "",

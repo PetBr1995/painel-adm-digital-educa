@@ -35,7 +35,7 @@ const CadastrarTag = ({
 
     try {
       const response = await axios.post(
-        'http://10.10.11.180:3000/tags',
+        'https://api.digitaleduca.com.vc/tags',
         { nome: nome.trim() },
         {
           headers: {

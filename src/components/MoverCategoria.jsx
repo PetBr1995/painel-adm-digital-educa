@@ -20,10 +20,10 @@ const MoverCategoria = ({ showFormMoverCategoria, setShowFormMoverCategoria }) =
                 const token = localStorage.getItem("token");
 
                 const [categoriasRes, conteudosRes] = await Promise.all([
-                    axios.get("http://10.10.11.180:3000/categorias/list", {
+                    axios.get("https://api.digitaleduca.com.vc/categorias/list", {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
-                    axios.get("http://10.10.11.180:3000/conteudos", {
+                    axios.get("https://api.digitaleduca.com.vc/conteudos", {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
                 ]);
@@ -126,7 +126,7 @@ const MoverCategoria = ({ showFormMoverCategoria, setShowFormMoverCategoria }) =
             console.log("Payload completo:", JSON.stringify(payload));
 
             await axios.put(
-                `http://10.10.11.180:3000/conteudos/mover-categoria`,
+                `https://api.digitaleduca.com.vc/conteudos/mover-categoria`,
                 payload,
                 { headers: { Authorization: `Bearer ${token}` } }
             );

@@ -43,7 +43,7 @@ export default function EditarConteudo() {
 
   const [categoriaId, setCategoriaId] = useState([]);
   const getCategoriaBtId = (id) => {
-    axios.get(`http://10.10.11.180:3000/categorias/${id}`, {
+    axios.get(`https://api.digitaleduca.com.vc/categorias/${id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -57,7 +57,7 @@ export default function EditarConteudo() {
 
 
   const listarCategorias = () => {
-    axios.get('http://10.10.11.180:3000/categorias/list', {
+    axios.get('https://api.digitaleduca.com.vc/categorias/list', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -83,7 +83,7 @@ export default function EditarConteudo() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `http://10.10.11.180:3000/conteudos/${id}/admin`,
+        `https://api.digitaleduca.com.vc/conteudos/${id}/admin`,
         { headers: { Authorization: `Bearer ${token}` } }
 
       );
@@ -113,7 +113,7 @@ export default function EditarConteudo() {
   // 🔹 Buscar instrutores
   const getInstrutores = async () => {
     try {
-      const res = await axios.get("http://10.10.11.180:3000/instrutor", {
+      const res = await axios.get("https://api.digitaleduca.com.vc/instrutor", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setInstrutores(res.data);
@@ -158,7 +158,7 @@ export default function EditarConteudo() {
 
 
       const res = await axios.put(
-        `http://10.10.11.180:3000/conteudos/${id}`,
+        `https://api.digitaleduca.com.vc/conteudos/${id}`,
         formData,
         {
           headers: {
@@ -316,7 +316,7 @@ export default function EditarConteudo() {
                     </Typography>
                     {thumb && !file && (
                       <img
-                        src={`http://10.10.11.180:3000/${thumb}`}
+                        src={`https://api.digitaleduca.com.vc/${thumb}`}
                         alt={label}
                         style={{
                           width: "100%",

@@ -53,7 +53,7 @@ const CadastrarCategorias = ({ setForm, onCategoriaCadastrada }) => {
       }
 
       const response = await axios.post(
-        "http://10.10.11.180:3000/categorias/create",
+        "https://api.digitaleduca.com.vc/categorias/create",
         { nome: nome.trim() },
         {
           headers: {

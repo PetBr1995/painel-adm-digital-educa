@@ -34,7 +34,7 @@ const EditarInstrutor = () => {
       setLoading(false);
     } else if (id) {
       axios
-        .get(`http://10.10.11.180:3000/instrutor/${id}`, {
+        .get(`https://api.digitaleduca.com.vc/instrutor/${id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         })
         .then((res) => {
@@ -69,7 +69,7 @@ const EditarInstrutor = () => {
     try {
       setLoading(true);
       await axios.put(
-        `http://10.10.11.180:3000/instrutor/update/${id}`,
+        `https://api.digitaleduca.com.vc/instrutor/update/${id}`,
         { nome, formacao, sobre },
         {
           headers: {

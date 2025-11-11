@@ -81,7 +81,7 @@ const Dashboard = () => {
 
   const getCursos = () => {
     return axios
-      .get("http://10.10.11.180:3000/conteudos", {
+      .get("https://api.digitaleduca.com.vc/conteudos", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         }
@@ -112,7 +112,7 @@ const Dashboard = () => {
   const [conteudos, setConteudos] = useState([])
 
   const getConteudos = () => {
-    axios.get('http://10.10.11.180:3000/conteudos', {
+    axios.get('https://api.digitaleduca.com.vc/conteudos', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`
       }
@@ -127,7 +127,7 @@ const Dashboard = () => {
 
 
   const getInstrutores = () => {
-    return axios.get("http://10.10.11.180:3000/instrutor", {
+    return axios.get("https://api.digitaleduca.com.vc/instrutor", {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -172,7 +172,7 @@ const Dashboard = () => {
   const [allUsers, setAllUsers] = useState([])
 
   const getAllUsers = () => {
-    axios.get('http://10.10.11.180:3000/usuario/admin/usuarios', {
+    axios.get('https://api.digitaleduca.com.vc/usuario/admin/usuarios', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -185,7 +185,7 @@ const Dashboard = () => {
   }
 
   const getCategorias = () => {
-    return axios.get('http://10.10.11.180:3000/categorias/list')
+    return axios.get('https://api.digitaleduca.com.vc/categorias/list')
       .then((response) => {
         setCategorias(response.data);
       })
@@ -197,7 +197,7 @@ const Dashboard = () => {
 
 
   const getPlanos = () => {
-    return axios.get('http://10.10.11.180:3000/planos', {
+    return axios.get('https://api.digitaleduca.com.vc/planos', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }

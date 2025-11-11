@@ -12,8 +12,8 @@ const theme = createTheme({
       main: '#1E2A46', // Azul escuro
     },
     background: {
-      default: 'radial-gradient(circle at top left, #1E2A46, #0A1128)',
-      paper: '#121829',
+      default: '#1E2A46',
+      paper: '#1E2A46',
     },
     text: {
       primary: '#FFFFFF',

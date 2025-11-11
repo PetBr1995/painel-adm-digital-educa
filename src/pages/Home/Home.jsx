@@ -43,6 +43,7 @@ const StyledDrawer = styled(Drawer)(({ theme }) => ({
     boxShadow: "8px 0 30px rgba(0,0,0,0.3)",
     // OTIMIZAÇÃO GPU
     transform: "translateZ(0)",
+    bgcolor:"#ffffff",
     backfaceVisibility: "hidden",
     willChange: "width",
     transition: theme.transitions.create("width", {
@@ -131,8 +132,8 @@ const Home = () => {
           sx={{
             color: "white",
             bgcolor: alpha(theme.palette.secondary.light, 0.5),
-            "&:hover": { bgcolor: alpha(theme.palette.secondary.light, 0.8), transform: "scale(1.1)" },
-            borderRadius: 2,
+            "&:hover": { bgcolor: alpha(theme.palette.secondary.light, 0.8)},
+            borderRadius: "100%",
             p: 1.3,
             transition: "all 0.3s ease",
           }}

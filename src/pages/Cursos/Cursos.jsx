@@ -49,11 +49,13 @@ const Conteudos = () => {
 
   const getConteudos = async () => {
     try {
-      const response = await axios.get("http://10.10.11.180:3000/conteudos", {
+      const response = await axios.get("https://api.digitaleduca.com.vc/conteudos?limit=100", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
+      
+
       console.log(response.data)
       setConteudos(response.data.data);
     } catch (err) {
@@ -65,7 +67,7 @@ const Conteudos = () => {
   // Função para buscar tags
   const getTags = async () => {
     try {
-      const response = await axios.get("http://10.10.11.180:3000/tags", {
+      const response = await axios.get("https://api.digitaleduca.com.vc/tags", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setTags(response.data);
@@ -76,12 +78,13 @@ const Conteudos = () => {
 
   const getCategorias = async () => {
     try {
-      const response = await axios.get("http://10.10.11.180:3000/categorias/list", {
+      const response = await axios.get("https://api.digitaleduca.com.vc/categorias/list", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
       setCategorias(response.data);
+      console.log(response)
     } catch (error) {
       setError("Erro ao carregar as categorias. Tente novamente mais tarde.");
     }
@@ -478,7 +481,7 @@ const Conteudos = () => {
                         component="img"
                         height="200"
                         image={
-                          "http://10.10.11.180:3000/public/" + conteudo.thumbnailDesktop
+                          "https://api.digitaleduca.com.vc/public/" + conteudo.thumbnailDesktop
                         }
                         alt={conteudo.titulo}
                         className="card-media"
@@ -647,7 +650,7 @@ const Conteudos = () => {
                               if (confirm.isConfirmed) {
                                 try {
                                   const token = localStorage.getItem("token");
-                                  await axios.delete(`http://10.10.11.180:3000/conteudos/${conteudo.id}`, {
+                                  await axios.delete(`https://api.digitaleduca.com.vc/conteudos/${conteudo.id}`, {
                                     headers: { Authorization: `Bearer ${token}` },
                                   });
 

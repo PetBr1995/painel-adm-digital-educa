@@ -1,19 +1,17 @@
-import { Box, Typography } from "@mui/material"
+import { Box, Container, Typography } from "@mui/material"
 import DashUsuarios from "./dashboardComponents/DashUsuarios"
+import DashAulas from "./dashboardComponents/DashAulas"
 
 const PublicDashboard = () => {
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography
-        variant="h4"
-        sx={{ fontWeight: 700, width: "100%", textAlign: "center", mb: 4 }}
-      >
-        Dashboard
-      </Typography>
-
-      {/* Seção de usuários */}
-      <DashUsuarios />
-    </Box>
+    <Container>
+      <Box sx={{ p: 3 }}>
+        {/* Seção de usuários */}
+        <DashUsuarios />
+        {/* Seção das aulas */}
+        <DashAulas />
+      </Box>
+    </Container>
   )
 }
 
