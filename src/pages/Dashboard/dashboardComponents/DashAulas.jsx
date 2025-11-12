@@ -14,6 +14,20 @@ const DashAulas = () => {
     const theme = useTheme();
     const [aulas, setAulas] = useState({});
 
+    const [conteudos, setConteudos] = useState([]);
+    const getConteudos = () => {
+        axios.get('https://api.digitaleduca.com.vc/conteudos',{
+            headers:{
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+        }).then(function(response){
+            setConteudos(response.data)
+            console.log(response)
+        }).catch(function(error){
+            console.log(error)
+        })
+    }
+
     const getAulas = async () => {
         try {
             const response = await axios.get(
@@ -56,7 +70,7 @@ const DashAulas = () => {
 
     useEffect(() => {
         getAulas();
-        usuarioConcluinte();
+        getConteudos();
     }, []);
 
     // Função para renderizar um card genérico de aula
