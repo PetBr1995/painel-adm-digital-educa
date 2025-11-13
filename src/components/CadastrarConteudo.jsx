@@ -85,12 +85,8 @@ export default function ConteudoForm() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const normalizedSubs = (res.data || []).map((s) => ({
-          id: s._id ?? s.id ?? "",
-          nome: s.nome ?? "",
-          categoriaId: s.categoriaId ?? s.categoria?._id ?? s.categoria ?? "",
-        }));
-        setSubcategorias(normalizedSubs);
+    
+        setSubcategorias(res.data);
       } catch (err) {
         console.error("Erro ao carregar subcategorias:", err);
         setSubcategorias([]);
@@ -392,12 +388,12 @@ export default function ConteudoForm() {
                         label="Subcategoria"
                         value={subcategoriaId || ""}
                         onChange={(e) => setSubcategoriaId(e.target.value ?? "")}
-                        disabled={!categoriaId}
+                       
                         margin="normal"
                       >
                         <MenuItem value="">Selecione uma subcategoria...</MenuItem>
                         {subcategorias
-                          .filter((s) => s.categoriaId === categoriaId)
+                         
                           .map((sub) => (
                             <MenuItem key={sub.id} value={sub.id}>
                               {sub.nome}
