@@ -239,7 +239,7 @@ const UploadVideo = () => {
         const upload = new tus.Upload(currentVideo.file, {
           uploadUrl: vimeoUploadLink,
           metadata: { filename: currentVideo.file.name, filetype: currentVideo.file.type },
-          chunkSize: 100 * 1024 * 1024,
+          chunkSize: 150 * 1024 * 1024,
           onError: (err) => {
             console.error("Erro no upload:", err);
             updateVideoStatus(videoId, "error");
