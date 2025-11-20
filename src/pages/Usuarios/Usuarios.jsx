@@ -134,17 +134,20 @@ const Usuarios = () => {
 
             // 🔍 match por texto (nome/email/celular como string)
             const matchTexto =
-                !termoBuscaTexto || // se busca vazia, não bloqueia
-                nome.includes(termoBuscaTexto) ||
-                email.includes(termoBuscaTexto) ||
-                celularTexto.includes(termoBuscaTexto);
+                termoBuscaTexto &&
+                (
+                    nome.includes(termoBuscaTexto) ||
+                    email.includes(termoBuscaTexto) ||
+                    celularTexto.includes(termoBuscaTexto)
+                );
 
             // 📱 match por número (ignora máscara)
             const matchTelefone =
-                !termoBuscaNumero || // se usuário não digitou número, ignora isso
+                termoBuscaNumero &&
                 celularNumero.includes(termoBuscaNumero);
 
-            const matchBusca = matchTexto || matchTelefone;
+            // se tiver texto, ou número, ou os dois, ele usa OR
+            const matchBusca = matchTexto || matchTelefone || (!termoBuscaTexto && !termoBuscaNumero);
 
             const assinaturaAtiva = temAssinaturaAtiva(usuario);
 
@@ -158,6 +161,7 @@ const Usuarios = () => {
             return matchBusca && matchStatus;
         });
     }, [usuarios, busca, filtroStatus]);
+
 
 
     // 🔢 Paginação
