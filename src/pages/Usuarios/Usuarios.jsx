@@ -111,7 +111,7 @@ const Usuarios = () => {
         listarUsuarios();
     }, []);
 
-    // 🔹 Filtra usuários (inclui lógica segura do toLowerCase)
+    // 🔹 Helpers de busca
     const normalizarTexto = (str) =>
         (str || "")
             .normalize("NFD") // remove acentos
@@ -122,6 +122,7 @@ const Usuarios = () => {
     const extrairNumeros = (str) =>
         (str || "").replace(/\D/g, ""); // só dígitos
 
+    // 🔹 Filtro com busca por texto e telefone (com/sem máscara)
     const usuariosFiltrados = useMemo(() => {
         const termoBuscaTexto = normalizarTexto(busca);
         const termoBuscaNumero = extrairNumeros(busca);
@@ -132,7 +133,6 @@ const Usuarios = () => {
             const celularTexto = normalizarTexto(usuario?.celular);
             const celularNumero = extrairNumeros(usuario?.celular);
 
-            // 🔍 match por texto (nome/email/celular como string)
             const matchTexto =
                 termoBuscaTexto &&
                 (
@@ -141,13 +141,14 @@ const Usuarios = () => {
                     celularTexto.includes(termoBuscaTexto)
                 );
 
-            // 📱 match por número (ignora máscara)
             const matchTelefone =
                 termoBuscaNumero &&
                 celularNumero.includes(termoBuscaNumero);
 
-            // se tiver texto, ou número, ou os dois, ele usa OR
-            const matchBusca = matchTexto || matchTelefone || (!termoBuscaTexto && !termoBuscaNumero);
+            const matchBusca =
+                matchTexto ||
+                matchTelefone ||
+                (!termoBuscaTexto && !termoBuscaNumero); // sem busca -> mostra todos
 
             const assinaturaAtiva = temAssinaturaAtiva(usuario);
 
@@ -155,14 +156,12 @@ const Usuarios = () => {
             if (filtroStatus === "ativa") {
                 matchStatus = assinaturaAtiva;
             } else if (filtroStatus === "inativa") {
-                matchStatus = !assinaturaAtiva;
+                matchStatus = !assinaturaAtiva; // aqui continuam sendo os "free"
             }
 
             return matchBusca && matchStatus;
         });
     }, [usuarios, busca, filtroStatus]);
-
-
 
     // 🔢 Paginação
     const inicio = (pagina - 1) * porPagina;
@@ -173,7 +172,7 @@ const Usuarios = () => {
     const handleChangePage = (_, novaPagina) => setPagina(novaPagina);
 
     const usuariosAtivos = usuariosFiltrados.filter((u) => temAssinaturaAtiva(u)).length;
-    const usuariosInativos = usuariosFiltrados.length - usuariosAtivos;
+    const usuariosFree = usuariosFiltrados.length - usuariosAtivos;
 
     return (
         <Container sx={{ py: 4, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
@@ -226,7 +225,7 @@ const Usuarios = () => {
                                 sx={{ fontWeight: 600 }}
                             />
                             <Chip
-                                label={`${usuariosInativos} inativos`}
+                                label={`${usuariosFree} free`}
                                 size="small"
                                 color="default"
                                 variant="outlined"
@@ -270,7 +269,7 @@ const Usuarios = () => {
             >
                 <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", alignItems: "center" }}>
                     <TextField
-                        placeholder="Buscar por nome ou email..."
+                        placeholder="Buscar por nome, email ou telefone..."
                         variant="outlined"
                         value={busca}
                         onChange={(e) => {
@@ -295,18 +294,18 @@ const Usuarios = () => {
                     />
 
                     <FormControl sx={{ minWidth: 200 }}>
-                        <InputLabel>Status da Matrícula</InputLabel>
+                        <InputLabel>Status do plano</InputLabel>
                         <Select
                             value={filtroStatus}
-                            label="Status da Matrícula"
+                            label="Status do plano"
                             onChange={(e) => {
                                 setFiltroStatus(e.target.value);
                                 setPagina(1);
                             }}
                         >
                             <MenuItem value="todos">Todos os usuários</MenuItem>
-                            <MenuItem value="ativa">Matrícula Ativa</MenuItem>
-                            <MenuItem value="inativa">Matrícula Inativa</MenuItem>
+                            <MenuItem value="ativa">Plano Ativo</MenuItem>
+                            <MenuItem value="inativa">Plano Free</MenuItem>
                         </Select>
                     </FormControl>
                 </Box>
@@ -355,7 +354,7 @@ const Usuarios = () => {
                                     <TableCell>Usuário</TableCell>
                                     <TableCell>Email</TableCell>
                                     <TableCell>Celular</TableCell>
-                                    <TableCell align="center">Status da Matrícula</TableCell>
+                                    <TableCell align="center">Plano</TableCell>
                                     <TableCell align="center">Ações</TableCell>
                                 </TableRow>
                             </TableHead>
@@ -363,8 +362,6 @@ const Usuarios = () => {
                             <TableBody>
                                 {exibidos.map((usuario, index) => {
                                     const assinaturaAtiva = temAssinaturaAtiva(usuario);
-
-                                    // 🔥 Lógica de SUPERADMIN
                                     const isSuperAdmin =
                                         (usuario?.role || "").toLowerCase() === "superadmin";
 
@@ -404,7 +401,6 @@ const Usuarios = () => {
                                                             {usuario.nome}
                                                         </Typography>
 
-                                                        {/* badge superadmin */}
                                                         {isSuperAdmin && (
                                                             <Chip
                                                                 label="Superadmin"
@@ -424,11 +420,12 @@ const Usuarios = () => {
                                                 <Chip
                                                     label={
                                                         assinaturaAtiva
-                                                            ? "Matrícula Ativa"
-                                                            : "Matrícula Inativa"
+                                                            ? "Ativo"
+                                                            : "Free"
                                                     }
                                                     color={assinaturaAtiva ? "success" : "default"}
                                                     size="small"
+                                                    sx={{ fontWeight: 600 }}
                                                 />
                                             </TableCell>
 
@@ -438,8 +435,8 @@ const Usuarios = () => {
                                                         isSuperAdmin
                                                             ? "Superadmin não pode ser excluído"
                                                             : assinaturaAtiva
-                                                                ? "Não pode excluir usuário com matrícula ativa"
-                                                                : "Excluir usuário"
+                                                            ? "Não pode excluir usuário com plano ativo"
+                                                            : "Excluir usuário"
                                                     }
                                                     arrow
                                                 >
