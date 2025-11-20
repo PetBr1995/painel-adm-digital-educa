@@ -6,28 +6,42 @@ import {
     alpha,
     LinearProgress,
     Tooltip,
+    Rating
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
 const DashAulas = () => {
     const theme = useTheme();
-    const [aulas, setAulas] = useState({});
+
+    const [aulas, setAulas] = useState({
+        maisAssistido: null,
+        melhorAvaliado: null,
+        menosAssistido: null,
+    });
 
     const [conteudos, setConteudos] = useState([]);
-    const getConteudos = () => {
-        axios.get('https://api.digitaleduca.com.vc/conteudos',{
-            headers:{
-                Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-        }).then(function(response){
-            setConteudos(response.data)
-            console.log(response)
-        }).catch(function(error){
-            console.log(error)
-        })
-    }
 
+    // Buscar Conteúdos
+    const getConteudos = async () => {
+        try {
+            const response = await axios.get(
+                "https://api.digitaleduca.com.vc/conteudos",
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                }
+            );
+
+            setConteudos(response.data?.data || []);
+            console.log("Conteúdos:", response.data);
+        } catch (error) {
+            console.error("Erro ao buscar conteúdos:", error);
+        }
+    };
+
+    // Buscar Métricas das Aulas
     const getAulas = async () => {
         try {
             const response = await axios.get(
@@ -41,39 +55,42 @@ const DashAulas = () => {
             );
 
             const data = response.data;
+            console.log("Dados de aulas:", data);
+
             setAulas({
                 maisAssistido: data.maisAssistido,
                 melhorAvaliado: data.melhorAvaliado,
                 menosAssistido: data.menosAssistido,
             });
-
-            console.log("Aulas carregadas:", data);
         } catch (error) {
-            console.error("Erro ao carregar dados das aulas:", error);
+            console.error("Erro ao carregar métricas:", error);
         }
     };
 
-    const [usuariosConcluintes, setUsuariosConcluintes] = useState([])
-    const usuarioConcluinte = (id) => {
-        axios.get('https://api.digitaleduca.com.vc/dashboard/videos/' + { id } + '/usuarios-concluintes', {
-            headers: {
-                Authorization:
-                    "Dashboard FDYWmkzwEDhacggv6tIZhHsqhz8FSkqVbsqR1QYsL722i8lRr9kFTiWofUmAYDQqvT3w8IcpjJwS9DqEkUpdmBtRzJEg9Ivy25jEXezoaMxpUvlFlct37ZQ4DOpMie",
-            },
-        }).then(function (response) {
-            setUsuariosConcluintes(response.data)
-            console.log(response)
-        }).catch(function (error) {
-            console.log(error)
-        })
-    }
+    // Buscar usuários concluintes (arrumado)
+    const usuarioConcluinte = async (id) => {
+        try {
+            const response = await axios.get(
+                `https://api.digitaleduca.com.vc/dashboard/videos/${id}/usuarios-concluintes`,
+                {
+                    headers: {
+                        Authorization:
+                            "Dashboard FDYWmkzwEDhacggv6tIZhHsqhz8FSkqVbsqR1QYsL722i8lRr9kFTiWofUmAYDQqvT3w8IcpjJwS9DqEkUpdmBtRzJEg9Ivy25jEXezoaMxpUvlFlct37ZQ4DOpMie",
+                    },
+                }
+            );
+            console.log("Concluintes:", response.data);
+        } catch (error) {
+            console.error("Erro ao buscar concluintes:", error);
+        }
+    };
 
     useEffect(() => {
         getAulas();
         getConteudos();
     }, []);
 
-    // Função para renderizar um card genérico de aula
+    // 🔥 Renderização de cards com taxa e visualizações
     const renderCard = (titulo, aula, cor, destaque, mostrarViews = true) => (
         <Box
             sx={{
@@ -89,26 +106,16 @@ const DashAulas = () => {
                 },
             }}
         >
-            <Typography
-                variant="body2"
-                sx={{ color: "text.secondary", mb: 1, fontWeight: 500 }}
-            >
+            <Typography variant="body2" sx={{ color: "text.secondary", mb: 1, fontWeight: 500 }}>
                 {titulo}
             </Typography>
 
-            <Typography
-                variant="h6"
-                sx={{
-                    fontWeight: 700,
-                    color: cor,
-                    mb: 1,
-                }}
-            >
+            <Typography variant="h6" sx={{ fontWeight: 700, color: cor, mb: 1 }}>
                 {aula?.titulo || "—"}
             </Typography>
 
-            {/* 👁 Só mostra visualizações se mostrarViews = true */}
-            {mostrarViews && aula?.visualizacoes > 0 && (
+            {/* 👁 Visualizações */}
+            {mostrarViews && aula?.visualizacoes >= 0 && (
                 <Typography
                     variant="body2"
                     sx={{
@@ -117,18 +124,17 @@ const DashAulas = () => {
                         fontSize: destaque ? "1.1rem" : "0.9rem",
                     }}
                 >
-                    👁 {aula?.visualizacoes} visualizações
+                    👁 {aula?.visualizacoes ?? 0} visualizações
                 </Typography>
             )}
 
-            <Tooltip
-                title="Taxa de conclusão estimada (com base no tempo assistido)"
-                placement="top"
-            >
+            {/* 🔵 Barra de conclusão */}
+            <Tooltip title="Taxa de conclusão estimada" placement="top">
                 <Box sx={{ mt: 2 }}>
                     <Typography variant="caption" sx={{ color: "text.secondary" }}>
                         Taxa de Conclusão
                     </Typography>
+
                     <LinearProgress
                         variant="determinate"
                         value={aula?.taxaConclusao || 0}
@@ -141,10 +147,8 @@ const DashAulas = () => {
                             },
                         }}
                     />
-                    <Typography
-                        variant="caption"
-                        sx={{ color: "text.secondary", mt: 0.5, display: "block" }}
-                    >
+
+                    <Typography variant="caption" sx={{ color: "text.secondary", mt: 0.5, display: "block" }}>
                         {aula?.taxaConclusao
                             ? `${aula.taxaConclusao.toFixed(1)}% concluída`
                             : "—"}
@@ -186,7 +190,6 @@ const DashAulas = () => {
                     mt: 5,
                 }}
             >
-
                 <Box
                     sx={{
                         display: "grid",
@@ -198,18 +201,20 @@ const DashAulas = () => {
                     }}
                 >
                     {renderCard(
-                        "Aula Mais Assistida",
+                        "Conteúdo com maior taxa de conclusão",
                         aulas.maisAssistido,
                         theme.palette.info.main,
                         true
                     )}
+
                     {renderCard(
                         "Melhor Avaliada",
                         aulas.melhorAvaliado,
                         theme.palette.success.main,
                         false,
-                        false // 👈 não exibe visualizações neste card
+                        true // 👈 **Agora exibe visualizações normalmente**
                     )}
+
                     {renderCard(
                         "Aula Menos Assistida",
                         aulas.menosAssistido,

@@ -109,7 +109,7 @@ const Dashboard = () => {
       });
   };
 
-  const [conteudos, setConteudos] = useState([])
+  const [conteudos, setConteudos] = useState([]);
 
   const getConteudos = () => {
     axios.get('https://api.digitaleduca.com.vc/conteudos', {
@@ -118,7 +118,7 @@ const Dashboard = () => {
       }
     }).then(function (response) {
       console.log(response)
-      setConteudos(response.data)
+      setConteudos(response.data.data)
 
     }).catch(function (error) {
       console.log(error)

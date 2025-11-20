@@ -8,27 +8,23 @@ import {
     InputAdornment,
     CircularProgress,
     Fade,
-    Divider,
-    Link,
-    alpha
 } from "@mui/material";
 
 import styles from '../Login/Login.module.css'
 
 import {
-    ArrowForwardIos,
     Visibility,
     VisibilityOff,
     Email,
     Lock,
     Login as LoginIcon,
-    PersonAdd as PersonAddIcon
 } from "@mui/icons-material";
 import axios from "axios";
 import theme from "../../theme/theme";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "./swal-custom.css";
+import { jwtDecode } from "jwt-decode"; // <<< ADICIONADO AQUI
 
 import Lottie from 'lottie-react'
 import animationData from '../../assets/Wave Loop.json'
@@ -80,7 +76,33 @@ const Login = () => {
                 senha,
             });
 
-            localStorage.setItem("token", response.data.access_token);
+            const token = response.data.access_token;
+            console.log("[Login] token:", token);
+
+            // Decodifica o token pra pegar a role
+            const decoded = jwtDecode(token);
+            console.log("[Login] decoded JWT:", decoded);
+
+            // Aqui é onde você valida a role
+            if (!decoded.role || decoded.role !== "SUPERADMIN") {
+                // NÃO salva o token e não navega
+                await Swal.fire({
+                    icon: "error",
+                    title: "Acesso negado",
+                    text: "Você não tem permissão para acessar o painel administrativo.",
+                    customClass: {
+                        popup: "swal-theme-popup",
+                        title: "swal-theme-title",
+                        confirmButton: "swal-theme-button",
+                    },
+                });
+                setLoading(false);
+                return;
+            }
+
+            // Se chegou aqui: é superadmin
+            localStorage.setItem("token", token);
+            localStorage.setItem("role", decoded.role); // se quiser guardar
 
             await Swal.fire({
                 icon: "success",
@@ -95,6 +117,7 @@ const Login = () => {
 
             navigate("/dashboard", { replace: true });
         } catch (error) {
+            console.error("[Login] erro no login:", error);
             Swal.fire({
                 icon: "error",
                 title: "Credenciais inválidas",
@@ -164,7 +187,7 @@ const Login = () => {
                         border: "1px solid rgba(255, 184, 0, 0.1)",
                         boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
                         position: "relative",
-                        zIndex: 1, // garante que o formulário fique acima da animação
+                        zIndex: 1,
                         overflow: "hidden",
                         "&::before": {
                             content: '""',

@@ -17,6 +17,7 @@ import {
   Fade,
   Backdrop,
   Paper,
+  Rating
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
@@ -54,7 +55,7 @@ const Conteudos = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      
+
 
       console.log(response.data)
       setConteudos(response.data.data);
@@ -116,7 +117,7 @@ const Conteudos = () => {
         <Paper
           elevation={0}
           sx={{
-            p: { xs: 3, md: 4 },
+            p: { xs: 3, md: 3 },
             mb: 4,
             borderRadius: 3,
             background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.08)},${alpha(theme.palette.primary.light, 0.02)})`,
@@ -124,9 +125,9 @@ const Conteudos = () => {
           }}
         >
           <Stack
-            direction={{ xs: "column", sm: "row" }}
+            direction={{ xs: "column", sm: "column", md: "row" }}
             justifyContent="space-between"
-            alignItems={{ xs: "flex-start", sm: "center" }}
+            alignItems={{ xs: "flex-start", sm: "flex-start", md: "center" }}
             gap={3}
           >
             <Box>
@@ -182,12 +183,13 @@ const Conteudos = () => {
               }}
               onClick={() => navigate("/cadastrarconteudo")}
             >
-              Cadastrar Conteúdo
+              Novo Conteúdo
             </Button>
           </Stack>
         </Paper>
 
         {/* Seção de categorias mais discreta */}
+        {/* 
         <Paper
           elevation={0}
           sx={{
@@ -227,7 +229,9 @@ const Conteudos = () => {
             </Button>
           </Stack>
         </Paper>
+      */}
 
+        {/* 
         <Paper
           elevation={0}
           sx={{
@@ -267,6 +271,8 @@ const Conteudos = () => {
             </Button>
           </Stack>
         </Paper>
+
+        */}
 
         <Paper
           elevation={0}
@@ -308,6 +314,9 @@ const Conteudos = () => {
           </Stack>
         </Paper>
 
+
+        {/* 
+
         <Paper
           elevation={0}
           sx={{
@@ -347,6 +356,8 @@ const Conteudos = () => {
             </Button>
           </Stack>
         </Paper>
+
+                */}
 
         {/* Content Area */}
         {loading ? (
@@ -531,6 +542,7 @@ const Conteudos = () => {
                       >
                         {conteudo.titulo}
                       </Typography>
+                      {/* 
 
                       <Typography
                         variant="body2"
@@ -548,6 +560,7 @@ const Conteudos = () => {
                       >
                         {conteudo.descricao}
                       </Typography>
+                      */}
 
                       <Typography
                         variant="body2"
@@ -558,11 +571,13 @@ const Conteudos = () => {
                           fontSize: "0.85rem",
                         }}
                       >
-                        {conteudo.categoria?.nome || "Sem categoria"}
+                        {conteudo.subcategoria?.categoria?.nome || "Sem categoria"}
                       </Typography>
+                      {/* 
                       <Typography>
                         {conteudo.tags?.nome || "Sem tag cadastrada"}
                       </Typography>
+                        */}
                       <Stack direction="row" spacing={1} mb={3} flexWrap="wrap" gap={1}>
                         <Chip
                           label={conteudo.tipo}
@@ -586,7 +601,30 @@ const Conteudos = () => {
                             fontSize: "0.75rem",
                           }}
                         />
+                        <Chip
+                          label={conteudo.instrutores?.[0]?.instrutor?.nome || "Instrutor não definido"}
+                          size="small"
+                          variant="contained"
+                          sx={{
+                            borderColor: alpha(theme.palette.text.secondary, 0.25),
+                            backgroundColor: alpha(theme.palette.primary.light, 1),
+                            color: theme.palette.secondary.dark,
+                            fontWeight: "700",
+                            fontSize: "0.85rem",
+                          }}
+                        />
                       </Stack>
+                      <Box sx={{mb:3}} display="flex" alignItems="center" gap={1}>
+                        <Rating
+                          value={conteudo.rating}
+                          readOnly
+                          precision={0.5}
+                          size="small"
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {conteudo.rating.toFixed(1)}
+                        </Typography>
+                      </Box>
                       <Stack direction="row" spacing={2}>
                         <Tooltip title="Editar conteúdo" arrow>
                           <Button
