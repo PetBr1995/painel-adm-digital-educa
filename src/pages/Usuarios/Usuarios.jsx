@@ -112,18 +112,39 @@ const Usuarios = () => {
     }, []);
 
     // 🔹 Filtra usuários (inclui lógica segura do toLowerCase)
+    const normalizarTexto = (str) =>
+        (str || "")
+            .normalize("NFD") // remove acentos
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .trim();
+
+    const extrairNumeros = (str) =>
+        (str || "").replace(/\D/g, ""); // só dígitos
+
     const usuariosFiltrados = useMemo(() => {
-        const termoBusca = (busca || "").toLowerCase();
+        const termoBuscaTexto = normalizarTexto(busca);
+        const termoBuscaNumero = extrairNumeros(busca);
 
         return (usuarios || []).filter((usuario) => {
-            const nome = (usuario?.nome || "").toLowerCase();
-            const email = (usuario?.email || "").toLowerCase();
-            const celular = (usuario?.celular || "").toLowerCase();
+            const nome = normalizarTexto(usuario?.nome);
+            const email = normalizarTexto(usuario?.email);
+            const celularTexto = normalizarTexto(usuario?.celular);
+            const celularNumero = extrairNumeros(usuario?.celular);
 
-            const matchBusca =
-                nome.includes(termoBusca) ||
-                email.includes(termoBusca) ||
-                celular.includes(termoBusca);
+            // 🔍 match por texto (nome/email/celular como string)
+            const matchTexto =
+                !termoBuscaTexto || // se busca vazia, não bloqueia
+                nome.includes(termoBuscaTexto) ||
+                email.includes(termoBuscaTexto) ||
+                celularTexto.includes(termoBuscaTexto);
+
+            // 📱 match por número (ignora máscara)
+            const matchTelefone =
+                !termoBuscaNumero || // se usuário não digitou número, ignora isso
+                celularNumero.includes(termoBuscaNumero);
+
+            const matchBusca = matchTexto || matchTelefone;
 
             const assinaturaAtiva = temAssinaturaAtiva(usuario);
 
@@ -137,6 +158,7 @@ const Usuarios = () => {
             return matchBusca && matchStatus;
         });
     }, [usuarios, busca, filtroStatus]);
+
 
     // 🔢 Paginação
     const inicio = (pagina - 1) * porPagina;
@@ -412,8 +434,8 @@ const Usuarios = () => {
                                                         isSuperAdmin
                                                             ? "Superadmin não pode ser excluído"
                                                             : assinaturaAtiva
-                                                            ? "Não pode excluir usuário com matrícula ativa"
-                                                            : "Excluir usuário"
+                                                                ? "Não pode excluir usuário com matrícula ativa"
+                                                                : "Excluir usuário"
                                                     }
                                                     arrow
                                                 >
