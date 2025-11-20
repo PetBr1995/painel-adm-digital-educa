@@ -3,7 +3,6 @@ import {
     Delete,
     SearchOutlined,
     FilterList,
-    PeopleOutlined,
     PersonOutlined
 } from "@mui/icons-material";
 import {
@@ -34,7 +33,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import theme from "../../theme/theme";
 
@@ -45,7 +44,6 @@ const Usuarios = () => {
     const [pagina, setPagina] = useState(1);
     const porPagina = 10;
     const navigate = useNavigate();
-    const location = useLocation();
 
     const listarUsuarios = () => {
         axios
@@ -113,26 +111,31 @@ const Usuarios = () => {
         listarUsuarios();
     }, []);
 
-    // 🔹 Filtra e remove SUPERADMIN
+    // 🔹 Filtra usuários (inclui lógica segura do toLowerCase)
     const usuariosFiltrados = useMemo(() => {
-        return usuarios
-            .filter((usuario) => usuario.role !== "SUPERADMIN")
-            .filter((usuario) => {
-                const matchBusca =
-                    usuario.nome.toLowerCase().includes(busca.toLowerCase()) ||
-                    usuario.email.toLowerCase().includes(busca.toLowerCase());
+        const termoBusca = (busca || "").toLowerCase();
 
-                const assinaturaAtiva = temAssinaturaAtiva(usuario);
+        return (usuarios || []).filter((usuario) => {
+            const nome = (usuario?.nome || "").toLowerCase();
+            const email = (usuario?.email || "").toLowerCase();
+            const celular = (usuario?.celular || "").toLowerCase();
 
-                let matchStatus = true;
-                if (filtroStatus === "ativa") {
-                    matchStatus = assinaturaAtiva;
-                } else if (filtroStatus === "inativa") {
-                    matchStatus = !assinaturaAtiva;
-                }
+            const matchBusca =
+                nome.includes(termoBusca) ||
+                email.includes(termoBusca) ||
+                celular.includes(termoBusca);
 
-                return matchBusca && matchStatus;
-            });
+            const assinaturaAtiva = temAssinaturaAtiva(usuario);
+
+            let matchStatus = true;
+            if (filtroStatus === "ativa") {
+                matchStatus = assinaturaAtiva;
+            } else if (filtroStatus === "inativa") {
+                matchStatus = !assinaturaAtiva;
+            }
+
+            return matchBusca && matchStatus;
+        });
     }, [usuarios, busca, filtroStatus]);
 
     // 🔢 Paginação
@@ -143,9 +146,7 @@ const Usuarios = () => {
 
     const handleChangePage = (_, novaPagina) => setPagina(novaPagina);
 
-    const usuariosAtivos = usuariosFiltrados.filter((u) =>
-        temAssinaturaAtiva(u)
-    ).length;
+    const usuariosAtivos = usuariosFiltrados.filter((u) => temAssinaturaAtiva(u)).length;
     const usuariosInativos = usuariosFiltrados.length - usuariosAtivos;
 
     return (
@@ -174,19 +175,13 @@ const Usuarios = () => {
                     }}
                 >
                     <Box>
-                        <Typography
-                            variant="h4"
-                            sx={{
-                                fontWeight: 700,
-                                color: "#ffffff",
-                                mb: 1,
-                            }}
-                        >
+                        <Typography variant="h4" sx={{ fontWeight: 700, color: "#ffffff", mb: 1 }}>
                             Gerenciar Usuários
                         </Typography>
                         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                             Visualize e gerencie todos os usuários cadastrados
                         </Typography>
+
                         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                             <Chip
                                 label={`${usuariosFiltrados.length} usuários`}
@@ -226,19 +221,6 @@ const Usuarios = () => {
                             px: 4,
                             py: 1.5,
                             textTransform: "none",
-                            boxShadow: `0 4px 15px ${alpha(
-                                theme.palette.primary.main,
-                                0.3
-                            )}`,
-                            transition: "all 0.3s ease",
-                            "&:hover": {
-                                background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                                boxShadow: `0 6px 20px ${alpha(
-                                    theme.palette.primary.main,
-                                    0.4
-                                )}`,
-                                transform: "translateY(-2px)",
-                            },
                         }}
                     >
                         Novo Usuário
@@ -260,14 +242,7 @@ const Usuarios = () => {
                     )}, ${alpha(theme.palette.primary.main, 0.03)})`,
                 }}
             >
-                <Box
-                    sx={{
-                        display: "flex",
-                        gap: 3,
-                        flexWrap: "wrap",
-                        alignItems: "center",
-                    }}
-                >
+                <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", alignItems: "center" }}>
                     <TextField
                         placeholder="Buscar por nome ou email..."
                         variant="outlined"
@@ -289,12 +264,6 @@ const Usuarios = () => {
                             "& .MuiOutlinedInput-root": {
                                 borderRadius: 3,
                                 backgroundColor: theme.palette.secondary.dark,
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: "#FDBB30",
-                                },
-                                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: "#FDBB30",
-                                },
                             },
                         }}
                     />
@@ -308,27 +277,12 @@ const Usuarios = () => {
                                 setFiltroStatus(e.target.value);
                                 setPagina(1);
                             }}
-                            sx={{
-                                borderRadius: 2,
-                                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: "#FDBB30",
-                                },
-                            }}
                         >
                             <MenuItem value="todos">Todos os usuários</MenuItem>
                             <MenuItem value="ativa">Matrícula Ativa</MenuItem>
                             <MenuItem value="inativa">Matrícula Inativa</MenuItem>
                         </Select>
                     </FormControl>
-                </Box>
-
-                <Box sx={{ mt: 2 }}>
-                    <Chip
-                        icon={<FilterList />}
-                        label={`${usuariosFiltrados.length} usuário(s) encontrado(s)`}
-                        variant="outlined"
-                        sx={{ fontWeight: 600 }}
-                    />
                 </Box>
             </Paper>
 
@@ -343,15 +297,8 @@ const Usuarios = () => {
                         border: "2px dashed #e0e0e0",
                     }}
                 >
-                    <PersonOutlined
-                        sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
-                    />
-                    <Typography
-                        variant="h6"
-                        color="text.secondary"
-                        fontWeight={600}
-                        sx={{ mb: 1 }}
-                    >
+                    <PersonOutlined sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+                    <Typography variant="h6" color="text.secondary" fontWeight={600} sx={{ mb: 1 }}>
                         Nenhum usuário encontrado
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -369,14 +316,7 @@ const Usuarios = () => {
                 >
                     <TableContainer>
                         <Table>
-                            <TableHead
-                                sx={{
-                                    background: `linear-gradient(135deg, ${alpha(
-                                        theme.palette.primary.main,
-                                        0.08
-                                    )}, ${alpha(theme.palette.primary.main, 0.03)})`,
-                                }}
-                            >
+                            <TableHead>
                                 <TableRow
                                     sx={{
                                         "& th": {
@@ -388,15 +328,20 @@ const Usuarios = () => {
                                 >
                                     <TableCell>Usuário</TableCell>
                                     <TableCell>Email</TableCell>
-                                    <TableCell align="center">
-                                        Status da Matrícula
-                                    </TableCell>
+                                    <TableCell>Celular</TableCell>
+                                    <TableCell align="center">Status da Matrícula</TableCell>
                                     <TableCell align="center">Ações</TableCell>
                                 </TableRow>
                             </TableHead>
+
                             <TableBody>
                                 {exibidos.map((usuario, index) => {
                                     const assinaturaAtiva = temAssinaturaAtiva(usuario);
+
+                                    // 🔥 Lógica de SUPERADMIN
+                                    const isSuperAdmin =
+                                        (usuario?.role || "").toLowerCase() === "superadmin";
+
                                     return (
                                         <TableRow
                                             key={usuario.id}
@@ -411,17 +356,10 @@ const Usuarios = () => {
                                                             ? alpha(theme.palette.primary.light, 0.08)
                                                             : alpha(theme.palette.secondary.dark, 0.08),
                                                 },
-                                                transition: "background-color 0.2s ease",
                                             }}
                                         >
                                             <TableCell>
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        gap: 2,
-                                                    }}
-                                                >
+                                                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                                                     <Avatar
                                                         sx={{
                                                             width: 40,
@@ -429,25 +367,33 @@ const Usuarios = () => {
                                                             backgroundColor: assinaturaAtiva
                                                                 ? "#4caf50"
                                                                 : "#9e9e9e",
-                                                            fontSize: "0.9rem",
-                                                            fontWeight: 600,
                                                         }}
                                                     >
-                                                        {usuario.nome.charAt(0).toUpperCase()}
+                                                        {(usuario.nome || "?")
+                                                            .charAt(0)
+                                                            .toUpperCase()}
                                                     </Avatar>
-                                                    <Typography variant="body1" fontWeight={600}>
-                                                        {usuario.nome}
-                                                    </Typography>
+                                                    <Box>
+                                                        <Typography fontWeight={600}>
+                                                            {usuario.nome}
+                                                        </Typography>
+
+                                                        {/* badge superadmin */}
+                                                        {isSuperAdmin && (
+                                                            <Chip
+                                                                label="Superadmin"
+                                                                size="small"
+                                                                color="warning"
+                                                                sx={{ mt: 0.5, fontWeight: 600 }}
+                                                            />
+                                                        )}
+                                                    </Box>
                                                 </Box>
                                             </TableCell>
-                                            <TableCell>
-                                                <Typography
-                                                    variant="body2"
-                                                    color="#ffffff"
-                                                >
-                                                    {usuario.email}
-                                                </Typography>
-                                            </TableCell>
+
+                                            <TableCell>{usuario.email}</TableCell>
+                                            <TableCell>{usuario.celular}</TableCell>
+
                                             <TableCell align="center">
                                                 <Chip
                                                     label={
@@ -455,20 +401,18 @@ const Usuarios = () => {
                                                             ? "Matrícula Ativa"
                                                             : "Matrícula Inativa"
                                                     }
-                                                    color={
-                                                        assinaturaAtiva
-                                                            ? "success"
-                                                            : "default"
-                                                    }
+                                                    color={assinaturaAtiva ? "success" : "default"}
                                                     size="small"
-                                                    sx={{ fontWeight: 600 }}
                                                 />
                                             </TableCell>
+
                                             <TableCell align="center">
                                                 <Tooltip
                                                     title={
-                                                        assinaturaAtiva
-                                                            ? "Não é possível excluir usuário com matrícula ativa"
+                                                        isSuperAdmin
+                                                            ? "Superadmin não pode ser excluído"
+                                                            : assinaturaAtiva
+                                                            ? "Não pode excluir usuário com matrícula ativa"
                                                             : "Excluir usuário"
                                                     }
                                                     arrow
@@ -476,18 +420,17 @@ const Usuarios = () => {
                                                     <span>
                                                         <IconButton
                                                             color="error"
-                                                            disabled={assinaturaAtiva}
+                                                            disabled={assinaturaAtiva || isSuperAdmin}
                                                             onClick={() =>
                                                                 !assinaturaAtiva &&
+                                                                !isSuperAdmin &&
                                                                 excluirUsuario(usuario.id)
                                                             }
                                                             sx={{
-                                                                opacity: assinaturaAtiva ? 0.4 : 1,
-                                                                "&:hover": {
-                                                                    backgroundColor: assinaturaAtiva
-                                                                        ? "transparent"
-                                                                        : alpha("#f44336", 0.1),
-                                                                },
+                                                                opacity:
+                                                                    assinaturaAtiva || isSuperAdmin
+                                                                        ? 0.4
+                                                                        : 1,
                                                             }}
                                                         >
                                                             <Delete />
