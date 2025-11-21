@@ -31,10 +31,10 @@ const Categorias = () => {
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // SEUS STATES (AGORA COM MODAIS LINDOS)
+  // MODAIS
   const [showFormMoverCategoria, setShowFormMoverCategoria] = useState(false);
   const [showFormSubcategoria, setShowFormSubcategoria] = useState(false);
-  const [showFormTag, setShowFormTag] = useState(false)
+  const [showFormTag, setShowFormTag] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -50,6 +50,7 @@ const Categorias = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }),
       ]);
+
       setCategorias(catRes.data);
       setSubcategorias(subRes.data);
       setTags(tagRes.data);
@@ -87,27 +88,17 @@ const Categorias = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
-      if (type === "categoria") setCategorias(prev => prev.filter(c => c.id !== id));
-      if (type === "subcategoria") setSubcategorias(prev => prev.filter(s => s.id !== id));
-      if (type === "tag") setTags(prev => prev.filter(t => t.id !== id));
+      if (type === "categoria")
+        setCategorias((prev) => prev.filter((c) => c.id !== id));
+      if (type === "subcategoria")
+        setSubcategorias((prev) => prev.filter((s) => s.id !== id));
+      if (type === "tag")
+        setTags((prev) => prev.filter((t) => t.id !== id));
 
       Swal.fire("Excluído!", `${type} removido com sucesso.`, "success");
     } catch {
       Swal.fire("Erro", `Não foi possível excluir.`, "error");
     }
-  };
-
-  const getColor = (nome) => {
-    const cores = {
-      Programação: "#3b82f6",
-      Design: "#10b981",
-      Frontend: "#8b5cf6",
-      Backend: "#f59e0b",
-      Iniciante: "#10b981",
-      Avançado: "#f97316",
-      React: "#3b82f6",
-    };
-    return cores[nome] || "#6366f1";
   };
 
   const Card = ({ item, type }) => (
@@ -153,6 +144,13 @@ const Categorias = () => {
     </Paper>
   );
 
+  // FUNÇÃO PARA IGNORAR TAGS QUE TÊM APENAS NÚMEROS NO NOME
+  const filteredTags = tags.filter((tag) => {
+    const nome = String(tag.nome || "").trim();
+    // true se NÃO for só número
+    return !/^\d+$/.test(nome);
+  });
+
   // ABRE O MODAL CORRETO
   const openForm = () => {
     if (tab === 0) setShowFormMoverCategoria(true);
@@ -163,8 +161,6 @@ const Categorias = () => {
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <Container maxWidth="lg" sx={{ pt: 4, pb: 8 }}>
-
-
         {/* TABS */}
         <Tabs value={tab} onChange={(_, v) => setTab(v)} centered sx={{ mb: 4 }}>
           <Tab label="Categorias" />
@@ -185,7 +181,7 @@ const Categorias = () => {
                   Categorias
                 </Typography>
                 <Grid container spacing={3}>
-                  {categorias.map(cat => (
+                  {categorias.map((cat) => (
                     <Grid item xs={12} sm={6} md={4} key={cat.id}>
                       <Card item={cat} type="categoria" />
                     </Grid>
@@ -200,7 +196,7 @@ const Categorias = () => {
                   Subcategorias
                 </Typography>
                 <Grid container spacing={3}>
-                  {subcategorias.map(sub => (
+                  {subcategorias.map((sub) => (
                     <Grid item xs={12} sm={6} md={4} key={sub.id}>
                       <Card item={sub} type="subcategoria" />
                     </Grid>
@@ -215,7 +211,7 @@ const Categorias = () => {
                   Tags
                 </Typography>
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                  {tags.map(tag => (
+                  {filteredTags.map((tag) => (
                     <Chip
                       key={tag.id}
                       label={tag.nome}
@@ -236,7 +232,7 @@ const Categorias = () => {
           </>
         )}
 
-        {/* BOTÃO FLUTUANTE (IGUAL AO CONTEÚDOS) */}
+        {/* BOTÃO FLUTUANTE */}
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -251,7 +247,7 @@ const Categorias = () => {
             fontWeight: 600,
             bgcolor: theme.palette.primary.light,
             "&:hover": {
-              bgcolor:theme.palette.primary.dark
+              bgcolor: theme.palette.primary.dark,
             },
             zIndex: 1000,
           }}
@@ -261,7 +257,7 @@ const Categorias = () => {
           {tab === 2 && "Nova Tag"}
         </Button>
 
-        {/* MODAIS (IGUAIS AO CONTEÚDOS) */}
+        {/* MODAL CATEGORIA */}
         <Modal
           open={showFormMoverCategoria}
           onClose={() => setShowFormMoverCategoria(false)}
@@ -290,7 +286,7 @@ const Categorias = () => {
               <CadastrarCategorias
                 setForm={setShowFormMoverCategoria}
                 onCategoriaCadastrada={(nova) => {
-                  setCategorias(prev => [...prev, nova]);
+                  setCategorias((prev) => [...prev, nova]);
                   setShowFormMoverCategoria(false);
                   fetchData();
                 }}
@@ -299,6 +295,7 @@ const Categorias = () => {
           </Fade>
         </Modal>
 
+        {/* MODAL SUBCATEGORIA */}
         <Modal
           open={showFormSubcategoria}
           onClose={() => setShowFormSubcategoria(false)}
@@ -327,7 +324,7 @@ const Categorias = () => {
               <CadastrarSubcategoria
                 setFormSubcategoria={setShowFormSubcategoria}
                 onSuccess={(nova) => {
-                  setSubcategorias(prev => [...prev, nova]);
+                  setSubcategorias((prev) => [...prev, nova]);
                   setShowFormSubcategoria(false);
                   fetchData();
                 }}
@@ -336,6 +333,7 @@ const Categorias = () => {
           </Fade>
         </Modal>
 
+        {/* MODAL TAG */}
         <Modal
           open={showFormTag}
           onClose={() => setShowFormTag(false)}
@@ -364,7 +362,7 @@ const Categorias = () => {
               <CadastrarTag
                 setForm={setShowFormTag}
                 onTagCadastrada={(nova) => {
-                  setTags(prev => [...prev, nova]);
+                  setTags((prev) => [...prev, nova]);
                   fetchData();
                 }}
               />
