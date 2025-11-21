@@ -22,6 +22,7 @@ import Swal from "sweetalert2";
 import CadastrarCategorias from "../../components/CadastrarCategorias";
 import CadastrarSubcategoria from "../../components/CadastrarSubcategoria";
 import CadastrarTag from "../../components/CadastrarTag";
+import theme from "../../theme/theme";
 
 const Categorias = () => {
   const [tab, setTab] = useState(0);
@@ -123,7 +124,7 @@ const Categorias = () => {
       <Chip
         label={item.nome}
         sx={{
-          bgcolor: getColor(item.nome),
+          bgcolor: theme.palette.primary.dark,
           color: "white",
           fontWeight: 600,
           mb: 2,
@@ -162,43 +163,7 @@ const Categorias = () => {
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <Container maxWidth="lg" sx={{ pt: 4, pb: 8 }}>
-        {/* HEADER */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 4,
-            mb: 4,
-            borderRadius: 3,
-            background: `linear-gradient(135deg, ${alpha("#6366f1", 0.08)}, ${alpha("#6366f1", 0.02)})`,
-            border: `1px solid ${alpha("#6366f1", 0.2)}`,
-          }}
-        >
-          <Stack direction="row" alignItems="center" gap={2}>
-            <Box
-              sx={{
-                bgcolor: "#6366f1",
-                color: "white",
-                width: 48,
-                height: 48,
-                borderRadius: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-              }}
-            >
-              GE
-            </Box>
-            <Box>
-              <Typography variant="h5" fontWeight={700}>
-                Gestão Educacional
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Gerencie categorias, subcategorias e tags da plataforma
-              </Typography>
-            </Box>
-          </Stack>
-        </Paper>
+
 
         {/* TABS */}
         <Tabs value={tab} onChange={(_, v) => setTab(v)} centered sx={{ mb: 4 }}>
@@ -257,7 +222,7 @@ const Categorias = () => {
                       onDelete={() => handleDelete("tag", tag.id, tag.nome)}
                       deleteIcon={<Close />}
                       sx={{
-                        bgcolor: getColor(tag.nome),
+                        bgcolor: theme.palette.primary.dark,
                         color: "white",
                         fontWeight: 600,
                         height: 40,
@@ -284,11 +249,9 @@ const Categorias = () => {
             px: 4,
             py: 1.5,
             fontWeight: 600,
-            boxShadow: "0 8px 25px rgba(99,102,241,0.4)",
-            bgcolor: "#3b82f6",
+            bgcolor: theme.palette.primary.light,
             "&:hover": {
-              bgcolor: "#2563eb",
-              transform: "translateY(-2px)",
+              bgcolor:theme.palette.primary.dark
             },
             zIndex: 1000,
           }}
