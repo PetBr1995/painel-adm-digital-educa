@@ -350,6 +350,7 @@ const Dashboard = () => {
         </Grid>
 
         {/*Charts*/}
+
         <section style={{ display: "flex", justifyContent: "flex-start", gap: "2rem", alignItems: "center", flexWrap: "wrap" }}>
 
           <Paper

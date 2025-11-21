@@ -51,7 +51,7 @@ function App() {
           <Route path='search' element={<SearchResults />} />
           <Route path="cadastrarcurso" element={<CadastrarCurso />} />
           <Route path="cursos" element={<Cursos />} />
-          <Route path='dashboard' element={<Dashboard />} />
+          <Route path='dashboard' element={<PublicDashboard />} />
           <Route path="cadastrarinstrutor" element={<CadastroInstrutor />} />
           <Route path="relatorios" element={<div>Relatórios</div>} />
           <Route path="configuracoes" element={<div>Configurações</div>} />
