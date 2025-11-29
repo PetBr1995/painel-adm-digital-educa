@@ -122,17 +122,25 @@ export default function ConteudoForm() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const normalizedTags = (res.data || []).map((t) => ({
-          id: t._id ?? t.id ?? "",
-          nome: t.nome ?? t.name ?? "",
-        }));
+        const normalizedTags = (res.data || [])
+          .map((t) => ({
+            id: String(t._id ?? t.id ?? ""),
+            nome: String(t.nome ?? t.name ?? ""),
+          }))
+          // 🔥 Remove nomes numéricos e vazios
+          .filter((t) => {
+            const nome = t.nome.trim();
+            return nome !== "" && isNaN(Number(nome));
+          });
+
         setTags(normalizedTags);
-        console.log("tags carregadas:", normalizedTags);
       } catch (err) {
         console.error("Erro ao carregar tags:", err);
         setTags([]);
       }
     };
+
+    
 
     loadCategorias();
     loadSubcategorias();
@@ -528,17 +536,22 @@ export default function ConteudoForm() {
                     fullWidth
                     label="Selecione as tags"
                     value={tagsSelecionadas}
-                    onChange={(e) => setTagsSelecionadas(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // MUI às vezes passa string, às vezes array
+                      setTagsSelecionadas(
+                        typeof value === "string" ? value.split(",") : value
+                      );
+                    }}
                     SelectProps={{
                       multiple: true,
-                      displayEmpty: false,
                       renderValue: (selected) =>
                         selected?.length > 0
                           ? tags
-                            .filter(t => selected.includes(t.id))
-                            .map(t => `#${t.nome}`)
+                            .filter((t) => selected.includes(t.id))
+                            .map((t) => `#${t.nome}`)
                             .join(", ")
-                          : ""
+                          : "",
                     }}
                   >
                     {tags.map((tag) => (
@@ -548,6 +561,7 @@ export default function ConteudoForm() {
                       </MenuItem>
                     ))}
                   </TextField>
+
                 </Paper>
 
                 {/* Thumbnails */}
