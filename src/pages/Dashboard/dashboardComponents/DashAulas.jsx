@@ -263,10 +263,13 @@ const DashAulas = () => {
         const titulo =
             conteudo?.titulo || conteudo?.nome || "Título não informado";
         const categoria =
-            conteudo?.categoria ||
+            (typeof conteudo?.categoria === "string"
+                ? conteudo.categoria
+                : conteudo?.categoria?.nome) ||
             conteudo?.area ||
             conteudo?.categoriaNome ||
             "Categoria";
+
         const visualizacoes =
             conteudo?.visualizacoes ?? conteudo?.views ?? 0;
         const nota = conteudo?.notaMedia ?? conteudo?.rating ?? 0;

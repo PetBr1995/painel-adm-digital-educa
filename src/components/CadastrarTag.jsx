@@ -2,6 +2,8 @@ import { Box, Button, Grid, TextField, Typography, CircularProgress } from "@mui
 import axios from "axios";
 import { useState } from "react";
 
+const MAX_TAG_NOME = 100;
+
 const CadastrarTag = ({ 
   setForm,           // ← Padrão novo (Categorias)
   onTagCadastrada,   // ← Callback novo
@@ -25,7 +27,9 @@ const CadastrarTag = ({
   };
 
   const postTag = async () => {
-    if (!nome.trim()) {
+    const nomeSafe = nome.slice(0, MAX_TAG_NOME).trim();
+
+    if (!nomeSafe) {
       setError("O nome da tag é obrigatório.");
       return;
     }
@@ -35,19 +39,18 @@ const CadastrarTag = ({
 
     try {
       const response = await axios.post(
-        'https://api.digitaleduca.com.vc/tags',
-        { nome: nome.trim() },
+        "https://api.digitaleduca.com.vc/tags",
+        { nome: nomeSafe },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
 
       sucesso(response.data);
       setNome("");
       fechar();
-
     } catch (error) {
       const msg = error.response?.data?.message || "Erro ao cadastrar tag.";
       setError(msg);
@@ -75,10 +78,14 @@ const CadastrarTag = ({
             variant="outlined"
             fullWidth
             value={nome}
-            onChange={(e) => setNome(e.target.value)}
+            onChange={(e) => {
+              setNome(e.target.value.slice(0, MAX_TAG_NOME));
+              if (error) setError("");
+            }}
             disabled={loading}
             error={!!error}
-            helperText={error}
+            helperText={error || `${nome.length}/${MAX_TAG_NOME} caracteres`}
+            inputProps={{ maxLength: MAX_TAG_NOME }}
             onKeyDown={(e) => e.key === "Enter" && !loading && postTag()}
           />
         </Grid>

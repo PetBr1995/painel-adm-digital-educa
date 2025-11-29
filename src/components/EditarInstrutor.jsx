@@ -21,7 +21,11 @@ const EditarInstrutor = () => {
   const instrutorFromState = location.state?.instrutor;
 
   const id = instrutorFromState?._id || paramId;
-  const [instrutor, setInstrutor] = useState({ nome: "", formacao: "", sobre: "" });
+  const [instrutor, setInstrutor] = useState({
+    nome: "",
+    formacao: "",
+    sobre: "",
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,11 +60,25 @@ const EditarInstrutor = () => {
   }, [id, instrutorFromState, navigate]);
 
   const handleChange = (e) => {
-    setInstrutor({ ...instrutor, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    let limitedValue = value;
+    if (name === "nome" || name === "formacao") {
+      limitedValue = value.slice(0, 100);
+    }
+    if (name === "sobre") {
+      limitedValue = value.slice(0, 500);
+    }
+
+    setInstrutor((prev) => ({
+      ...prev,
+      [name]: limitedValue,
+    }));
   };
 
   const handleUpdate = async () => {
     const { nome, formacao, sobre } = instrutor;
+
     if (!nome || !formacao || !sobre) {
       Swal.fire("Atenção", "Preencha todos os campos antes de salvar.", "warning");
       return;
@@ -68,9 +86,17 @@ const EditarInstrutor = () => {
 
     try {
       setLoading(true);
+
+      // Segurança extra antes de mandar pro backend
+      const payload = {
+        nome: nome.slice(0, 100),
+        formacao: formacao.slice(0, 100),
+        sobre: sobre.slice(0, 500),
+      };
+
       await axios.put(
         `https://api.digitaleduca.com.vc/instrutor/update/${id}`,
-        { nome, formacao, sobre },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -90,7 +116,7 @@ const EditarInstrutor = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !instrutor.nome && !instrutor.formacao && !instrutor.sobre) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
         <CircularProgress />
@@ -154,6 +180,8 @@ const EditarInstrutor = () => {
             name="nome"
             value={instrutor.nome}
             onChange={handleChange}
+            inputProps={{ maxLength: 100 }}
+            helperText={`${instrutor.nome.length}/100 caracteres`}
             InputProps={{
               startAdornment: <Person sx={{ mr: 1, color: theme.palette.primary.main }} />,
             }}
@@ -165,6 +193,8 @@ const EditarInstrutor = () => {
             name="formacao"
             value={instrutor.formacao}
             onChange={handleChange}
+            inputProps={{ maxLength: 100 }}
+            helperText={`${instrutor.formacao.length}/100 caracteres`}
             InputProps={{
               startAdornment: <School sx={{ mr: 1, color: theme.palette.primary.main }} />,
             }}
@@ -178,6 +208,8 @@ const EditarInstrutor = () => {
             onChange={handleChange}
             multiline
             minRows={4}
+            inputProps={{ maxLength: 500 }}
+            helperText={`${instrutor.sobre.length}/500 caracteres`}
             InputProps={{
               startAdornment: <Info sx={{ mr: 1, color: theme.palette.primary.main }} />,
             }}

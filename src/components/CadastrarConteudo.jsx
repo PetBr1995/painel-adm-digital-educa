@@ -54,7 +54,7 @@ export default function ConteudoForm() {
   const [instrutores, setInstrutores] = useState([]);
   const [instrutoresSelecionados, setInstrutoresSelecionados] = useState([]);
 
-  // ⭐ NOVO: Estado para tags
+  // Estado para tags
   const [tags, setTags] = useState([]);
   const [tagsSelecionadas, setTagsSelecionadas] = useState([]);
 
@@ -85,7 +85,6 @@ export default function ConteudoForm() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-    
         setSubcategorias(res.data);
       } catch (err) {
         console.error("Erro ao carregar subcategorias:", err);
@@ -116,7 +115,7 @@ export default function ConteudoForm() {
       }
     };
 
-    // ⭐ NOVO: Carrega tags
+    // Carrega tags
     const loadTags = async () => {
       try {
         const res = await axios.get("https://api.digitaleduca.com.vc/tags", {
@@ -138,7 +137,7 @@ export default function ConteudoForm() {
     loadCategorias();
     loadSubcategorias();
     getInstrutores();
-    loadTags(); // ⭐ chama a função
+    loadTags();
   }, []);
 
   const subcategoriasFiltradas = subcategorias.filter((s) => s.categoriaId === (categoriaId || ""));
@@ -150,13 +149,35 @@ export default function ConteudoForm() {
     if (!descricao.trim()) return setStatus("Preencha a descrição.");
     if (!file) return setStatus("Selecione um vídeo introdutório!");
 
+    // categoria obrigatória
+    if (!categoriaId) {
+      setStatus("Selecione uma categoria.");
+      return;
+    }
+
+    // converte categoriaId para inteiro
+    const categoriaIdInt = parseInt(categoriaId, 10);
+    if (Number.isNaN(categoriaIdInt) || categoriaIdInt < 1) {
+      setStatus("Categoria inválida.");
+      return;
+    }
+
+    // se subcategoriaId vier preenchida, tenta converter também
+    const subcategoriaIdInt =
+      subcategoriaId && subcategoriaId !== ""
+        ? parseInt(subcategoriaId, 10)
+        : undefined;
+
     try {
       setLoading(true);
       setStatus("Criando conteúdo...");
       const token = localStorage.getItem("token");
 
       const tipoGratuito = gratuitoTipo?.toUpperCase() || "NENHUM";
-      const dataGratuita = tipoGratuito === "TEMPORARIO" && gratuitoDataFim ? gratuitoDataFim : null;
+      const dataGratuita =
+        tipoGratuito === "TEMPORARIO" && gratuitoDataFim
+          ? gratuitoDataFim
+          : null;
 
       const conteudoData = {
         titulo,
@@ -165,38 +186,44 @@ export default function ConteudoForm() {
         level,
         aprendizagem,
         requisitos,
-        subcategoriaId,
-        dataCriacao: dataCriacao,
+        categoriaId: categoriaIdInt,
+        ...(subcategoriaIdInt && { subcategoriaId: subcategoriaIdInt }),
+        dataCriacao,
         gratuitoTipo: tipoGratuito,
         ...(dataGratuita && { gratuitoAte: dataGratuita }),
         fileSize: file?.size,
       };
 
+      console.log("Payload de criação de conteúdo:", conteudoData);
+
       const formData = new FormData();
       for (const [key, value] of Object.entries(conteudoData)) {
-        if (value !== undefined && value !== null && value !== "")
+        if (value !== undefined && value !== null && value !== "") {
           formData.append(key, value);
+        }
       }
 
-      // Adiciona múltiplos instrutores
+      // múltiplos instrutores
       if (instrutoresSelecionados && instrutoresSelecionados.length > 0) {
         instrutoresSelecionados.forEach((id) => {
           formData.append("instrutorIds[]", id);
         });
       }
 
-      // ✅ Envia as tags no formato que o backend espera
+      // múltiplas tags
       if (tagsSelecionadas && tagsSelecionadas.length > 0) {
         tagsSelecionadas.forEach((tag) => {
           formData.append("tags[]", tag);
         });
       }
 
-
       // thumbnails
-      if (thumbnailDesktop) formData.append("thumbnailDesktop", thumbnailDesktop);
-      if (thumbnailMobile) formData.append("thumbnailMobile", thumbnailMobile);
-      if (thumbnailDestaque) formData.append("thumbnailDestaque", thumbnailDestaque);
+      if (thumbnailDesktop)
+        formData.append("thumbnailDesktop", thumbnailDesktop);
+      if (thumbnailMobile)
+        formData.append("thumbnailMobile", thumbnailMobile);
+      if (thumbnailDestaque)
+        formData.append("thumbnailDestaque", thumbnailDestaque);
 
       const response = await axios.post(
         "https://api.digitaleduca.com.vc/conteudos/create",
@@ -251,7 +278,9 @@ export default function ConteudoForm() {
             }, 1000);
           } catch (err) {
             console.error("Erro ao atualizar metadata:", err);
-            setStatus("Conteúdo criado, mas falhou ao atualizar metadata.");
+            setStatus(
+              "Conteúdo criado, mas falhou ao atualizar metadata."
+            );
             setLoading(false);
           }
         },
@@ -264,6 +293,7 @@ export default function ConteudoForm() {
       setLoading(false);
     }
   };
+
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 5 }}>
@@ -323,8 +353,30 @@ export default function ConteudoForm() {
                 <Paper elevation={3} sx={{ p: 4, borderRadius: 3, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }}>
                   <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>📝 Informações Básicas</Typography>
                   <Stack spacing={3}>
-                    <TextField fullWidth label="Título *" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
-                    <TextField fullWidth multiline rows={3} label="Descrição *" value={descricao} onChange={(e) => setDescricao(e.target.value)} />
+                    <TextField
+                      fullWidth
+                      label="Título *"
+                      value={titulo}
+                      onChange={(e) => {
+                        const value = e.target.value.slice(0, 100);
+                        setTitulo(value);
+                      }}
+                      inputProps={{ maxLength: 100 }}
+                      helperText={`${titulo.length}/100 caracteres`}
+                    />
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      label="Descrição *"
+                      value={descricao}
+                      onChange={(e) => {
+                        const value = e.target.value.slice(0, 500);
+                        setDescricao(value);
+                      }}
+                      inputProps={{ maxLength: 500 }}
+                      helperText={`${descricao.length}/500 caracteres`}
+                    />
                   </Stack>
                 </Paper>
 
@@ -336,8 +388,32 @@ export default function ConteudoForm() {
                 }}>
                   <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>🎯 Aprendizagem e Pré-requisitos</Typography>
                   <Stack spacing={3}>
-                    <TextField fullWidth multiline rows={3} label="O que o aluno vai aprender?" value={aprendizagem} onChange={(e) => setAprendizagem(e.target.value)} />
-                    <TextField fullWidth multiline rows={2} label="Pré-requisitos" value={requisitos} onChange={(e) => setRequisitos(e.target.value)} />
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      label="O que o aluno vai aprender?"
+                      value={aprendizagem}
+                      onChange={(e) => {
+                        const value = e.target.value.slice(0, 500);
+                        setAprendizagem(value);
+                      }}
+                      inputProps={{ maxLength: 500 }}
+                      helperText={`${aprendizagem.length}/500 caracteres`}
+                    />
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={2}
+                      label="Pré-requisitos"
+                      value={requisitos}
+                      onChange={(e) => {
+                        const value = e.target.value.slice(0, 500);
+                        setRequisitos(value);
+                      }}
+                      inputProps={{ maxLength: 500 }}
+                      helperText={`${requisitos.length}/500 caracteres`}
+                    />
                   </Stack>
                 </Paper>
 
@@ -360,7 +436,6 @@ export default function ConteudoForm() {
 
                     <Grid item xs={12}>
                       {/* Categoria */}
-
                       <TextField
                         select
                         fullWidth
@@ -388,17 +463,14 @@ export default function ConteudoForm() {
                         label="Subcategoria"
                         value={subcategoriaId || ""}
                         onChange={(e) => setSubcategoriaId(e.target.value ?? "")}
-                       
                         margin="normal"
                       >
                         <MenuItem value="">Selecione uma subcategoria...</MenuItem>
-                        {subcategorias
-                         
-                          .map((sub) => (
-                            <MenuItem key={sub.id} value={sub.id}>
-                              {sub.nome}
-                            </MenuItem>
-                          ))}
+                        {subcategorias.map((sub) => (
+                          <MenuItem key={sub.id} value={sub.id}>
+                            {sub.nome}
+                          </MenuItem>
+                        ))}
                       </TextField>
                     </Grid>
 
@@ -412,7 +484,7 @@ export default function ConteudoForm() {
                   </Grid>
                 </Paper>
 
-                {/* INSTRUTORES – AGORA IGUAL AOS OUTROS */}
+                {/* INSTRUTORES */}
                 <Paper elevation={3} sx={{ p: 4, borderRadius: 3, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }}>
                   <Typography variant="h6" fontWeight="700" sx={{ mb: 2 }}>
                     Instrutores
@@ -445,7 +517,7 @@ export default function ConteudoForm() {
                   </TextField>
                 </Paper>
 
-                {/* TAGS – AGORA IGUAL TAMBÉM */}
+                {/* TAGS */}
                 <Paper elevation={3} sx={{ p: 4, borderRadius: 3, border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}` }}>
                   <Typography variant="h6" fontWeight="700" sx={{ mb: 2 }}>
                     Tags

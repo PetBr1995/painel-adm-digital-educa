@@ -25,6 +25,9 @@ import {
 import { alpha } from "@mui/material/styles";
 import theme from "../theme/theme";
 
+const MAX_NOME = 100;
+const MAX_DESC = 500;
+
 const EditarPlano = ({ plano, setOpen, onUpdate }) => {
   const [nome, setNome] = useState("");
   const [preco, setPreco] = useState("");
@@ -56,9 +59,13 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
       return;
     }
 
+    // Segurança extra: corta os campos no submit
+    const nomeSafe = nome.slice(0, MAX_NOME).trim();
+    const descSafe = desc.slice(0, MAX_DESC).trim();
+
     const payload = {
-      nome,
-      descricao: desc,
+      nome: nomeSafe,
+      descricao: descSafe,
     };
 
     try {
@@ -142,15 +149,19 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
         </Alert>
       )}
 
+      {/* Nome (100 chars) */}
       <TextField
         type="text"
         label="Nome"
         fullWidth
         margin="normal"
         value={nome}
-        onChange={(e) => setNome(e.target.value)}
+        onChange={(e) => setNome(e.target.value.slice(0, MAX_NOME))}
         error={!!errors.nome}
-        helperText={errors.nome}
+        helperText={
+          errors.nome ? errors.nome : `${nome.length}/${MAX_NOME} caracteres`
+        }
+        inputProps={{ maxLength: MAX_NOME }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -160,6 +171,7 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
         }}
       />
 
+      {/* Preço (somente leitura) */}
       <TextField
         type="number"
         label="Preço"
@@ -176,6 +188,7 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
         }}
       />
 
+      {/* Descrição (500 chars) */}
       <TextField
         type="text"
         label="Descrição"
@@ -184,9 +197,12 @@ const EditarPlano = ({ plano, setOpen, onUpdate }) => {
         fullWidth
         margin="normal"
         value={desc}
-        onChange={(e) => setDesc(e.target.value)}
+        onChange={(e) => setDesc(e.target.value.slice(0, MAX_DESC))}
         error={!!errors.desc}
-        helperText={errors.desc}
+        helperText={
+          errors.desc ? errors.desc : `${desc.length}/${MAX_DESC} caracteres`
+        }
+        inputProps={{ maxLength: MAX_DESC }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">

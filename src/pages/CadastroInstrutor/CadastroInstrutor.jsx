@@ -36,10 +36,17 @@ const CadastroInstrutor = () => {
 
     setIsLoading(true);
 
+    // Garantia extra de limite antes de enviar
+    const payload = {
+      nome: nome.slice(0, 100),
+      formacao: formacao.slice(0, 100),
+      sobre: sobre.slice(0, 500),
+    };
+
     axios
       .post(
         "https://api.digitaleduca.com.vc/instrutor/create",
-        { nome, formacao, sobre },
+        payload,
         { headers: { Authorization: `bearer ${token}` } }
       )
       .then(() => {
@@ -115,29 +122,56 @@ const CadastroInstrutor = () => {
             <TextField
               label="Nome"
               value={nome}
-              onChange={(e) => setNome(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value.slice(0, 100);
+                setNome(value);
+              }}
               required
-              InputProps={{ startAdornment: <Person sx={{ mr: 1, color: theme.palette.primary.main }} /> }}
+              inputProps={{ maxLength: 100 }}
+              helperText={`${nome.length}/100 caracteres`}
+              InputProps={{
+                startAdornment: (
+                  <Person sx={{ mr: 1, color: theme.palette.primary.main }} />
+                )
+              }}
             />
 
             {/* Formação */}
             <TextField
               label="Formação"
               value={formacao}
-              onChange={(e) => setFormacao(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value.slice(0, 100);
+                setFormacao(value);
+              }}
               required
-              InputProps={{ startAdornment: <School sx={{ mr: 1, color: theme.palette.primary.main }} /> }}
+              inputProps={{ maxLength: 100 }}
+              helperText={`${formacao.length}/100 caracteres`}
+              InputProps={{
+                startAdornment: (
+                  <School sx={{ mr: 1, color: theme.palette.primary.main }} />
+                )
+              }}
             />
 
             {/* Sobre */}
             <TextField
               label="Sobre"
               value={sobre}
-              onChange={(e) => setSobre(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value.slice(0, 500);
+                setSobre(value);
+              }}
               required
               multiline
               rows={4}
-              InputProps={{ startAdornment: <Info sx={{ mr: 1, color: theme.palette.primary.main }} /> }}
+              inputProps={{ maxLength: 500 }}
+              helperText={`${sobre.length}/500 caracteres`}
+              InputProps={{
+                startAdornment: (
+                  <Info sx={{ mr: 1, color: theme.palette.primary.main }} />
+                )
+              }}
             />
 
             {/* Ações */}

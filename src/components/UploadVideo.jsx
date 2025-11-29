@@ -28,7 +28,7 @@ import {
   CloudUpload,
   Delete,
   CheckCircle,
-  Error,
+  Error as ErrorIcon,
   VideoFile,
   PlayArrow,
   FileUpload,
@@ -54,7 +54,7 @@ const UploadVideo = () => {
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-  const [alertSeverity, setAlertSeverity] = useState('success');
+  const [alertSeverity, setAlertSeverity] = useState("success");
 
   useEffect(() => {
     if (location.state?.conteudoId) {
@@ -63,14 +63,14 @@ const UploadVideo = () => {
       setCurso(location.state?.curso || null);
     } else {
       setMensagem("Conteúdo não encontrado.");
-      setAlertSeverity('error');
+      setAlertSeverity("error");
       setShowAlert(true);
     }
   }, [location.state]);
 
   const showMessage = (msg, isError = false) => {
     setMensagem(msg);
-    setAlertSeverity(isError ? 'error' : 'success');
+    setAlertSeverity(isError ? "error" : "success");
     setShowAlert(true);
   };
 
@@ -81,7 +81,6 @@ const UploadVideo = () => {
 
       video.onloadedmetadata = () => {
         window.URL.revokeObjectURL(video.src);
-        // arredonda para inteiro (segundos). Use Math.floor se preferir truncar.
         const durationSeconds = Math.round(video.duration);
         resolve(Number.isFinite(durationSeconds) ? durationSeconds : 0);
       };
@@ -98,24 +97,30 @@ const UploadVideo = () => {
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;
 
-    const videoFiles = selectedFiles.filter((file) => file.type.startsWith("video/"));
+    const videoFiles = selectedFiles.filter((file) =>
+      file.type.startsWith("video/")
+    );
     if (videoFiles.length !== selectedFiles.length) {
-      showMessage(`${selectedFiles.length - videoFiles.length} arquivo(s) não são vídeos e foram ignorados`, true);
+      showMessage(
+        `${
+          selectedFiles.length - videoFiles.length
+        } arquivo(s) não são vídeos e foram ignorados`,
+        true
+      );
     }
     if (videoFiles.length === 0) return;
 
     try {
       const newVideos = await Promise.all(
         videoFiles.map(async (file, index) => {
-          // pega duração como inteiro (segundos)
           const duracao = await getVideoDuration(file);
           return {
             id: Date.now() + index,
             file,
             titulo: file.name.replace(/\.[^/.]+$/, ""),
-            duracao, // inteiro em segundos
+            duracao,
             progress: 0,
-            status: "pending",
+            status: "pending"
           };
         })
       );
@@ -127,7 +132,6 @@ const UploadVideo = () => {
       showMessage("Erro ao processar a duração dos vídeos.", true);
     }
   };
-
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -160,9 +164,9 @@ const UploadVideo = () => {
             id: Date.now() + index,
             file,
             titulo: file.name.replace(/\.[^/.]+$/, ""),
-            duracao, // inteiro em segundos
+            duracao,
             progress: 0,
-            status: "pending",
+            status: "pending"
           };
         })
       );
@@ -175,7 +179,6 @@ const UploadVideo = () => {
     }
   };
 
-
   const handleRemoveVideo = (videoId) => {
     setVideos((prev) => prev.filter((video) => video.id !== videoId));
     showMessage("Vídeo removido da lista");
@@ -183,19 +186,25 @@ const UploadVideo = () => {
 
   const handleVideoTitleChange = (videoId, newTitle) => {
     setVideos((prev) =>
-      prev.map((video) => (video.id === videoId ? { ...video, titulo: newTitle } : video))
+      prev.map((video) =>
+        video.id === videoId ? { ...video, titulo: newTitle } : video
+      )
     );
   };
 
   const updateVideoProgress = (videoId, progress) => {
     setVideos((prev) =>
-      prev.map((video) => (video.id === videoId ? { ...video, progress } : video))
+      prev.map((video) =>
+        video.id === videoId ? { ...video, progress } : video
+      )
     );
   };
 
   const updateVideoStatus = (videoId, status) => {
     setVideos((prev) =>
-      prev.map((video) => (video.id === videoId ? { ...video, status } : video))
+      prev.map((video) =>
+        video.id === videoId ? { ...video, status } : video
+      )
     );
   };
 
@@ -212,7 +221,7 @@ const UploadVideo = () => {
         duracao: currentVideo.duracao,
         moduloId: moduloId || null,
         conteudoId,
-        fileSize: currentVideo.file.size,
+        fileSize: currentVideo.file.size
       };
 
       const token = localStorage.getItem("token");
@@ -223,8 +232,8 @@ const UploadVideo = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+            "Content-Type": "application/json"
+          }
         }
       );
 
@@ -238,7 +247,10 @@ const UploadVideo = () => {
       return new Promise((resolve, reject) => {
         const upload = new tus.Upload(currentVideo.file, {
           uploadUrl: vimeoUploadLink,
-          metadata: { filename: currentVideo.file.name, filetype: currentVideo.file.type },
+          metadata: {
+            filename: currentVideo.file.name,
+            filetype: currentVideo.file.type
+          },
           chunkSize: 100 * 1024 * 1024,
           onError: (err) => {
             console.error("Erro no upload:", err);
@@ -261,12 +273,15 @@ const UploadVideo = () => {
               updateVideoProgress(videoId, 100);
               resolve(currentVideo);
             } catch (metadataError) {
-              console.error("Erro ao atualizar metadados no Vimeo:", metadataError);
+              console.error(
+                "Erro ao atualizar metadados no Vimeo:",
+                metadataError
+              );
               updateVideoStatus(videoId, "success");
               updateVideoProgress(videoId, 100);
               resolve(currentVideo);
             }
-          },
+          }
         });
 
         upload.start();
@@ -280,7 +295,8 @@ const UploadVideo = () => {
 
   const handleSubmit = async () => {
     if (!conteudoId) return showMessage("Conteúdo não informado.", true);
-    if (videos.length === 0) return showMessage("Adicione pelo menos um vídeo.", true);
+    if (videos.length === 0)
+      return showMessage("Adicione pelo menos um vídeo.", true);
 
     const videosWithoutTitle = videos.filter((v) => !v.titulo.trim());
     if (videosWithoutTitle.length > 0) {
@@ -294,28 +310,28 @@ const UploadVideo = () => {
 
       for (const video of videosToUpload) {
         try {
-          await uploadSingleVideo(video.id); // Aguarda o envio de cada vídeo
+          await uploadSingleVideo(video.id);
         } catch (err) {
           console.error(`Erro ao enviar vídeo ${video.titulo}:`, err);
         }
       }
 
-
       const successCount = videos.filter((v) => v.status === "success").length;
       const errorCount = videos.filter((v) => v.status === "error").length;
 
-      if (successCount > 0) showMessage(`${successCount} vídeo(s) enviado(s) com sucesso!`);
-      if (errorCount > 0) showMessage(`${errorCount} vídeo(s) falharam no upload.`, true);
+      if (successCount > 0)
+        showMessage(`${successCount} vídeo(s) enviado(s) com sucesso!`);
+      if (errorCount > 0)
+        showMessage(`${errorCount} vídeo(s) falharam no upload.`, true);
 
-      // Aguardar um pouco antes de navegar para mostrar o feedback
       setTimeout(() => {
-        // Remove apenas os vídeos enviados com sucesso
         setVideos((prev) => prev.filter((v) => v.status !== "success"));
 
-        // Navegar de volta se todos foram enviados com sucesso
         if (errorCount === 0) {
-          navigate(moduloId ? "/modulos" : `/conteudos/${conteudoId}`,
-            moduloId ? { state: { curso } } : {});
+          navigate(
+            moduloId ? "/modulos" : `/conteudos/${conteudoId}`,
+            moduloId ? { state: { curso } } : {}
+          );
         }
       }, 1500);
     } catch (err) {
@@ -331,7 +347,7 @@ const UploadVideo = () => {
       case "success":
         return <CheckCircle color="success" />;
       case "error":
-        return <Error color="error" />;
+        return <ErrorIcon color="error" />;
       case "uploading":
         return <VideoFile color="primary" />;
       default:
@@ -357,25 +373,32 @@ const UploadVideo = () => {
   };
 
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return (
+      parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+    );
   };
 
   const getOverallProgress = () => {
     if (videos.length === 0) return 0;
-    const totalProgress = videos.reduce((sum, video) => sum + video.progress, 0);
+    const totalProgress = videos.reduce(
+      (sum, video) => sum + video.progress,
+      0
+    );
     return totalProgress / videos.length;
   };
 
   return (
-    <Box sx={{
-      minHeight: "100vh",
-      bgcolor: alpha(theme.palette.primary.main, 0.02),
-      py: 4
-    }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: alpha(theme.palette.primary.main, 0.02),
+        py: 4
+      }}
+    >
       <Container maxWidth="md">
         <Fade in timeout={300}>
           <Box>
@@ -391,22 +414,26 @@ const UploadVideo = () => {
                 sx={{
                   mb: 3,
                   borderRadius: 3,
-                  textTransform: 'none',
+                  textTransform: "none",
                   color: theme.palette.text.secondary,
-                  '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                  "&:hover": {
+                    bgcolor: alpha(theme.palette.primary.main, 0.08)
                   }
                 }}
               >
                 Voltar
               </Button>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                <Avatar sx={{
-                  bgcolor: theme.palette.primary.main,
-                  width: 56,
-                  height: 56
-                }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: theme.palette.primary.main,
+                    width: 56,
+                    height: 56
+                  }}
+                >
                   <Movie sx={{ fontSize: 28 }} />
                 </Avatar>
                 <Box>
@@ -430,19 +457,26 @@ const UploadVideo = () => {
               {videos.length > 0 && (
                 <Grid container spacing={3} sx={{ mb: 3 }}>
                   <Grid item xs={12} sm={4}>
-                    <Card sx={{
-                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                      color: 'white'
-                    }}>
-                      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: alpha('#fff', 0.2) }}>
+                    <Card
+                      sx={{
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                        color: "white"
+                      }}
+                    >
+                      <CardContent
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        <Avatar sx={{ bgcolor: alpha("#fff", 0.2) }}>
                           <VideoFile />
                         </Avatar>
                         <Box>
                           <Typography variant="h4" fontWeight="bold">
                             {videos.length}
                           </Typography>
-                          <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ opacity: 0.9 }}
+                          >
                             Vídeos
                           </Typography>
                         </Box>
@@ -451,19 +485,26 @@ const UploadVideo = () => {
                   </Grid>
 
                   <Grid item xs={12} sm={4}>
-                    <Card sx={{
-                      background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
-                      color: 'white'
-                    }}>
-                      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: alpha('#fff', 0.2) }}>
+                    <Card
+                      sx={{
+                        background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
+                        color: "white"
+                      }}
+                    >
+                      <CardContent
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        <Avatar sx={{ bgcolor: alpha("#fff", 0.2) }}>
                           <Folder />
                         </Avatar>
                         <Box>
                           <Typography variant="h6" fontWeight="bold">
                             {formatFileSize(getTotalSize())}
                           </Typography>
-                          <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ opacity: 0.9 }}
+                          >
                             Tamanho Total
                           </Typography>
                         </Box>
@@ -472,19 +513,26 @@ const UploadVideo = () => {
                   </Grid>
 
                   <Grid item xs={12} sm={4}>
-                    <Card sx={{
-                      background: `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`,
-                      color: 'white'
-                    }}>
-                      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: alpha('#fff', 0.2) }}>
+                    <Card
+                      sx={{
+                        background: `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`,
+                        color: "white"
+                      }}
+                    >
+                      <CardContent
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        <Avatar sx={{ bgcolor: alpha("#fff", 0.2) }}>
                           <CheckCircle />
                         </Avatar>
                         <Box>
                           <Typography variant="h4" fontWeight="bold">
-                            {videos.filter(v => v.status === 'success').length}
+                            {videos.filter((v) => v.status === "success").length}
                           </Typography>
-                          <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ opacity: 0.9 }}
+                          >
                             Concluídos
                           </Typography>
                         </Box>
@@ -497,7 +545,11 @@ const UploadVideo = () => {
               {/* Overall Progress */}
               {loading && (
                 <Box sx={{ mb: 3 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                  >
                     Progresso geral: {getOverallProgress().toFixed(1)}%
                   </Typography>
                   <LinearProgress
@@ -507,7 +559,7 @@ const UploadVideo = () => {
                       height: 8,
                       borderRadius: 4,
                       bgcolor: alpha(theme.palette.primary.main, 0.1),
-                      '& .MuiLinearProgress-bar': {
+                      "& .MuiLinearProgress-bar": {
                         borderRadius: 4,
                         background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
                       }
@@ -522,8 +574,11 @@ const UploadVideo = () => {
               elevation={0}
               sx={{
                 borderRadius: 4,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                overflow: 'hidden'
+                border: `1px solid ${alpha(
+                  theme.palette.primary.main,
+                  0.12
+                )}`,
+                overflow: "hidden"
               }}
             >
               <CardContent sx={{ p: 4 }}>
@@ -534,20 +589,20 @@ const UploadVideo = () => {
                     borderColor: isDragging
                       ? theme.palette.primary.main
                       : videos.length > 0
-                        ? theme.palette.success.main
-                        : alpha(theme.palette.primary.main, 0.3),
+                      ? theme.palette.success.main
+                      : alpha(theme.palette.primary.main, 0.3),
                     bgcolor: isDragging
                       ? alpha(theme.palette.primary.main, 0.08)
                       : videos.length > 0
-                        ? alpha(theme.palette.success.main, 0.04)
-                        : 'transparent',
+                      ? alpha(theme.palette.success.main, 0.04)
+                      : "transparent",
                     p: 4,
                     textAlign: "center",
                     borderRadius: 3,
                     mb: 4,
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer',
-                    '&:hover': {
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                    "&:hover": {
                       borderColor: theme.palette.primary.main,
                       bgcolor: alpha(theme.palette.primary.main, 0.04)
                     }
@@ -565,28 +620,37 @@ const UploadVideo = () => {
                     onChange={handleFileChange}
                   />
 
-                  <Avatar sx={{
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
-                    color: theme.palette.primary.main,
-                    width: 80,
-                    height: 80,
-                    mx: 'auto',
-                    mb: 2
-                  }}>
+                  <Avatar
+                    sx={{
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      color: theme.palette.primary.main,
+                      width: 80,
+                      height: 80,
+                      mx: "auto",
+                      mb: 2
+                    }}
+                  >
                     <CloudUpload sx={{ fontSize: 40 }} />
                   </Avatar>
 
-                  <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ mb: 1, fontWeight: 600 }}
+                  >
                     {isDragging
                       ? "Solte os arquivos aqui"
                       : videos.length > 0
-                        ? "Adicionar mais vídeos"
-                        : "Carregar vídeos"
-                    }
+                      ? "Adicionar mais vídeos"
+                      : "Carregar vídeos"}
                   </Typography>
 
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Arraste e solte arquivos de vídeo aqui ou clique para selecionar
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 3 }}
+                  >
+                    Arraste e solte arquivos de vídeo aqui ou clique para
+                    selecionar
                   </Typography>
 
                   <label htmlFor="video-upload">
@@ -599,7 +663,7 @@ const UploadVideo = () => {
                         borderRadius: 3,
                         px: 4,
                         py: 1.5,
-                        textTransform: 'none',
+                        textTransform: "none",
                         fontWeight: 600
                       }}
                     >
@@ -607,7 +671,11 @@ const UploadVideo = () => {
                     </Button>
                   </label>
 
-                  <Typography variant="caption" display="block" sx={{ mt: 2, color: 'text.secondary' }}>
+                  <Typography
+                    variant="caption"
+                    display="block"
+                    sx={{ mt: 2, color: "text.secondary" }}
+                  >
                     Formatos suportados: MP4, MOV, AVI, MKV
                   </Typography>
                 </Box>
@@ -615,52 +683,97 @@ const UploadVideo = () => {
                 {/* Videos List */}
                 {videos.length > 0 && (
                   <Box>
-                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ mb: 3, fontWeight: 600 }}
+                    >
                       Vídeos Selecionados ({videos.length})
                     </Typography>
 
-                    <List sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), borderRadius: 2 }}>
+                    <List
+                      sx={{
+                        bgcolor: alpha(
+                          theme.palette.primary.main,
+                          0.02
+                        ),
+                        borderRadius: 2
+                      }}
+                    >
                       {videos.map((video, index) => (
                         <React.Fragment key={video.id}>
                           <ListItem sx={{ p: 3 }}>
                             <Box sx={{ width: "100%" }}>
-                              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                                <Avatar sx={{
-                                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                  color: theme.palette.primary.main,
-                                  mr: 2
-                                }}>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  mb: 2
+                                }}
+                              >
+                                <Avatar
+                                  sx={{
+                                    bgcolor: alpha(
+                                      theme.palette.primary.main,
+                                      0.1
+                                    ),
+                                    color: theme.palette.primary.main,
+                                    mr: 2
+                                  }}
+                                >
                                   {getStatusIcon(video.status)}
                                 </Avatar>
 
                                 <Box sx={{ flex: 1 }}>
-                                  <Typography variant="subtitle1" fontWeight={600}>
+                                  <Typography
+                                    variant="subtitle1"
+                                    fontWeight={600}
+                                  >
                                     {video.file.name}
                                   </Typography>
-                                  <Typography variant="body2" color="text.secondary">
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
                                     {formatFileSize(video.file.size)}
                                   </Typography>
                                 </Box>
 
-                                <Stack direction="row" spacing={1} alignItems="center">
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  alignItems="center"
+                                >
                                   <Chip
                                     size="small"
-                                    label={video.status === 'pending' ? 'Aguardando' :
-                                      video.status === 'uploading' ? 'Enviando...' :
-                                        video.status === 'success' ? 'Concluído' : 'Erro'}
+                                    label={
+                                      video.status === "pending"
+                                        ? "Aguardando"
+                                        : video.status === "uploading"
+                                        ? "Enviando..."
+                                        : video.status === "success"
+                                        ? "Concluído"
+                                        : "Erro"
+                                    }
                                     color={getStatusColor(video.status)}
                                     variant="outlined"
                                   />
 
                                   <Tooltip title="Remover vídeo">
                                     <IconButton
-                                      onClick={() => handleRemoveVideo(video.id)}
-                                      disabled={video.status === "uploading"}
+                                      onClick={() =>
+                                        handleRemoveVideo(video.id)
+                                      }
+                                      disabled={
+                                        video.status === "uploading"
+                                      }
                                       size="small"
                                       sx={{
                                         color: theme.palette.error.main,
-                                        '&:hover': {
-                                          bgcolor: alpha(theme.palette.error.main, 0.1)
+                                        "&:hover": {
+                                          bgcolor: alpha(
+                                            theme.palette.error.main,
+                                            0.1
+                                          )
                                         }
                                       }}
                                     >
@@ -674,27 +787,55 @@ const UploadVideo = () => {
                                 fullWidth
                                 label={`Título do Vídeo ${index + 1}`}
                                 value={video.titulo}
-                                onChange={(e) => handleVideoTitleChange(video.id, e.target.value)}
-                                disabled={video.status === "uploading" || video.status === "success"}
+                                onChange={(e) =>
+                                  handleVideoTitleChange(
+                                    video.id,
+                                    e.target.value
+                                  )
+                                }
+                                disabled={
+                                  video.status === "uploading" ||
+                                  video.status === "success"
+                                }
                                 sx={{
                                   mb: 2,
-                                  '& .MuiOutlinedInput-root': {
-                                    borderRadius: 2,
+                                  "& .MuiOutlinedInput-root": {
+                                    borderRadius: 2
                                   }
                                 }}
                                 required
-                                error={!video.titulo.trim() && video.status !== "success"}
-                                helperText={!video.titulo.trim() && video.status !== "success" ? "Título é obrigatório" : ""}
+                                error={
+                                  !video.titulo.trim() &&
+                                  video.status !== "success"
+                                }
+                                helperText={
+                                  !video.titulo.trim() &&
+                                  video.status !== "success"
+                                    ? "Título é obrigatório"
+                                    : ""
+                                }
                                 placeholder="Digite um título descritivo para o vídeo"
                               />
 
                               {video.status === "uploading" && (
                                 <Box>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                    <Typography variant="body2" color="text.secondary">
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      mb: 1
+                                    }}
+                                  >
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                    >
                                       Enviando...
                                     </Typography>
-                                    <Typography variant="body2" color="text.secondary">
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                    >
                                       {video.progress.toFixed(1)}%
                                     </Typography>
                                   </Box>
@@ -704,8 +845,11 @@ const UploadVideo = () => {
                                     sx={{
                                       height: 8,
                                       borderRadius: 4,
-                                      bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                      '& .MuiLinearProgress-bar': {
+                                      bgcolor: alpha(
+                                        theme.palette.primary.main,
+                                        0.1
+                                      ),
+                                      "& .MuiLinearProgress-bar": {
                                         borderRadius: 4,
                                         background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
                                       }
@@ -733,21 +877,26 @@ const UploadVideo = () => {
                       mt: 4,
                       py: 2,
                       borderRadius: 3,
-                      textTransform: 'none',
+                      textTransform: "none",
                       fontWeight: 600,
-                      fontSize: '1.1rem',
+                      fontSize: "1.1rem",
                       background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                      '&:hover': {
-                        background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                      "&:hover": {
+                        background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`
                       },
-                      '&:disabled': {
-                        background: alpha(theme.palette.primary.main, 0.3)
+                      "&:disabled": {
+                        background: alpha(
+                          theme.palette.primary.main,
+                          0.3
+                        )
                       }
                     }}
                     onClick={handleSubmit}
                     disabled={loading || videos.length === 0}
                   >
-                    {loading ? "Enviando vídeos..." : `Enviar ${videos.length} Vídeo(s)`}
+                    {loading
+                      ? "Enviando vídeos..."
+                      : `Enviar ${videos.length} Vídeo(s)`}
                   </Button>
                 )}
               </CardContent>
@@ -758,7 +907,7 @@ const UploadVideo = () => {
               open={showAlert}
               autoHideDuration={5000}
               onClose={() => setShowAlert(false)}
-              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+              anchorOrigin={{ vertical: "top", horizontal: "center" }}
             >
               <Alert
                 onClose={() => setShowAlert(false)}

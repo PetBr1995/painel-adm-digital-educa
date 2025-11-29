@@ -18,26 +18,63 @@ const MoverCategoria = ({ showFormMoverCategoria, setShowFormMoverCategoria }) =
             try {
                 setLoading(true);
                 const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
 
-                const [categoriasRes, conteudosRes] = await Promise.all([
+                const [categoriasRes, conteudosFirstRes] = await Promise.all([
                     axios.get("https://api.digitaleduca.com.vc/categorias/list", {
-                        headers: { Authorization: `Bearer ${token}` },
+                        headers,
                     }),
-                    axios.get("https://api.digitaleduca.com.vc/conteudos", {
-                        headers: { Authorization: `Bearer ${token}` },
+                    axios.get("https://api.digitaleduca.com.vc/conteudos?page=1&limit=100", {
+                        headers,
                     }),
                 ]);
 
-                const categoriasData = Array.isArray(categoriasRes.data) ? categoriasRes.data : [];
-                const conteudosData = Array.isArray(conteudosRes.data) ? conteudosRes.data : [];
+                const categoriasData = Array.isArray(categoriasRes.data)
+                    ? categoriasRes.data
+                    : [];
+
+                const conteudosFirstRaw = conteudosFirstRes.data;
+                let conteudosData = Array.isArray(conteudosFirstRaw?.data)
+                    ? conteudosFirstRaw.data
+                    : Array.isArray(conteudosFirstRaw)
+                        ? conteudosFirstRaw
+                        : [];
+
+                const pagination = conteudosFirstRaw?.pagination;
+
+                if (pagination && pagination.totalPages && pagination.totalPages > 1) {
+                    const currentPage = pagination.page || 1;
+                    const totalPages = pagination.totalPages;
+                    const limit = pagination.limit || 100;
+
+                    const requests = [];
+                    for (let page = currentPage + 1; page <= totalPages; page++) {
+                        requests.push(
+                            axios.get(
+                                `https://api.digitaleduca.com.vc/conteudos?page=${page}&limit=${limit}`,
+                                { headers }
+                            )
+                        );
+                    }
+
+                    if (requests.length > 0) {
+                        const responses = await Promise.all(requests);
+                        responses.forEach((res) => {
+                            const raw = res.data;
+                            if (Array.isArray(raw?.data)) {
+                                conteudosData = conteudosData.concat(raw.data);
+                            } else if (Array.isArray(raw)) {
+                                conteudosData = conteudosData.concat(raw);
+                            }
+                        });
+                    }
+                }
 
                 setCategorias(categoriasData);
                 setConteudos(conteudosData);
 
                 console.log("Categorias carregadas:", categoriasData.length);
-                console.log("Conteúdos carregados:", conteudosData.length);
-                console.log("Exemplo de conteúdo:", conteudosData[0]);
-                console.log("Exemplo de categoria:", categoriasData[0]);
+                console.log("Conteúdos carregados (todas as páginas):", conteudosData.length);
             } catch (error) {
                 console.error("Erro ao carregar dados:", error);
                 Swal.fire({
@@ -55,13 +92,11 @@ const MoverCategoria = ({ showFormMoverCategoria, setShowFormMoverCategoria }) =
 
     const handleConteudoChange = (event) => {
         const value = event.target.value;
-        console.log("Conteúdo selecionado:", value);
         setConteudoId(value);
     };
 
     const handleCategoriaChange = (event) => {
         const value = event.target.value;
-        console.log("Categoria selecionada:", value);
         setNovaCategoriaId(value);
     };
 
@@ -93,11 +128,16 @@ const MoverCategoria = ({ showFormMoverCategoria, setShowFormMoverCategoria }) =
         try {
             const token = localStorage.getItem("token");
 
-            // Converter para números inteiros
-            const conteudoIdInt = Number(conteudoId);
-            const novaCategoriaIdInt = Number(novaCategoriaId);
+            console.log("Valores brutos do select:", {
+                conteudoId,
+                novaCategoriaId,
+                tipoConteudoId: typeof conteudoId,
+                tipoNovaCategoriaId: typeof novaCategoriaId,
+            });
 
-            // Validar se são números válidos
+            const conteudoIdInt = parseInt(conteudoId, 10);
+            const novaCategoriaIdInt = parseInt(novaCategoriaId, 10);
+
             if (isNaN(conteudoIdInt) || conteudoIdInt <= 0) {
                 Swal.fire({
                     icon: "error",
@@ -116,19 +156,22 @@ const MoverCategoria = ({ showFormMoverCategoria, setShowFormMoverCategoria }) =
                 return;
             }
 
-            const payload = { 
-                conteudoId: conteudoIdInt, 
-                novaCategoriaId: novaCategoriaIdInt 
+            const payload = {
+                conteudoId: conteudoIdInt,
+                novaCategoriaId: novaCategoriaIdInt,
             };
 
-            console.log("Tipo conteudoId:", typeof payload.conteudoId, payload.conteudoId);
-            console.log("Tipo novaCategoriaId:", typeof payload.novaCategoriaId, payload.novaCategoriaId);
-            console.log("Payload completo:", JSON.stringify(payload));
+            console.log("Payload FINAL enviado para mover-categoria:", payload);
 
             await axios.put(
-                `https://api.digitaleduca.com.vc/conteudos/mover-categoria`,
+                "https://api.digitaleduca.com.vc/conteudos/mover-categoria",
                 payload,
-                { headers: { Authorization: `Bearer ${token}` } }
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
             );
 
             Swal.fire({
@@ -142,12 +185,20 @@ const MoverCategoria = ({ showFormMoverCategoria, setShowFormMoverCategoria }) =
             setShowFormMoverCategoria(false);
         } catch (error) {
             console.error("Erro ao mover conteúdo:", error);
-            console.log("Response data:", error.response?.data);
-            const msg = error.response?.data?.message || "Erro ao mover o conteúdo.";
+            console.log("Response data bruta:", error.response?.data);
+
+            const backendMessage =
+                (Array.isArray(error.response?.data?.message)
+                    ? error.response.data.message.join(" | ")
+                    : error.response?.data?.message) ||
+                error.response?.data?.error ||
+                error.response?.data?.msg ||
+                "Erro ao mover o conteúdo.";
+
             Swal.fire({
                 icon: "error",
-                title: "Erro",
-                text: msg,
+                title: `Erro ${error.response?.status || ""}`,
+                text: backendMessage,
             });
         }
     };
@@ -183,7 +234,10 @@ const MoverCategoria = ({ showFormMoverCategoria, setShowFormMoverCategoria }) =
                                 </option>
                             ) : (
                                 conteudos.map((conteudo) => (
-                                    <option key={conteudo._id} value={conteudo.id || conteudo._id}>
+                                    <option
+                                        key={conteudo.id ?? conteudo._id}
+                                        value={conteudo.id ?? conteudo._id}
+                                    >
                                         {conteudo.titulo}
                                     </option>
                                 ))
@@ -207,7 +261,10 @@ const MoverCategoria = ({ showFormMoverCategoria, setShowFormMoverCategoria }) =
                                 </option>
                             ) : (
                                 categorias.map((categoria) => (
-                                    <option key={categoria._id} value={categoria.id || categoria._id}>
+                                    <option
+                                        key={categoria.id ?? categoria._id}
+                                        value={categoria.id ?? categoria._id}
+                                    >
                                         {categoria.nome}
                                     </option>
                                 ))

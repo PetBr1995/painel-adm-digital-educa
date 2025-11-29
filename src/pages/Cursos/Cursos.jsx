@@ -274,6 +274,8 @@ const Conteudos = () => {
 
         */}
 
+        {/*Mover categoria */}
+        {/*
         <Paper
           elevation={0}
           sx={{
@@ -313,6 +315,7 @@ const Conteudos = () => {
             </Button>
           </Stack>
         </Paper>
+                  */}
 
 
         {/* 
@@ -614,7 +617,7 @@ const Conteudos = () => {
                           }}
                         />
                       </Stack>
-                      <Box sx={{mb:3}} display="flex" alignItems="center" gap={1}>
+                      <Box sx={{ mb: 3 }} display="flex" alignItems="center" gap={1}>
                         <Rating
                           value={conteudo.rating}
                           readOnly

@@ -33,39 +33,13 @@ const Conteudo = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const [conteudo, setConteudo] = useState(null);
   const [modulos, setModulos] = useState([]);
   const [videosSoltos, setVideosSoltos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-
-  const isValidUrl = (string) => {
-    try {
-      new URL(string);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
   const editVideoTitle = async (videoId, moduloId) => {
-    const { value: newTitle } = await Swal.fire({
-      title: "Editar título do vídeo",
-      input: "text",
-      inputLabel: "Novo título",
-      inputPlaceholder: "Digite o novo título",
-      showCancelButton: true,
-      confirmButtonText: "Salvar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: theme.palette.primary.main,
-      inputValidator: (value) => {
-        if (!value || value.trim() === "") return "O título não pode estar vazio";
-      },
-    });
-
-    if (!newTitle) return;
-
     try {
-      // 1. Busca o vídeo atual
       const { data: videoAtual } = await axios.get(
         `https://api.digitaleduca.com.vc/video/${videoId}`,
         {
@@ -75,28 +49,26 @@ const Conteudo = () => {
         }
       );
 
-      // 2. Valida e corrige a URL
-      let urlValida = videoAtual.url?.trim();
+      const { value: newTitle } = await Swal.fire({
+        title: "Editar título do vídeo",
+        input: "text",
+        inputLabel: "Novo título",
+        inputValue: videoAtual.titulo || "",
+        inputPlaceholder: "Digite o novo título",
+        showCancelButton: true,
+        confirmButtonText: "Salvar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: theme.palette.primary.main,
+        inputValidator: (value) => {
+          if (!value || value.trim() === "") return "O título não pode estar vazio";
+        },
+      });
 
-      // Se não tiver URL válida, força uma URL temporária válida (ex: YouTube)
-      if (!urlValida || !isValidUrl(urlValida)) {
-        urlValida = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; // Vídeo temporário válido
-        // Ou use: "https://example.com/video-placeholder"
-      }
+      if (!newTitle) return;
 
-      // 3. Payload com URL válida
-      const payload = {
-        titulo: newTitle.trim(),
-        duracao: videoAtual.duracao || 0,
-        url: urlValida,
-        moduloId: videoAtual.moduloId || null,
-        conteudoId: videoAtual.conteudoId || parseInt(id),
-      };
-
-      // 4. Envia PATCH
       await axios.patch(
         `https://api.digitaleduca.com.vc/video/${videoId}`,
-        payload,
+        { titulo: newTitle.trim() },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -104,20 +76,21 @@ const Conteudo = () => {
         }
       );
 
-      // 5. Atualiza estado local
       const updateVideo = (videos) =>
-        videos.map((v) => (v.id === videoId ? { ...v, titulo: newTitle.trim() } : v));
+        videos.map((v) =>
+          v.id === videoId ? { ...v, titulo: newTitle.trim() } : v
+        );
 
       if (moduloId) {
         setModulos((prev) =>
           prev.map((mod) =>
             mod.id === moduloId
-              ? { ...mod, videos: updateVideo(mod.videos) }
+              ? { ...mod, videos: updateVideo(mod.videos || []) }
               : mod
           )
         );
       } else {
-        setVideosSoltos(updateVideo);
+        setVideosSoltos((prev) => updateVideo(prev));
       }
 
       Swal.fire({
@@ -128,12 +101,12 @@ const Conteudo = () => {
         showConfirmButton: false,
       });
     } catch (error) {
-      console.error("Erro ao editar título:", error);
+      console.error("Erro ao editar vídeo:", error.response?.data || error);
 
       const message =
         error.response?.data?.message?.[0] ||
         error.response?.data?.message ||
-        "Erro ao atualizar. Verifique a URL do vídeo.";
+        "Erro ao editar vídeo.";
 
       Swal.fire({
         title: "Erro",
@@ -144,7 +117,64 @@ const Conteudo = () => {
     }
   };
 
+  const deleteModulo = async (moduloId) => {
+    const modulo = modulos.find((m) => m.id === moduloId);
+    const hasVideos = modulo && modulo.videos && modulo.videos.length > 0;
 
+    const result = await Swal.fire({
+      title: "Deseja realmente deletar este módulo?",
+      text: hasVideos
+        ? "Este módulo possui vídeos vinculados. Ao deletar, TODOS os vídeos deste módulo também serão excluídos. Esta ação não pode ser desfeita."
+        : "Esta ação não pode ser desfeita.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: hasVideos ? "Sim, deletar módulo e vídeos" : "Sim, deletar módulo",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d32f2f",
+      cancelButtonColor: "#6c757d",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(
+        `https://api.digitaleduca.com.vc/modulo-conteudo/${moduloId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setModulos((prev) => prev.filter((m) => m.id !== moduloId));
+
+      Swal.fire({
+        title: "Deletado!",
+        text: hasVideos
+          ? "O módulo e todos os vídeos vinculados foram deletados com sucesso."
+          : "O módulo foi deletado com sucesso.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      const backend = error.response?.data;
+
+      let message =
+        (Array.isArray(backend?.message)
+          ? backend.message.join("\n")
+          : backend?.message) ||
+        backend?.error ||
+        "Erro ao deletar módulo.";
+
+      Swal.fire({
+        title: "Erro",
+        text: message,
+        icon: "error",
+        confirmButtonColor: theme.palette.primary.main,
+      });
+    }
+  };
 
   const fetchConteudo = async () => {
     setLoading(true);
@@ -154,15 +184,19 @@ const Conteudo = () => {
         { headers: { Authorization: "Bearer " + localStorage.getItem("token") } }
       );
 
-      const modulosAPI = response.data.modulos || response.data.módulos || [];
+      const data = response.data;
+
+      console.log("Conteúdo carregado:", data);
+
+      setConteudo(data);
+
+      const modulosAPI = data.modulos || [];
       setModulos(modulosAPI);
 
-      // Pega vídeos sem módulo
-      const todosVideos = response.data.videos || [];
-      const soltos = todosVideos.filter((video) => !video.moduloId);
-      setVideosSoltos(soltos);
+      const todosVideos = data.videos || [];
+      setVideosSoltos(todosVideos.filter((video) => !video.moduloId));
     } catch (error) {
-      console.error("Erro ao buscar módulos e vídeos:", error.response || error);
+      console.error("Erro ao buscar conteúdo:", error.response || error);
     } finally {
       setLoading(false);
     }
@@ -170,57 +204,70 @@ const Conteudo = () => {
 
   const deleteVideo = async (videoId, moduloId) => {
     const result = await Swal.fire({
-      title: "Deseja realmente deletar este vídeo?",
-      text: "Esta ação não pode ser desfeita",
+      title: "Excluir vídeo?",
+      text: "Esta ação não pode ser desfeita.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Sim, deletar",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "#d32f2f",
       cancelButtonColor: "#6c757d",
-      background: "#fff",
     });
 
     if (!result.isConfirmed) return;
 
     try {
+      const token = localStorage.getItem("token");
+
       await axios.delete(`https://api.digitaleduca.com.vc/video/${videoId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (moduloId) {
         setModulos((prev) =>
-          prev.map((modulo) =>
-            modulo.id === moduloId
-              ? { ...modulo, videos: modulo.videos.filter((v) => v.id !== videoId) }
-              : modulo
+          prev.map((mod) =>
+            mod.id === moduloId
+              ? {
+                  ...mod,
+                  videos: (mod.videos || []).filter(
+                    (v) => (v.id ?? v._id) !== videoId
+                  ),
+                }
+              : mod
           )
         );
       } else {
-        setVideosSoltos((prev) => prev.filter((v) => v.id !== videoId));
+        setVideosSoltos((prev) =>
+          prev.filter((v) => (v.id ?? v._id) !== videoId)
+        );
       }
 
       Swal.fire({
         title: "Deletado!",
-        text: "O vídeo foi deletado com sucesso.",
+        text: "O vídeo foi excluído com sucesso.",
         icon: "success",
-        timer: 2000,
+        timer: 1800,
         showConfirmButton: false,
       });
     } catch (error) {
-      console.error("Erro ao deletar vídeo:", error.response || error);
+      console.error("Erro ao deletar vídeo:", error.response?.data || error);
+
+      const backend = error.response?.data;
+      const message =
+        (Array.isArray(backend?.message)
+          ? backend.message.join("\n")
+          : backend?.message) ||
+        backend?.error ||
+        "Erro ao deletar vídeo.";
+
       Swal.fire({
         title: "Erro",
-        text: "Erro ao deletar vídeo. Tente novamente.",
+        text: message,
         icon: "error",
-        confirmButtonColor: theme.palette.primary.main,
+        confirmButtonColor: "#d32f2f",
       });
     }
   };
-
-  const getTotalVideos = () =>
-    modulos.reduce((total, m) => total + (m.videos?.length || 0), 0) +
-    videosSoltos.length;
 
   useEffect(() => {
     fetchConteudo();
@@ -232,41 +279,44 @@ const Conteudo = () => {
         <Card key={item} sx={{ mb: 3 }}>
           <CardContent>
             <Stack spacing={1}>
-              <Box
-                sx={{
-                  height: 32,
-                  bgcolor: alpha(theme.palette.grey[300], 0.4),
-                  mb: 1,
-                }}
-              />
-              <Box
-                sx={{
-                  height: 20,
-                  bgcolor: alpha(theme.palette.grey[300], 0.3),
-                  mb: 2,
-                }}
-              />
-              <Box
-                sx={{
-                  height: 60,
-                  bgcolor: alpha(theme.palette.grey[300], 0.2),
-                  borderRadius: 1,
-                  mb: 1,
-                }}
-              />
-              <Box
-                sx={{
-                  height: 60,
-                  bgcolor: alpha(theme.palette.grey[300], 0.2),
-                  borderRadius: 1,
-                }}
-              />
+              <Box sx={{ height: 32, bgcolor: alpha(theme.palette.grey[300], 0.4), mb: 1 }} />
+              <Box sx={{ height: 20, bgcolor: alpha(theme.palette.grey[300], 0.3), mb: 2 }} />
+              <Box sx={{ height: 60, bgcolor: alpha(theme.palette.grey[300], 0.2), borderRadius: 1, mb: 1 }} />
+              <Box sx={{ height: 60, bgcolor: alpha(theme.palette.grey[300], 0.2), borderRadius: 1 }} />
             </Stack>
           </CardContent>
         </Card>
       ))}
     </Box>
   );
+
+  const categoriaNome =
+    conteudo?.categoria?.nome ||
+    conteudo?.categoria?.title ||
+    "Sem categoria";
+
+  const subcategoriaNome =
+    conteudo?.subcategoria?.nome ||
+    conteudo?.subcategoria?.title ||
+    "Sem subcategoria";
+
+  const gratuitoTipoLabel = (() => {
+    if (!conteudo?.gratuitoTipo || conteudo.gratuitoTipo === "NENHUM") {
+      return "Conteúdo pago";
+    }
+    if (conteudo.gratuitoTipo === "PERMANENTE") {
+      return "Gratuito permanente";
+    }
+    if (conteudo.gratuitoTipo === "TEMPORARIO") {
+      if (conteudo.gratuitoAte) {
+        return `Gratuito até ${conteudo.gratuitoAte}`;
+      }
+      return "Gratuito temporariamente";
+    }
+    return conteudo.gratuitoTipo;
+  })();
+
+  const instrutores = conteudo?.instrutores || [];
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
@@ -285,56 +335,151 @@ const Conteudo = () => {
             Voltar aos conteúdos
           </Button>
 
-          {/* Cards de estatísticas */}
+          {/* Seção de informações do conteúdo */}
+          {conteudo && (
+            <Card
+              sx={{
+                mb: 4,
+                borderRadius: 3,
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+              }}
+            >
+              <CardContent>
+                <Stack spacing={2}>
+                  <Box>
+                    <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
+                      {conteudo.titulo}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {conteudo.descricao || "Sem descrição"}
+                    </Typography>
+                  </Box>
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Stack spacing={1}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Categoria
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          <Chip
+                            label={categoriaNome}
+                            color="primary"
+                            variant="outlined"
+                            size="small"
+                          />
+                          <Chip
+                            label={subcategoriaNome}
+                            variant="outlined"
+                            size="small"
+                            sx={{fontWeight:700, color:theme.palette.secondary.dark,bgcolor:theme.palette.primary.light}}
+                          />
+                        </Stack>
+                      </Stack>
+                    </Grid>
+                  
+                    <Grid item xs={12} md={6}>
+                      <Stack spacing={1}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Tipo e Nível
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          <Chip
+                            label={conteudo.tipo || "Sem tipo"}
+                            variant="outlined"
+                            size="small"
+                          />
+                          <Chip
+                            label={conteudo.level || "Nível não informado"}
+                            variant="outlined"
+                            size="small"
+                          />
+                          <Chip
+                            label={gratuitoTipoLabel}
+                            color={
+                              conteudo?.gratuitoTipo === "NENHUM"
+                                ? "default"
+                                : "success"
+                            }
+                            variant="outlined"
+                            size="small"
+                          />
+                        </Stack>
+                      </Stack>
+                    </Grid>
+
+                    {/* Instrutores */}
+                    <Grid item xs={12} md={6}>
+                      <Stack spacing={1}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Instrutores
+                        </Typography>
+                        {instrutores.length === 0 ? (
+                          <Typography variant="body2" color="text.secondary">
+                            Nenhum instrutor vinculado.
+                          </Typography>
+                        ) : (
+                          <Stack direction="row" spacing={1} flexWrap="wrap">
+                            {instrutores.map((item, idx) => {
+                              const nome =
+                                item.instrutor?.nome ||
+                                item.instrutor?.nomeCompleto ||
+                                item.instrutor?.name ||
+                                item.nome ||
+                                "Instrutor";
+                              return (
+                                <Chip
+                                  key={idx}
+                                  label={nome}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              );
+                            })}
+                          </Stack>
+                        )}
+                      </Stack>
+                    </Grid>
+                  </Grid>
+                </Stack>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Estatísticas */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
             <Grid item xs={12} sm={6} md={3}>
-              <Card
-                sx={{
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                  color: "white",
-                }}
-              >
+              <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`, color: "white" }}>
                 <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <Avatar sx={{ bgcolor: alpha("#fff", 0.2) }}>
                     <FolderOpen />
                   </Avatar>
                   <Box>
-                    <Typography variant="h4" fontWeight="bold">
-                      {loading ? "-" : modulos.length}
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Módulos
-                    </Typography>
+                    <Typography variant="h4" fontWeight="bold">{loading ? "-" : modulos.length}</Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>Módulos</Typography>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
 
             <Grid item xs={12} sm={6} md={3}>
-              <Card
-                sx={{
-                  background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
-                  color: "white",
-                }}
-              >
+              <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`, color: "white" }}>
                 <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <Avatar sx={{ bgcolor: alpha("#fff", 0.2) }}>
                     <VideoLibrary />
                   </Avatar>
                   <Box>
                     <Typography variant="h4" fontWeight="bold">
-                      {loading ? "-" : getTotalVideos()}
+                      {loading ? "-" : modulos.reduce((t, m) => t + (m.videos?.length || 0), 0) + videosSoltos.length}
                     </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Vídeos
-                    </Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>Vídeos</Typography>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
           </Grid>
 
-          {/* Botões de ação */}
+          {/* Botões */}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <Button
               startIcon={<Add />}
@@ -347,10 +492,6 @@ const Conteudo = () => {
                 color: theme.palette.primary.main,
                 px: 3,
                 py: 1.5,
-                "&:hover": {
-                  bgcolor: alpha(theme.palette.primary.main, 0.08),
-                  borderColor: theme.palette.primary.dark,
-                },
               }}
             >
               Criar Módulo
@@ -360,18 +501,12 @@ const Conteudo = () => {
               startIcon={<VideoCall />}
               variant="contained"
               size="large"
-              onClick={() =>
-                navigate("/upload-video", { state: { conteudoId: id, moduloId: null } })
-              }
+              onClick={() => navigate("/upload-video", { state: { conteudoId: id, moduloId: null } })}
               sx={{
                 borderRadius: 3,
                 px: 3,
                 py: 1.5,
                 fontWeight: 600,
-                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                "&:hover": {
-                  background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                },
               }}
             >
               Adicionar Vídeo
@@ -385,214 +520,107 @@ const Conteudo = () => {
         {loading ? (
           <LoadingSkeleton />
         ) : modulos.length === 0 ? (
-          <Card
-            sx={{
-              textAlign: "center",
-              py: 8,
-              background: `linear-gradient(135deg, ${alpha(
-                theme.palette.primary.main,
-                0.05
-              )}, ${alpha(theme.palette.secondary.main, 0.05)})`,
-            }}
-          >
+          <Card sx={{ textAlign: "center", py: 8 }}>
             <CardContent>
-              <FolderOpen
-                sx={{ fontSize: 80, color: theme.palette.grey[400], mb: 2 }}
-              />
-              <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                Nenhum módulo cadastrado
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Comece criando seu primeiro módulo
-              </Typography>
-              <Button
-                startIcon={<Add />}
-                variant="contained"
-                onClick={() =>
-                  navigate("/cadastromodulo", { state: { conteudoId: id } })
-                }
-                sx={{ borderRadius: 3 }}
-              >
-                Criar Primeiro Módulo
-              </Button>
+              <FolderOpen sx={{ fontSize: 80, color: theme.palette.grey[400], mb: 2 }} />
+              <Typography variant="h6" color="text.secondary">Nenhum módulo cadastrado</Typography>
             </CardContent>
           </Card>
         ) : (
           <Stack spacing={3}>
             {modulos.map((modulo, index) => (
               <Fade in timeout={300 + index * 100} key={modulo.id}>
-                <Card
-                  sx={{
-                    borderRadius: 3,
-                    border: `1px solid ${alpha(
-                      theme.palette.primary.main,
-                      0.12
-                    )}`,
-                    overflow: "hidden",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-2px)",
-                      boxShadow: theme.shadows[8],
-                      borderColor: alpha(theme.palette.primary.main, 0.3),
-                    },
-                  }}
-                >
+                <Card sx={{ borderRadius: 3, border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}` }}>
                   <CardContent sx={{ p: 0 }}>
-                    <Box
-                      sx={{
-                        p: 3,
-                        background: `linear-gradient(135deg, ${alpha(
-                          theme.palette.primary.main,
-                          0.08
-                        )}, ${alpha(theme.palette.secondary.main, 0.08)})`,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "flex-start",
-                          mb: 2,
-                        }}
-                      >
+                    <Box sx={{ p: 3, background: alpha(theme.palette.primary.main, 0.08) }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
                         <Box sx={{ flex: 1 }}>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: 600,
-                              color: theme.palette.text.primary,
-                              mb: 1,
-                            }}
-                          >
-                            {modulo.titulo}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ mb: 2 }}
-                          >
-                            {modulo.descricao || "Sem descrição"}
-                          </Typography>
+                          <Typography variant="h6" fontWeight={600}>{modulo.titulo}</Typography>
+                          <Typography variant="body2" color="text.secondary">{modulo.descricao || "Sem descrição"}</Typography>
                         </Box>
-                        <Chip
-                          label={`${modulo.videos?.length || 0} vídeos`}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
+
+                        <Chip label={`${modulo.videos?.length || 0} vídeos`} size="small" color="primary" />
                       </Box>
-                      <Button
-                        size="small"
-                        startIcon={<Add />}
-                        variant="contained"
-                        onClick={() =>
-                          navigate("/uploadvideomodulo", {
+
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          size="small"
+                          startIcon={<Add />}
+                          variant="contained"
+                          onClick={() => navigate("/uploadvideomodulo", {
                             state: { conteudoId: id, moduloId: modulo.id },
-                          })
-                        }
-                        sx={{
-                          borderRadius: 2,
-                          textTransform: "none",
-                          fontWeight: 500,
-                        }}
-                      >
-                        Adicionar Vídeo
-                      </Button>
+                          })}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          Adicionar Vídeo
+                        </Button>
+
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => navigate("/editar-modulo", { state: { modulo } })}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          Editar módulo
+                        </Button>
+
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          startIcon={<Delete />}
+                          onClick={() => deleteModulo(modulo.id)}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          Excluir módulo
+                        </Button>
+                      </Stack>
                     </Box>
 
-                    {/* Vídeos dentro do módulo */}
-                    {modulo.videos && modulo.videos.length > 0 ? (
+                    {modulo.videos?.length > 0 ? (
                       <Box sx={{ p: 2 }}>
                         <Stack spacing={2}>
-                          {modulo.videos.map((video, videoIndex) => (
-                            <Fade in timeout={500 + videoIndex * 100} key={video.id}>
-                              <Card
-                                variant="outlined"
-                                sx={{
-                                  borderRadius: 2,
-                                  transition: "all 0.2s ease",
-                                  "&:hover": {
-                                    bgcolor: alpha(theme.palette.primary.main, 0.04),
-                                    borderColor: alpha(theme.palette.primary.main, 0.2),
-                                  },
-                                }}
-                              >
-                                <CardContent sx={{ p: 2 }}>
-                                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                    <Avatar
-                                      sx={{
-                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                        color: theme.palette.primary.main,
-                                      }}
-                                    >
-                                      <PlayArrow />
-                                    </Avatar>
-                                    <Box sx={{ flex: 1 }}>
-                                      <Typography
-                                        variant="subtitle1"
-                                        sx={{ fontWeight: 500, mb: 0.5 }}
-                                      >
-                                        {video.titulo}
-                                      </Typography>
-                                      <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        sx={{ fontSize: "0.875rem" }}
-                                      >
-                                        {video.url ? "Link disponível" : "Sem link"}
-                                      </Typography>
-                                    </Box>
-                                    <Stack direction="row" spacing={1}>
-                                      <Button
-                                        size="small"
-                                        startIcon={<Watch />}
-                                        variant="outlined"
-                                        onClick={() =>
-                                          video.url && window.open(video.url, "_blank")
-                                        }
-                                        sx={{
-                                          borderRadius: 2,
-                                          textTransform: "none",
-                                          minWidth: "auto",
-                                          px: 2,
-                                        }}
-                                      >
-                                        Assistir
-                                      </Button>
-                                      <Button
-                                        size="small"
-                                        variant="outlined"
-                                        color="error"
-                                        onClick={() => deleteVideo(video.id, modulo.id)}
-                                      >
-                                        Deletar
-                                      </Button>
-                                    </Stack>
-                                  </Box>
-                                </CardContent>
-                              </Card>
-                            </Fade>
+                          {modulo.videos.map((video) => (
+                            <Card key={video.id} variant="outlined" sx={{ borderRadius: 2 }}>
+                              <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.15) }}>
+                                  <PlayArrow />
+                                </Avatar>
+
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="subtitle1">{video.titulo}</Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {video.url ? "Link disponível" : "Sem link"}
+                                  </Typography>
+                                </Box>
+
+                                <Stack direction="row" spacing={1}>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={() => editVideoTitle(video.id, modulo.id)}
+                                  >
+                                    Editar
+                                  </Button>
+
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="error"
+                                    onClick={() => deleteVideo(video.id, null)}
+                                  >
+                                    Deletar
+                                  </Button>
+                                </Stack>
+                              </CardContent>
+                            </Card>
                           ))}
                         </Stack>
                       </Box>
                     ) : (
-                      <Box
-                        sx={{
-                          p: 4,
-                          textAlign: "center",
-                          bgcolor: alpha(theme.palette.grey[500], 0.05),
-                        }}
-                      >
-                        <VideoLibrary
-                          sx={{
-                            fontSize: 48,
-                            color: theme.palette.grey[400],
-                            mb: 1,
-                          }}
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          Nenhum vídeo cadastrado neste módulo
-                        </Typography>
+                      <Box sx={{ p: 3, textAlign: "center" }}>
+                        <Typography color="text.secondary">Nenhum vídeo neste módulo</Typography>
                       </Box>
                     )}
                   </CardContent>
@@ -605,59 +633,35 @@ const Conteudo = () => {
         {/* Vídeos sem módulo */}
         {videosSoltos.length > 0 && (
           <Box sx={{ mt: 5 }}>
-            <Typography
-              variant="h5"
-              sx={{
-                mb: 3,
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
+            <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
               <VideoLibrary color="primary" /> Vídeos sem módulo
             </Typography>
             <Stack spacing={2}>
               {videosSoltos.map((video) => (
                 <Card key={video.id} variant="outlined" sx={{ borderRadius: 2 }}>
                   <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Avatar
-                      sx={{
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                        color: theme.palette.primary.main,
-                      }}
-                    >
+                    <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.15) }}>
                       <PlayArrow />
                     </Avatar>
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                        {video.titulo}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ fontSize: "0.875rem" }}
-                      >
+                      <Typography variant="subtitle1">{video.titulo}</Typography>
+                      <Typography variant="body2" color="text.secondary">
                         {video.url ? "Link disponível" : "Sem link"}
                       </Typography>
                     </Box>
+
                     <Stack direction="row" spacing={1}>
                       {video.url && (
                         <Button
                           size="small"
-                          startIcon={<Watch />}
                           variant="outlined"
+                          startIcon={<Watch />}
                           onClick={() => window.open(video.url, "_blank")}
-                          sx={{
-                            borderRadius: 2,
-                            textTransform: "none",
-                            minWidth: "auto",
-                            px: 2,
-                          }}
                         >
                           Assistir
                         </Button>
                       )}
+
                       <Button
                         size="small"
                         variant="outlined"
