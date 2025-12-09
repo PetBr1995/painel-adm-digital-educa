@@ -87,16 +87,16 @@ const theme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
-              borderColor: 'rgba(255, 184, 0, 0.2)',           // borda normal
+              borderColor:'rgba(255,255,255,0.4)',           // borda normal
               borderWidth: 1,
               borderRadius: 12,
             },
             '&:hover fieldset': {
-              borderColor: 'rgba(255,184,0,0.3)',           // hover
+              borderColor: 'rgba(255,255,255,0.6)',           // hover
 
             },
             '&.Mui-focused fieldset': {
-              borderColor: 'rgba(255,184,0,0.2)',           // ativo/focus
+              borderColor: 'rgba(255,255,255,0.2)',           // ativo/focus
               backgroundColor: 'rgba(30, 42, 70, 0.5)',
             },
 

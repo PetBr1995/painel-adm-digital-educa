@@ -184,25 +184,10 @@ const Login = () => {
                         gap: 3,
                         background: "rgba(18, 24, 41, 0.8)",
                         backdropFilter: "blur(10px)",
-                        border: "1px solid rgba(255, 184, 0, 0.1)",
-                        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                        boxShadow: "0 0 15px rgba(255,255,255,0.1)",
                         position: "relative",
                         zIndex: 1,
-                        overflow: "hidden",
-                        "&::before": {
-                            content: '""',
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: "2px",
-                            background: "linear-gradient(90deg, transparent, #FFB800, transparent)",
-                            animation: "shimmer 2s infinite",
-                        },
-                        "@keyframes shimmer": {
-                            "0%": { transform: "translateX(-100%)" },
-                            "100%": { transform: "translateX(100%)" },
-                        },
+                        overflow: "hidden"
                     }}
                 >
                     <Box sx={{ textAlign: "center" }}>
@@ -213,14 +198,14 @@ const Login = () => {
                             sx={{
                                 height: 60,
                                 mb: 2,
-                                transition: "transform 0.3s ease",
-                                "&:hover": { transform: "scale(1.05)" },
+                                display: "flex",
+                                justifyContent: "flex-start"
                             }}
                         />
                         <Typography
                             color="text.secondary"
                             variant="body1"
-                            sx={{ opacity: 0.8, fontSize: "0.95rem", letterSpacing: "0.5px" }}
+                            sx={{ textAlign: "start", opacity: 0.8, fontSize: "0.95rem", letterSpacing: "0.5px" }}
                         >
                             Acesse sua conta administrativa
                         </Typography>
@@ -236,15 +221,6 @@ const Login = () => {
                         helperText={errors.email}
                         required
                         disabled={loading}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <Email
-                                        sx={{ color: theme.palette.text.secondary, fontSize: 20 }}
-                                    />
-                                </InputAdornment>
-                            ),
-                        }}
                     />
 
                     <TextField
@@ -258,13 +234,6 @@ const Login = () => {
                         required
                         disabled={loading}
                         InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <Lock
-                                        sx={{ color: theme.palette.text.secondary, fontSize: 20 }}
-                                    />
-                                </InputAdornment>
-                            ),
                             endAdornment: (
                                 <InputAdornment position="end">
                                     <IconButton
@@ -291,7 +260,6 @@ const Login = () => {
                         type="submit"
                         variant="contained"
                         fullWidth
-                        disabled={loading || !validateEmail(email) || !validatePassword(senha)}
                         startIcon={
                             loading ? (
                                 <CircularProgress size={20} color="inherit" />
