@@ -30,6 +30,7 @@ import EditarConteudo from './pages/EditarCurso/EditarCurso';
 import UploadVideoIntrodutorio from './components/UploadVideoIntrodutorio';
 import PublicDashboard from './pages/Dashboard/PublicDashboard';
 import PublicLayout from './pages/PublicLayout/PublicLayout';
+import EditarUsuario from './components/EditarUsuario';
 
 
 function App() {
@@ -73,6 +74,7 @@ function App() {
           <Route path='/uploadvideomodulo' element={<UploadVideoModulo />} />
           <Route path='/uploadvideointrodutorio' element={<UploadVideoIntrodutorio />} />
           <Route path='/public-dashboard' element={<PublicDashboard />} />
+          <Route path='/editarusuario/:id' element={<EditarUsuario/>}/>
         </Route>
         <Route path='/testes' element={<ConteudoForm />} />
       </Routes>

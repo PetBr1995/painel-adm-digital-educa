@@ -19,6 +19,10 @@ import {
   Paper,
   Rating
 } from "@mui/material";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import SearchIcon from "@mui/icons-material/Search";
+
 import EditIcon from "@mui/icons-material/Edit";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import AddIcon from "@mui/icons-material/Add";
@@ -110,8 +114,45 @@ const Conteudos = () => {
     fetchData();
   }, []);
 
+
+
+  const [search, setSearch] = useState("");
+
+  const normalizar = (v = "") =>
+    String(v)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, ""); // remove acentos
+
+  const conteudosFiltrados = conteudos.filter((conteudo) => {
+    const termo = normalizar(search).trim();
+    if (!termo) return true;
+
+    const titulo = conteudo?.titulo ?? "";
+    const categoria = conteudo?.subcategoria?.categoria?.nome ?? "";
+    const instrutor = conteudo?.instrutores?.[0]?.instrutor?.nome ?? "";
+    const tipo = conteudo?.tipo ?? "";
+    const level = conteudo?.level ?? "";
+
+    // Ajuste aqui conforme o formato real das tags na sua API:
+    // Pode ser array de strings, array de objetos, etc.
+    const tags =
+      Array.isArray(conteudo?.tags)
+        ? conteudo.tags
+          .map((t) => (typeof t === "string" ? t : t?.nome ?? ""))
+          .join(" ")
+        : "";
+
+    const alvo = normalizar(
+      `${titulo} ${categoria} ${instrutor} ${tipo} ${level} ${tags}`
+    );
+
+    return alvo.includes(termo);
+  });
+
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", pb: 6 }}>
+
       <Container maxWidth="lg" sx={{ pt: { xs: 2, md: 4 } }}>
         {/* Header com design mais limpo */}
         <Paper
@@ -161,6 +202,25 @@ const Conteudos = () => {
                 {conteudos.length} {conteudos.length === 1 ? 'conteúdo' : 'conteúdos'} {conteudos.length === 1 ? 'cadastrado' : 'cadastrados'}
               </Typography>
             </Box>
+
+            <TextField
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Pesquisar conteúdos..."
+              size="medium"
+              sx={{
+                width: { xs: "100%", sm: 320, md: 360 },
+                "& .MuiOutlinedInput-root": { borderRadius: "12px" },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -462,7 +522,7 @@ const Conteudos = () => {
           </Paper>
         ) : (
           <Grid container spacing={4}>
-            {conteudos.map((conteudo, index) => (
+            {conteudosFiltrados.map((conteudo, index) => (
               <Grid item xs={12} sm={6} lg={4} key={conteudo.id}>
                 <Fade in timeout={300 + index * 100}>
                   <Card

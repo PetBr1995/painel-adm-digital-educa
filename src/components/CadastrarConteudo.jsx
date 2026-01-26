@@ -39,6 +39,7 @@ export default function ConteudoForm() {
   const [loading, setLoading] = useState(false);
   const [gratuito, setGratuito] = useState(false);
   const [dataCriacao, setDataCriacao] = useState("");
+  const [destaque, setDestaque] = useState(false);
 
   const [gratuitoTipo, setGratuitoTipo] = useState("nenhum");
   const [gratuitoDataInicio, setGratuitoDataInicio] = useState("");
@@ -191,6 +192,7 @@ export default function ConteudoForm() {
         titulo,
         descricao,
         tipo,
+        destaque,
         level,
         aprendizagem,
         requisitos,

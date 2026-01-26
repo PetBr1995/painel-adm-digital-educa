@@ -3,7 +3,8 @@ import {
     Delete,
     SearchOutlined,
     FilterList,
-    PersonOutlined
+    PersonOutlined,
+    Edit
 } from "@mui/icons-material";
 import {
     Box,
@@ -54,12 +55,15 @@ const Usuarios = () => {
             })
             .then((response) => {
                 setUsuarios(response.data);
+                console.log(response.data)
             })
             .catch((error) => {
                 console.error("❌ Erro ao listar usuários:", error);
                 Swal.fire("Erro", "Não foi possível carregar os usuários.", "error");
             });
     };
+
+
 
     const excluirUsuario = (id) => {
         Swal.fire({
@@ -435,8 +439,8 @@ const Usuarios = () => {
                                                         isSuperAdmin
                                                             ? "Superadmin não pode ser excluído"
                                                             : assinaturaAtiva
-                                                            ? "Não pode excluir usuário com plano ativo"
-                                                            : "Excluir usuário"
+                                                                ? "Não pode excluir usuário com plano ativo"
+                                                                : "Excluir usuário"
                                                     }
                                                     arrow
                                                 >
@@ -461,6 +465,44 @@ const Usuarios = () => {
                                                     </span>
                                                 </Tooltip>
                                             </TableCell>
+                                            <TableCell align="center">
+                                                <Tooltip title="Editar usuário" arrow>
+                                                    <IconButton
+                                                        color="primary"
+                                                        onClick={() => navigate(`/editarusuario/${usuario.id}`, {state: {usuario}})}
+                                                        sx={{ mr: 1 }}
+                                                    >
+                                                        <Edit />
+                                                    </IconButton>
+                                                </Tooltip>
+
+                                                <Tooltip
+                                                    title={
+                                                        isSuperAdmin
+                                                            ? "Superadmin não pode ser excluído"
+                                                            : assinaturaAtiva
+                                                                ? "Não pode excluir usuário com plano ativo"
+                                                                : "Excluir usuário"
+                                                    }
+                                                    arrow
+                                                >
+                                                    <span>
+                                                        <IconButton
+                                                            color="error"
+                                                            disabled={assinaturaAtiva || isSuperAdmin}
+                                                            onClick={() =>
+                                                                !assinaturaAtiva && !isSuperAdmin && excluirUsuario(usuario.id)
+                                                            }
+                                                            sx={{
+                                                                opacity: assinaturaAtiva || isSuperAdmin ? 0.4 : 1,
+                                                            }}
+                                                        >
+                                                            <Delete />
+                                                        </IconButton>
+                                                    </span>
+                                                </Tooltip>
+                                            </TableCell>
+
                                         </TableRow>
                                     );
                                 })}
