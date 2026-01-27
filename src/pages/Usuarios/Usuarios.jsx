@@ -1,11 +1,4 @@
-import {
-    Add,
-    Delete,
-    SearchOutlined,
-    FilterList,
-    PersonOutlined,
-    Edit
-} from "@mui/icons-material";
+import { Add, Delete, SearchOutlined, PersonOutlined, Edit } from "@mui/icons-material";
 import {
     Box,
     Table,
@@ -30,7 +23,7 @@ import {
     Avatar,
     IconButton,
     Pagination,
-    Divider
+    Divider,
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState, useMemo } from "react";
@@ -42,7 +35,9 @@ const Usuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
     const [busca, setBusca] = useState("");
     const [filtroStatus, setFiltroStatus] = useState("todos");
+    const [ordenacao, setOrdenacao] = useState("mais_recente"); // ✅ novo
     const [pagina, setPagina] = useState(1);
+
     const porPagina = 10;
     const navigate = useNavigate();
 
@@ -55,15 +50,13 @@ const Usuarios = () => {
             })
             .then((response) => {
                 setUsuarios(response.data);
-                console.log(response.data)
+                console.log(response.data);
             })
             .catch((error) => {
                 console.error("❌ Erro ao listar usuários:", error);
                 Swal.fire("Erro", "Não foi possível carregar os usuários.", "error");
             });
     };
-
-
 
     const excluirUsuario = (id) => {
         Swal.fire({
@@ -78,20 +71,13 @@ const Usuarios = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 axios
-                    .delete(
-                        `https://api.digitaleduca.com.vc/usuario/admin/usuarios/${id}`,
-                        {
-                            headers: {
-                                Authorization: `Bearer ${localStorage.getItem("token")}`,
-                            },
-                        }
-                    )
+                    .delete(`https://api.digitaleduca.com.vc/usuario/admin/usuarios/${id}`, {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        },
+                    })
                     .then(() => {
-                        Swal.fire(
-                            "Excluído!",
-                            "O usuário foi excluído com sucesso.",
-                            "success"
-                        );
+                        Swal.fire("Excluído!", "O usuário foi excluído com sucesso.", "success");
                         listarUsuarios();
                     })
                     .catch((error) => {
@@ -118,20 +104,41 @@ const Usuarios = () => {
     // 🔹 Helpers de busca
     const normalizarTexto = (str) =>
         (str || "")
-            .normalize("NFD") // remove acentos
+            .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .toLowerCase()
             .trim();
 
-    const extrairNumeros = (str) =>
-        (str || "").replace(/\D/g, ""); // só dígitos
+    const extrairNumeros = (str) => (str || "").replace(/\D/g, "");
 
-    // 🔹 Filtro com busca por texto e telefone (com/sem máscara)
+    // 🔹 Comparador para "mais recente"
+    const getTimestampUsuario = (u) => {
+        // tenta campos comuns
+        const raw =
+            u?.createdAt ||
+            u?.created_at ||
+            u?.dataCadastro ||
+            u?.data_cadastro ||
+            u?.created ||
+            null;
+
+        const t = raw ? new Date(raw).getTime() : NaN;
+        if (!Number.isNaN(t)) return t;
+
+        // fallback: id numérico (se fizer sentido no teu backend)
+        const idNum = Number(u?.id);
+        if (!Number.isNaN(idNum)) return idNum;
+
+        // fallback final
+        return 0;
+    };
+
+    // 🔹 Filtro + ordenação
     const usuariosFiltrados = useMemo(() => {
         const termoBuscaTexto = normalizarTexto(busca);
         const termoBuscaNumero = extrairNumeros(busca);
 
-        return (usuarios || []).filter((usuario) => {
+        const filtrados = (usuarios || []).filter((usuario) => {
             const nome = normalizarTexto(usuario?.nome);
             const email = normalizarTexto(usuario?.email);
             const celularTexto = normalizarTexto(usuario?.celular);
@@ -139,33 +146,33 @@ const Usuarios = () => {
 
             const matchTexto =
                 termoBuscaTexto &&
-                (
-                    nome.includes(termoBuscaTexto) ||
+                (nome.includes(termoBuscaTexto) ||
                     email.includes(termoBuscaTexto) ||
-                    celularTexto.includes(termoBuscaTexto)
-                );
+                    celularTexto.includes(termoBuscaTexto));
 
-            const matchTelefone =
-                termoBuscaNumero &&
-                celularNumero.includes(termoBuscaNumero);
+            const matchTelefone = termoBuscaNumero && celularNumero.includes(termoBuscaNumero);
 
-            const matchBusca =
-                matchTexto ||
-                matchTelefone ||
-                (!termoBuscaTexto && !termoBuscaNumero); // sem busca -> mostra todos
+            const matchBusca = matchTexto || matchTelefone || (!termoBuscaTexto && !termoBuscaNumero);
 
             const assinaturaAtiva = temAssinaturaAtiva(usuario);
 
             let matchStatus = true;
-            if (filtroStatus === "ativa") {
-                matchStatus = assinaturaAtiva;
-            } else if (filtroStatus === "inativa") {
-                matchStatus = !assinaturaAtiva; // aqui continuam sendo os "free"
-            }
+            if (filtroStatus === "ativa") matchStatus = assinaturaAtiva;
+            if (filtroStatus === "inativa") matchStatus = !assinaturaAtiva;
 
             return matchBusca && matchStatus;
         });
-    }, [usuarios, busca, filtroStatus]);
+
+        // ✅ Ordenação: mais recente primeiro
+        const ordenados = [...filtrados].sort((a, b) => {
+            const ta = getTimestampUsuario(a);
+            const tb = getTimestampUsuario(b);
+            if (ordenacao === "mais_recente") return tb - ta;
+            return ta - tb; // caso você queira adicionar "mais_antigo" depois
+        });
+
+        return ordenados;
+    }, [usuarios, busca, filtroStatus, ordenacao]);
 
     // 🔢 Paginação
     const inicio = (pagina - 1) * porPagina;
@@ -178,16 +185,26 @@ const Usuarios = () => {
     const usuariosAtivos = usuariosFiltrados.filter((u) => temAssinaturaAtiva(u)).length;
     const usuariosFree = usuariosFiltrados.length - usuariosAtivos;
 
+    const formatarData = (data) => {
+        if (!data) return "-";
+
+        return new Date(data).toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
+    }
+
     return (
         <Container sx={{ py: 4, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
             {/* Header */}
             <Paper
                 elevation={0}
                 sx={{
-                    background: `linear-gradient(135deg, ${alpha(
+                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(
                         theme.palette.primary.main,
-                        0.08
-                    )}, ${alpha(theme.palette.primary.main, 0.03)})`,
+                        0.03
+                    )})`,
                     borderRadius: 3,
                     p: 4,
                     mb: 4,
@@ -265,10 +282,10 @@ const Usuarios = () => {
                     mb: 3,
                     borderRadius: 3,
                     border: `1px solid ${alpha(theme.palette.primary.light, 0.2)}`,
-                    background: `linear-gradient(135deg, ${alpha(
+                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(
                         theme.palette.primary.main,
-                        0.08
-                    )}, ${alpha(theme.palette.primary.main, 0.03)})`,
+                        0.03
+                    )})`,
                 }}
             >
                 <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", alignItems: "center" }}>
@@ -310,6 +327,24 @@ const Usuarios = () => {
                             <MenuItem value="todos">Todos os usuários</MenuItem>
                             <MenuItem value="ativa">Plano Ativo</MenuItem>
                             <MenuItem value="inativa">Plano Free</MenuItem>
+                        </Select>
+                    </FormControl>
+
+                    {/* ✅ NOVO SELECT: ordenação por mais recente */}
+                    <FormControl sx={{ minWidth: 200 }}>
+                        <InputLabel>Ordenar</InputLabel>
+                        <Select
+                            value={ordenacao}
+                            label="Ordenar"
+                            onChange={(e) => {
+                                setOrdenacao(e.target.value);
+                                setPagina(1);
+                            }}
+                        >
+                            <MenuItem value="mais_recente">Mais recente</MenuItem>
+                            {/* se quiser depois:
+              <MenuItem value="mais_antigo">Mais antigo</MenuItem>
+              */}
                         </Select>
                     </FormControl>
                 </Box>
@@ -356,6 +391,7 @@ const Usuarios = () => {
                                     }}
                                 >
                                     <TableCell>Usuário</TableCell>
+                                    <TableCell>Data</TableCell>
                                     <TableCell>Email</TableCell>
                                     <TableCell>Celular</TableCell>
                                     <TableCell align="center">Plano</TableCell>
@@ -366,8 +402,7 @@ const Usuarios = () => {
                             <TableBody>
                                 {exibidos.map((usuario, index) => {
                                     const assinaturaAtiva = temAssinaturaAtiva(usuario);
-                                    const isSuperAdmin =
-                                        (usuario?.role || "").toLowerCase() === "superadmin";
+                                    const isSuperAdmin = (usuario?.role || "").toLowerCase() === "superadmin";
 
                                     return (
                                         <TableRow
@@ -391,19 +426,13 @@ const Usuarios = () => {
                                                         sx={{
                                                             width: 40,
                                                             height: 40,
-                                                            backgroundColor: assinaturaAtiva
-                                                                ? "#4caf50"
-                                                                : "#9e9e9e",
+                                                            backgroundColor: assinaturaAtiva ? "#4caf50" : "#9e9e9e",
                                                         }}
                                                     >
-                                                        {(usuario.nome || "?")
-                                                            .charAt(0)
-                                                            .toUpperCase()}
+                                                        {(usuario.nome || "?").charAt(0).toUpperCase()}
                                                     </Avatar>
                                                     <Box>
-                                                        <Typography fontWeight={600}>
-                                                            {usuario.nome}
-                                                        </Typography>
+                                                        <Typography fontWeight={600}>{usuario.nome}</Typography>
 
                                                         {isSuperAdmin && (
                                                             <Chip
@@ -417,16 +446,14 @@ const Usuarios = () => {
                                                 </Box>
                                             </TableCell>
 
+                                            <TableCell sx={{fontWeight:"bolder",color:theme.palette.primary.light}}>{formatarData(usuario.createdAt)}</TableCell>
+
                                             <TableCell>{usuario.email}</TableCell>
                                             <TableCell>{usuario.celular}</TableCell>
 
                                             <TableCell align="center">
                                                 <Chip
-                                                    label={
-                                                        assinaturaAtiva
-                                                            ? "Ativo"
-                                                            : "Free"
-                                                    }
+                                                    label={assinaturaAtiva ? "Ativo" : "Free"}
                                                     color={assinaturaAtiva ? "success" : "default"}
                                                     size="small"
                                                     sx={{ fontWeight: 600 }}
@@ -434,42 +461,12 @@ const Usuarios = () => {
                                             </TableCell>
 
                                             <TableCell align="center">
-                                                <Tooltip
-                                                    title={
-                                                        isSuperAdmin
-                                                            ? "Superadmin não pode ser excluído"
-                                                            : assinaturaAtiva
-                                                                ? "Não pode excluir usuário com plano ativo"
-                                                                : "Excluir usuário"
-                                                    }
-                                                    arrow
-                                                >
-                                                    <span>
-                                                        <IconButton
-                                                            color="error"
-                                                            disabled={assinaturaAtiva || isSuperAdmin}
-                                                            onClick={() =>
-                                                                !assinaturaAtiva &&
-                                                                !isSuperAdmin &&
-                                                                excluirUsuario(usuario.id)
-                                                            }
-                                                            sx={{
-                                                                opacity:
-                                                                    assinaturaAtiva || isSuperAdmin
-                                                                        ? 0.4
-                                                                        : 1,
-                                                            }}
-                                                        >
-                                                            <Delete />
-                                                        </IconButton>
-                                                    </span>
-                                                </Tooltip>
-                                            </TableCell>
-                                            <TableCell align="center">
                                                 <Tooltip title="Editar usuário" arrow>
                                                     <IconButton
                                                         color="primary"
-                                                        onClick={() => navigate(`/editarusuario/${usuario.id}`, {state: {usuario}})}
+                                                        onClick={() =>
+                                                            navigate(`/editarusuario/${usuario.id}`, { state: { usuario } })
+                                                        }
                                                         sx={{ mr: 1 }}
                                                     >
                                                         <Edit />
@@ -493,16 +490,13 @@ const Usuarios = () => {
                                                             onClick={() =>
                                                                 !assinaturaAtiva && !isSuperAdmin && excluirUsuario(usuario.id)
                                                             }
-                                                            sx={{
-                                                                opacity: assinaturaAtiva || isSuperAdmin ? 0.4 : 1,
-                                                            }}
+                                                            sx={{ opacity: assinaturaAtiva || isSuperAdmin ? 0.4 : 1 }}
                                                         >
                                                             <Delete />
                                                         </IconButton>
                                                     </span>
                                                 </Tooltip>
                                             </TableCell>
-
                                         </TableRow>
                                     );
                                 })}
