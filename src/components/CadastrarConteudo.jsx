@@ -487,7 +487,7 @@ export default function ConteudoForm() {
                     <Grid item xs={12}>
                       <TextField select fullWidth label="Nível" value={level} onChange={(e) => setLevel(e.target.value)}>
                         <MenuItem value="Iniciante">Iniciante</MenuItem>
-                        <MenuItem value="Intermediário">Intermediário</MenuItem>
+                        <MenuItem value="Intermediário">Intermediario</MenuItem>
                         <MenuItem value="Avançado">Avançado</MenuItem>
                       </TextField>
                     </Grid>
